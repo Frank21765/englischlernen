@@ -22,7 +22,7 @@ export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useUserAccess();
   const { level, topic, ready: ctxReady, hasSelection } = useLearning();
-  const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield }] : baseNav;
+  const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield, match: ["/admin"] }] : baseNav;
   const navigate = useNavigate();
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
