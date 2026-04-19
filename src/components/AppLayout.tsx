@@ -98,22 +98,24 @@ export default function AppLayout() {
           </Button>
         </div>
         <nav className="container max-w-6xl flex gap-1 overflow-x-auto pb-2 -mt-1">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
+          {navItems.map(({ to, label, icon: Icon, match }) => {
+            const path = typeof window !== "undefined" ? window.location.pathname : "";
+            const isActive = match.some((m) => path === m || path.startsWith(m + "/"));
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`
-              }
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            );
+          })}
         </nav>
       </header>
       <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden">
