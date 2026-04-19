@@ -228,16 +228,28 @@ export default function Vokabeln() {
               )}
               {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
             </div>
-            <Button
-              size="sm"
-              variant="soft"
-              onClick={saveLookupToCollection}
-              disabled={savingLookup}
-              className="shrink-0"
-            >
-              {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              <span className="hidden sm:inline">In Sammlung</span>
-            </Button>
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <Button
+                size="sm"
+                variant="soft"
+                onClick={saveLookupToCollection}
+                disabled={savingLookup}
+              >
+                {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                <span className="hidden sm:inline">In Sammlung</span>
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="text-xs">
+                <Link
+                  to={buildEllieUrl({
+                    prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
+                    auto: true,
+                  })}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Frag Ellie</span>
+                </Link>
+              </Button>
+            </div>
           </div>
           {(() => {
             const examplesDe = lookup.examples_de?.length ? lookup.examples_de : (lookup.example_de ? [lookup.example_de] : []);
