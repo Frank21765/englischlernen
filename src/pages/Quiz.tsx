@@ -10,6 +10,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import { FocusChip } from "@/components/FocusChip";
+import { computeNextReview } from "@/lib/srs";
 
 interface Vocab {
   id: string;
@@ -21,6 +22,8 @@ interface Vocab {
   status: string;
   correct_count: number;
   wrong_count: number;
+  interval_days: number;
+  ease_factor: number;
 }
 
 type QuizMode = "vocab" | "grammar";
@@ -379,15 +382,17 @@ export default function Quiz() {
 
     if (current.kind === "vocab") {
       const v = current.vocab;
-      const newCorrect = v.correct_count + (isCorrect ? 1 : 0);
-      const newWrong = v.wrong_count + (isCorrect ? 0 : 1);
-      let status: "new" | "learning" | "mastered" = "learning";
-      if (newCorrect >= 3 && newWrong === 0) status = "mastered";
-      else if (newCorrect >= 5 && newCorrect > newWrong * 2) status = "mastered";
-      await supabase.from("vocabulary").update({
-        correct_count: newCorrect, wrong_count: newWrong, status,
-        last_seen_at: new Date().toISOString(),
-      }).eq("id", v.id);
+      const upd = computeNextReview(
+        {
+          correct_count: v.correct_count,
+          wrong_count: v.wrong_count,
+          interval_days: v.interval_days,
+          ease_factor: v.ease_factor,
+          status: v.status as "new" | "learning" | "mastered",
+        },
+        isCorrect,
+      );
+      await supabase.from("vocabulary").update(upd).eq("id", v.id);
     }
 
     if (isCorrect && user) {
