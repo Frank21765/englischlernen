@@ -74,7 +74,6 @@ export type Database = {
       profiles: {
         Row: {
           access_status: string
-          anthropic_api_key: string | null
           created_at: string
           current_streak: number
           default_level: string | null
@@ -92,7 +91,6 @@ export type Database = {
         }
         Insert: {
           access_status?: string
-          anthropic_api_key?: string | null
           created_at?: string
           current_streak?: number
           default_level?: string | null
@@ -110,7 +108,6 @@ export type Database = {
         }
         Update: {
           access_status?: string
-          anthropic_api_key?: string | null
           created_at?: string
           current_streak?: number
           default_level?: string | null
@@ -223,6 +220,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_badge: { Args: { _badge_key: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
