@@ -105,6 +105,7 @@ export default function Chat() {
       const decoder = new TextDecoder();
       let buffer = "";
       let assistantText = "";
+      scrollToLastAssistantTop.current = true;
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       let done = false;
@@ -203,25 +204,35 @@ export default function Chat() {
               </div>
             </div>
           )}
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+          {(() => {
+            let lastAssistantIdx = -1;
+            for (let i = messages.length - 1; i >= 0; i--) {
+              if (messages[i].role === "assistant") { lastAssistantIdx = i; break; }
+            }
+            return messages.map((m, i) => (
               <div
-                className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
-                  m.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                }`}
+                key={i}
+                ref={i === lastAssistantIdx ? lastAssistantRef : undefined}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {m.role === "assistant" ? (
-                  <div className="prose prose-sm prose-invert max-w-none break-words">
-                    <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
-                  </div>
-                ) : (
-                  <div className="whitespace-pre-wrap break-words">{m.content}</div>
-                )}
+                <div
+                  className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
+                    m.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
+                  }`}
+                >
+                  {m.role === "assistant" ? (
+                    <div className="prose prose-sm prose-invert max-w-none break-words">
+                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ));
+          })()}
         </div>
 
         <div className="border-t border-border p-3 flex gap-2 items-end">
