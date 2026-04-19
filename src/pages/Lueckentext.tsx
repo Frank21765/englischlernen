@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Level, LEVELS, QUICK_TOPICS } from "@/lib/learning";
+import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";

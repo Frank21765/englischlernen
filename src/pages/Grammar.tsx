@@ -6,8 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
+import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
@@ -25,7 +24,7 @@ interface Lesson {
 
 export default function Grammar() {
   const { user } = useAuth();
-  const { level, topic, hasSelection, setSelection } = useLearning();
+  const { level, topic, hasSelection } = useLearning();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -88,53 +87,15 @@ export default function Grammar() {
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
-      <header className="space-y-1">
+      <header className="space-y-2">
         <h1 className="text-2xl sm:text-3xl">Grammatik 📚</h1>
-        <p className="text-sm text-muted-foreground">
-          Aktuell: <span className="font-semibold text-foreground">{level}</span> · {topic}
-        </p>
+        <FocusChip />
       </header>
 
-      <Card className="p-4 sm:p-5 space-y-4 bg-gradient-card shadow-card">
-        <div>
-          <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {LEVELS.map((l) => (
-              <button
-                key={l}
-                onClick={() => setSelection(l as Level, topic)}
-                className={`min-w-[2.75rem] rounded-2xl px-3 py-1.5 text-sm font-bold transition-bounce ${
-                  level === l ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted text-foreground hover:bg-muted/70"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="grammar-topic" className="mb-2 block text-sm font-semibold">Thema (optional)</Label>
-          <Input
-            id="grammar-topic"
-            value={topic}
-            onChange={(e) => setSelection(level, e.target.value)}
-            className="rounded-2xl h-11"
-            placeholder="z. B. Reise"
-          />
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {QUICK_TOPICS.map((t) => (
-              <button
-                key={t}
-                onClick={() => setSelection(level, t)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-smooth ${
-                  topic === t ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
+      <Card className="p-4 sm:p-5 space-y-3 bg-gradient-card shadow-card">
+        <p className="text-sm text-muted-foreground">
+          Eine kurze Lektion passend zu deinem aktuellen Fokus – mit Beispielen, typischem Fehler und Übung.
+        </p>
         <Button variant="hero" size="lg" onClick={generate} disabled={busy} className="w-full">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {lesson ? "Neue Lektion" : "Lektion starten"}
