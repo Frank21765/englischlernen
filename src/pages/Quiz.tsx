@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 
 interface Vocab {
   id: string;
@@ -23,6 +23,7 @@ interface Vocab {
 }
 
 type QuizMode = "vocab" | "grammar";
+type VocabSource = "review" | "fresh";
 
 interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
 interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: string }
@@ -66,6 +67,9 @@ export default function Quiz() {
   const [directionMode, setDirectionMode] = useState<"de_en" | "en_de" | "random">("random");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+  const [vocabSource, setVocabSource] = useState<VocabSource>("review");
+  const [reviewCount, setReviewCount] = useState<number | null>(null);
+  const [emptyReview, setEmptyReview] = useState(false);
 
   // sync URL deep links
   useEffect(() => {
@@ -79,14 +83,56 @@ export default function Quiz() {
     setTopic(ctxTopic);
   }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
 
-  const startVocab = async () => {
+  // count saved vocab for current context (refreshed when picker shown)
+  useEffect(() => {
+    if (!user || !ctxReady || started) return;
+    (async () => {
+      const { count } = await supabase
+        .from("vocabulary")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
+      setReviewCount(count ?? 0);
+    })();
+  }, [user, ctxReady, ctxLevel, ctxTopic, started]);
+
+  const startVocab = async (source: VocabSource = vocabSource) => {
     if (!user) return;
     setLoading(true);
+    setEmptyReview(false);
     try {
       const { data: profile } = await supabase
         .from("profiles").select("direction_mode").eq("user_id", user.id).maybeSingle();
       const dm = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
       setDirectionMode(dm);
+
+      // If "Neu starten": generate fresh vocab and persist before quizzing
+      if (source === "fresh") {
+        const { data: existing } = await supabase
+          .from("vocabulary").select("german")
+          .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
+        const existingGerman = (existing ?? []).map((r) => r.german);
+
+        const { data: gen, error: genErr } = await supabase.functions.invoke("generate-vocabulary", {
+          body: { level: ctxLevel, topic: ctxTopic, existing: existingGerman },
+        });
+        if (genErr) throw genErr;
+        if (gen?.error) throw new Error(gen.error);
+        const pairs: Array<{ german: string; english: string; grammar_note?: string }> = gen?.pairs ?? [];
+        if (!pairs.length) throw new Error("Keine Vokabeln erhalten");
+        const rows = pairs.map((p) => ({
+          user_id: user.id,
+          level: ctxLevel,
+          topic: ctxTopic,
+          german: p.german.trim(),
+          english: p.english.trim(),
+          grammar_note: p.grammar_note ?? null,
+        }));
+        const { error: insErr } = await supabase
+          .from("vocabulary")
+          .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
+        if (insErr) throw insErr;
+        toast.success(`${pairs.length} neue Vokabeln erzeugt`);
+      }
 
       const { data: vocab } = await supabase
         .from("vocabulary").select("*")
@@ -94,7 +140,9 @@ export default function Quiz() {
       const all = (vocab ?? []) as Vocab[];
       setPool(all);
       if (!all.length) {
-        toast.error(`Noch keine Vokabeln für ${ctxLevel} · ${ctxTopic}. Generiere zuerst welche.`);
+        // Review path with empty pool → show inline fallback instead of an error toast
+        setEmptyReview(true);
+        setReviewCount(0);
         setLoading(false);
         return;
       }
@@ -201,19 +249,72 @@ export default function Quiz() {
               </button>
             </div>
           </div>
+
+          {mode === "vocab" && (
+            <div>
+              <div className="text-sm font-semibold mb-2">Vokabel-Quelle wählen</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setVocabSource("review")}
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                    vocabSource === "review" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  <RefreshCw className="h-5 w-5 text-primary mb-1" />
+                  <div className="font-bold text-sm">Wiederholen</div>
+                  <div className="text-xs text-muted-foreground">
+                    {reviewCount === null ? "Gespeicherte Vokabeln" : `${reviewCount} gespeicherte Vokabeln`}
+                  </div>
+                </button>
+                <button
+                  onClick={() => setVocabSource("fresh")}
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                    vocabSource === "fresh" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  <Sparkles className="h-5 w-5 text-primary mb-1" />
+                  <div className="font-bold text-sm">Neu starten</div>
+                  <div className="text-xs text-muted-foreground">20 frische Vokabeln generieren</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {emptyReview && mode === "vocab" && vocabSource === "review" && (
+            <Card className="p-3 sm:p-4 bg-muted/40 text-sm space-y-3">
+              <p>
+                Für <span className="font-semibold">{ctxLevel} · {ctxTopic}</span> hast du noch keine gespeicherten Vokabeln.
+                Sollen wir frische Vokabeln generieren und direkt loslegen?
+              </p>
+              <Button
+                variant="hero"
+                size="sm"
+                disabled={loading}
+                onClick={() => { setVocabSource("fresh"); startVocab("fresh"); }}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                Neue Vokabeln generieren & starten
+              </Button>
+            </Card>
+          )}
+
           <Button
             variant="hero"
             size="xl"
-            disabled={loading}
-            onClick={mode === "vocab" ? startVocab : startGrammar}
+            disabled={loading || (mode === "vocab" && vocabSource === "review" && reviewCount === 0)}
+            onClick={() => mode === "vocab" ? startVocab(vocabSource) : startGrammar()}
             className="w-full"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <GraduationCap className="h-5 w-5" />}
-            {mode === "vocab" ? "Vokabel-Quiz starten" : "Grammatik-Quiz starten"}
+            {mode === "grammar"
+              ? "Grammatik-Quiz starten"
+              : vocabSource === "fresh"
+                ? "Neue Vokabeln generieren & Quiz starten"
+                : "Wiederholungs-Quiz starten"}
           </Button>
           {mode === "vocab" && (
             <p className="text-xs text-muted-foreground">
-              Tipp: Das Vokabel-Quiz nutzt deine vorhandenen Vokabeln für {ctxLevel} · {ctxTopic}.
+              Aktiver Kontext: <span className="font-semibold text-foreground">{ctxLevel}</span> · {ctxTopic}
             </p>
           )}
         </Card>
