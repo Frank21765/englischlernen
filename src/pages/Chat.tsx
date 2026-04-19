@@ -233,16 +233,17 @@ export default function Chat() {
     setRenamingId(null);
   };
 
-  const send = async (text?: string, sessionIdOverride?: string) => {
+  const send = async (text?: string, sessionIdOverride?: string, baseMessagesOverride?: Msg[]) => {
     const sessionId = sessionIdOverride ?? activeId;
     if (!user || busy || !sessionId) return;
     const content = (text ?? input).trim();
     if (!content) return;
     setInput("");
-    const isFirstChat = messages.length === 0;
+    const baseMessages = baseMessagesOverride ?? messages;
+    const isFirstChat = baseMessages.length === 0;
 
     const userMsg: Msg = { role: "user", content };
-    const optimistic = [...messages, userMsg];
+    const optimistic = [...baseMessages, userMsg];
     setMessages(optimistic);
     setBusy(true);
 
