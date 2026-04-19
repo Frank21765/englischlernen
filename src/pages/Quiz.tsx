@@ -9,6 +9,7 @@ import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { FocusChip } from "@/components/FocusChip";
 
 interface Vocab {
   id: string;
@@ -216,11 +217,9 @@ export default function Quiz() {
   if (!started) {
     return (
       <div className="space-y-5 max-w-2xl mx-auto">
-        <header className="space-y-1">
+        <header className="space-y-2">
           <h1 className="text-2xl sm:text-3xl">Quiz 🎯</h1>
-          <p className="text-sm text-muted-foreground">
-            Aktuell: <span className="font-semibold text-foreground">{level ?? ctxLevel}</span> · {topic ?? ctxTopic}
-          </p>
+          <FocusChip />
         </header>
 
         <Card className="p-4 sm:p-5 space-y-4 bg-gradient-card shadow-card">

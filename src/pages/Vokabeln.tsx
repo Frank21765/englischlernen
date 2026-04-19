@@ -10,6 +10,7 @@ import { LEVELS } from "@/lib/learning";
 import { ArrowRightLeft, Loader2, Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
+import { FocusChip } from "@/components/FocusChip";
 
 interface Vocab {
   id: string;
@@ -43,11 +44,12 @@ const statusClasses: Record<string, string> = {
 
 export default function Vokabeln() {
   const { user } = useAuth();
-  const { level: activeLevel, topic: activeTopic } = useLearning();
+  const { level: activeLevel, topic: activeTopic, hasSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
   const [search, setSearch] = useState("");
-  const [levelFilter, setLevelFilter] = useState<string>("alle");
-  const [topicFilter, setTopicFilter] = useState<string>("alle");
+  const [levelFilter, setLevelFilter] = useState<string>(hasSelection ? activeLevel : "alle");
+  const [topicFilter, setTopicFilter] = useState<string>(hasSelection ? activeTopic : "alle");
+  const [showFilters, setShowFilters] = useState(false);
 
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
