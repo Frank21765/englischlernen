@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, MessageCircle, RefreshCw, Sparkles, X } from "lucide-react";
 import { FocusChip } from "@/components/FocusChip";
 import { computeNextReview } from "@/lib/srs";
+import { buildEllieUrl, ellieExplainGrammarPrompt, ellieExplainQuizMistakePrompt } from "@/lib/ellie";
+import { Link } from "react-router-dom";
 
 interface Vocab {
   id: string;
@@ -477,6 +479,37 @@ export default function Quiz() {
           <span className="font-semibold">💡 </span>{current.explanation}
         </Card>
       )}
+
+      {picked && (() => {
+        const isWrong = picked !== correctAnswer;
+        // Show Ellie helper after a wrong vocab answer, or always for grammar (explanation deepening).
+        if (current.kind === "vocab" && !isWrong) return null;
+        const prompt = current.kind === "vocab"
+          ? ellieExplainQuizMistakePrompt({
+              prompt: promptText,
+              userAnswer: picked,
+              correctAnswer,
+              level: ctxLevel,
+              topic: ctxTopic,
+            })
+          : ellieExplainGrammarPrompt({
+              prompt: current.prompt,
+              correctAnswer: current.correct,
+              explanation: current.explanation,
+              level: ctxLevel,
+              topic: ctxTopic,
+            });
+        return (
+          <div className="flex justify-center">
+            <Button asChild variant="soft" size="sm" className="rounded-full">
+              <Link to={buildEllieUrl({ prefill: prompt, auto: true })}>
+                <MessageCircle className="h-4 w-4" />
+                {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
+              </Link>
+            </Button>
+          </div>
+        );
+      })()}
 
       <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>

@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/lib/learning";
-import { ArrowRightLeft, Loader2, Plus, Search, Sparkles } from "lucide-react";
+import { ArrowRightLeft, Loader2, MessageCircle, Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
+import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { Link } from "react-router-dom";
 
 interface Vocab {
   id: string;
@@ -226,16 +228,28 @@ export default function Vokabeln() {
               )}
               {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
             </div>
-            <Button
-              size="sm"
-              variant="soft"
-              onClick={saveLookupToCollection}
-              disabled={savingLookup}
-              className="shrink-0"
-            >
-              {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              <span className="hidden sm:inline">In Sammlung</span>
-            </Button>
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <Button
+                size="sm"
+                variant="soft"
+                onClick={saveLookupToCollection}
+                disabled={savingLookup}
+              >
+                {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                <span className="hidden sm:inline">In Sammlung</span>
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="text-xs">
+                <Link
+                  to={buildEllieUrl({
+                    prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
+                    auto: true,
+                  })}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Frag Ellie</span>
+                </Link>
+              </Button>
+            </div>
           </div>
           {(() => {
             const examplesDe = lookup.examples_de?.length ? lookup.examples_de : (lookup.example_de ? [lookup.example_de] : []);
@@ -274,7 +288,25 @@ export default function Vokabeln() {
               {v.grammar_note && <div className="text-xs text-muted-foreground italic mt-1">{v.grammar_note}</div>}
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
-              <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
+              <div className="flex items-center gap-1.5">
+                <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  title="Frag Ellie zu diesem Wort"
+                >
+                  <Link
+                    to={buildEllieUrl({
+                      prefill: ellieAskWordPrompt(v.german, v.english, v.level),
+                      auto: true,
+                    })}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses[v.status] ?? statusClasses.new}`}>
                 {statusLabels[v.status] ?? "Neu"}
               </span>

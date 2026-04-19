@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,7 @@ export default function Chat() {
   const { user } = useAuth();
   const { level, topic, hasSelection } = useLearning();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -51,6 +53,7 @@ export default function Chat() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showSessions, setShowSessions] = useState(false);
+  const handledIncomingRef = useRef(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
@@ -111,6 +114,45 @@ export default function Chat() {
       scrollToLastAssistantTop.current = false;
     }
   }, [messages]);
+
+  // Handle incoming context from Quiz/Vokabeln/Review (?prefill=...&auto=1&fresh=1)
+  useEffect(() => {
+    if (!user || handledIncomingRef.current) return;
+    const prefill = searchParams.get("prefill");
+    if (!prefill) return;
+    const auto = searchParams.get("auto") === "1";
+    const fresh = searchParams.get("fresh") !== "0";
+    handledIncomingRef.current = true;
+
+    (async () => {
+      let targetId = activeId;
+      if (fresh) {
+        const { data: created } = await supabase
+          .from("chat_sessions")
+          .insert({ user_id: user.id, title: "Neuer Chat" })
+          .select("id,title,updated_at")
+          .single();
+        if (created) {
+          setSessions((prev) => [created as ChatSession, ...prev]);
+          setActiveId(created.id);
+          setMessages([]);
+          targetId = created.id;
+        }
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete("prefill");
+      next.delete("auto");
+      next.delete("fresh");
+      setSearchParams(next, { replace: true });
+
+      if (auto && targetId) {
+        setTimeout(() => { void send(prefill); }, 60);
+      } else {
+        setInput(prefill);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeId, searchParams]);
 
   const refreshSessions = async () => {
     if (!user) return;
