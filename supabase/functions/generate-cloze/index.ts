@@ -30,6 +30,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    const { data: profile } = await supabase
+      .from("profiles").select("access_status, valid_until")
+      .eq("user_id", claims.claims.sub).maybeSingle();
+    const { data: roles } = await supabase
+      .from("user_roles").select("role").eq("user_id", claims.claims.sub);
+    const isAdmin = (roles ?? []).some((r: { role: string }) => r.role === "admin");
+    if (!isAdmin) {
+      if (profile?.access_status === "blocked") {
+        return new Response(JSON.stringify({ error: "Zugang gesperrt" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (profile?.valid_until && new Date(profile.valid_until) < new Date()) {
+        return new Response(JSON.stringify({ error: "Zugang abgelaufen" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const { level, topic, vocab } = await req.json();
     if (!level || !topic) {
       return new Response(JSON.stringify({ error: "level und topic erforderlich" }), {

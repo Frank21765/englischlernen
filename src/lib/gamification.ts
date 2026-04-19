@@ -144,11 +144,10 @@ export async function awardActivity(
       .in("badge_key", candidates);
     const have = new Set((existing ?? []).map((r) => r.badge_key));
     const toInsert = candidates.filter((k) => !have.has(k));
-    if (toInsert.length) {
-      await supabase
-        .from("user_badges")
-        .insert(toInsert.map((k) => ({ user_id: userId, badge_key: k })));
-      for (const k of toInsert) {
+    for (const k of toInsert) {
+      // Server-side validated awarder (only allows known badge keys)
+      const { data: awarded } = await supabase.rpc("award_badge", { _badge_key: k });
+      if (awarded) {
         const def = BADGE_BY_KEY[k];
         if (def) newBadges.push(def);
       }
