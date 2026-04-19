@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
+import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, MessageCircle, Sparkles, X } from "lucide-react";
 
 interface ClozeItem {
   full_sentence: string;
@@ -29,6 +31,7 @@ function maskSentence(sentence: string, word: string): { before: string; after: 
 export default function Lueckentext() {
   const { user } = useAuth();
   const { level, topic, hasSelection } = useLearning();
+  const navigate = useNavigate();
 
   const [items, setItems] = useState<ClozeItem[]>([]);
   const [idx, setIdx] = useState(0);
@@ -37,6 +40,34 @@ export default function Lueckentext() {
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  // Restore a paused Lückentext session after a "Frag Ellie" side-trip.
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const resumeId = search.get("resume");
+    if (!resumeId) return;
+    try {
+      const raw = sessionStorage.getItem(`cloze-resume-${resumeId}`);
+      if (!raw) return;
+      const snap = JSON.parse(raw) as {
+        items: ClozeItem[]; idx: number; answer: string; revealed: null | boolean;
+        stats: { correct: number; total: number }; combo: number;
+      };
+      setItems(snap.items);
+      setIdx(snap.idx);
+      setAnswer(snap.answer);
+      setRevealed(snap.revealed);
+      setStats(snap.stats);
+      setCombo(snap.combo);
+      sessionStorage.removeItem(`cloze-resume-${resumeId}`);
+      search.delete("resume");
+      const qs = search.toString();
+      navigate({ pathname: window.location.pathname, search: qs ? `?${qs}` : "" }, { replace: true });
+    } catch (e) {
+      console.error("[cloze] resume failed", e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const generate = async () => {
     if (!user) return;
@@ -196,6 +227,40 @@ export default function Lueckentext() {
       {revealed === false && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <X className="h-4 w-4" /> Richtig wäre: <span className="font-bold">{current.missing_word}</span>
+        </div>
+      )}
+
+      {revealed !== null && (
+        <div className="flex justify-center">
+          <Button
+            variant="soft"
+            size="sm"
+            className="rounded-full"
+            onClick={() => {
+              const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+              const snap = { items, idx, answer, revealed, stats, combo };
+              try { sessionStorage.setItem(`cloze-resume-${resumeId}`, JSON.stringify(snap)); } catch { /* ignore */ }
+              const shortWord = current.missing_word.length > 24 ? `${current.missing_word.slice(0, 21)}…` : current.missing_word;
+              const url = buildEllieUrl({
+                prefill: ellieExplainClozePrompt({
+                  sentence: current.full_sentence,
+                  missingWord: current.missing_word,
+                  translation: current.translation,
+                  userAnswer: answer,
+                  level,
+                  topic,
+                }),
+                auto: true,
+                title: `Lückentext · ${shortWord}`,
+                returnTo: `/uben/lueckentext?resume=${resumeId}`,
+                returnLabel: "Zurück zur Übung",
+              });
+              navigate(url);
+            }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            {revealed ? "Lass es dir von Ellie vertiefen" : "Frag Ellie zu dieser Lücke"}
+          </Button>
         </div>
       )}
 

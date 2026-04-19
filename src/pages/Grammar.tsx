@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
@@ -8,8 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
+import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, MessageCircle, RefreshCw, Sparkles, X } from "lucide-react";
 
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
@@ -30,6 +31,74 @@ export default function Grammar() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+
+  // Restore a paused Grammar lesson after a "Frag Ellie" side-trip.
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const resumeId = search.get("resume");
+    if (!resumeId) return;
+    try {
+      const raw = sessionStorage.getItem(`grammar-resume-${resumeId}`);
+      if (!raw) return;
+      const snap = JSON.parse(raw) as {
+        lesson: Lesson | null; answers: Record<number, string>; revealed: Record<number, boolean>;
+      };
+      setLesson(snap.lesson);
+      setAnswers(snap.answers ?? {});
+      setRevealed(snap.revealed ?? {});
+      sessionStorage.removeItem(`grammar-resume-${resumeId}`);
+      search.delete("resume");
+      const qs = search.toString();
+      navigate({ pathname: window.location.pathname, search: qs ? `?${qs}` : "" }, { replace: true });
+    } catch (e) {
+      console.error("[grammar] resume failed", e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const askEllieAboutLesson = () => {
+    if (!lesson) return;
+    const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    try { sessionStorage.setItem(`grammar-resume-${resumeId}`, JSON.stringify({ lesson, answers, revealed })); } catch { /* ignore */ }
+    const shortTitle = lesson.title.length > 28 ? `${lesson.title.slice(0, 25)}…` : lesson.title;
+    const url = buildEllieUrl({
+      prefill: ellieExplainGrammarLessonPrompt({
+        title: lesson.title,
+        explanation: lesson.explanation,
+        level,
+        topic: hasSelection ? topic : undefined,
+      }),
+      auto: true,
+      title: `Grammatik · ${shortTitle}`,
+      returnTo: `/uben/grammatik?resume=${resumeId}`,
+      returnLabel: "Zurück zur Lektion",
+    });
+    navigate(url);
+  };
+
+  const askEllieAboutPractice = (i: number) => {
+    if (!lesson) return;
+    const p = lesson.practice[i];
+    const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    try { sessionStorage.setItem(`grammar-resume-${resumeId}`, JSON.stringify({ lesson, answers, revealed })); } catch { /* ignore */ }
+    const shortAns = p.answer.length > 24 ? `${p.answer.slice(0, 21)}…` : p.answer;
+    const url = buildEllieUrl({
+      prefill: ellieExplainGrammarPracticePrompt({
+        lessonTitle: lesson.title,
+        sentence: p.sentence,
+        answer: p.answer,
+        userAnswer: answers[i],
+        hint: p.hint,
+        level,
+        topic: hasSelection ? topic : undefined,
+      }),
+      auto: true,
+      title: `Grammatik-Übung · ${shortAns}`,
+      returnTo: `/uben/grammatik?resume=${resumeId}`,
+      returnLabel: "Zurück zur Lektion",
+    });
+    navigate(url);
+  };
 
   const generate = async () => {
     if (!user) return;
@@ -116,6 +185,11 @@ export default function Grammar() {
               </Button>
             </div>
             <p className="text-sm leading-relaxed">{lesson.explanation}</p>
+            <div className="flex justify-end">
+              <Button size="sm" variant="soft" className="rounded-full" onClick={askEllieAboutLesson}>
+                <MessageCircle className="h-4 w-4" /> Lass es dir von Ellie erklären
+              </Button>
+            </div>
           </Card>
 
           <Card className="p-4 sm:p-5 space-y-3">
@@ -182,6 +256,14 @@ export default function Grammar() {
                         </span>
                       )}
                     </div>
+                    {isRevealed && (
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="ghost" className="rounded-full text-xs h-7" onClick={() => askEllieAboutPractice(i)}>
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          {ok ? "Ellie vertieft die Regel" : "Frag Ellie zu dieser Übung"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

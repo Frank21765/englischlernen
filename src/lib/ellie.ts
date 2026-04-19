@@ -51,6 +51,65 @@ Richtige Antwort: *${correctAnswer}*
 Bitte erklär mir freundlich: Warum passt meine Antwort nicht so gut, was bedeutet die richtige Antwort genau, und wie kann ich mir das gut merken? Gib mir 1–2 kurze Beispielsätze auf meinem Niveau.`;
 }
 
+export function ellieExplainClozePrompt(opts: {
+  sentence: string;
+  missingWord: string;
+  translation?: string;
+  userAnswer?: string;
+  level?: string;
+  topic?: string;
+}): string {
+  const { sentence, missingWord, translation, userAnswer, level, topic } = opts;
+  const ctx = [level && `Level ${level}`, topic && `Thema: ${topic}`].filter(Boolean).join(" · ");
+  const ctxLine = ctx ? `\nKontext: ${ctx}` : "";
+  const wrongLine = userAnswer && userAnswer.trim().toLowerCase() !== missingWord.toLowerCase()
+    ? `\nMeine Antwort: *${userAnswer}*`
+    : "";
+  return `Hmm, da ist mir bei einer Lücke gerade etwas durchgerutscht – kannst du mir kurz weiterhelfen?${ctxLine}
+Satz: *${sentence.replace(missingWord, "___")}*
+Richtiges Wort: *${missingWord}*${translation ? `\nÜbersetzung: ${translation}` : ""}${wrongLine}
+
+Bitte erklär mir freundlich, warum *${missingWord}* an dieser Stelle passt (Bedeutung, Form, typische Verwendung) und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+}
+
+export function ellieExplainGrammarLessonPrompt(opts: {
+  title: string;
+  explanation: string;
+  level?: string;
+  topic?: string;
+}): string {
+  const { title, explanation, level, topic } = opts;
+  const ctx = [level && `Level ${level}`, topic && `Thema: ${topic}`].filter(Boolean).join(" · ");
+  const ctxLine = ctx ? `\nKontext: ${ctx}` : "";
+  return `Kannst du mir diese Grammatik-Lektion noch genauer erklären?${ctxLine}
+Lektion: *${title}*
+Kurz-Erklärung: ${explanation}
+
+Bitte erklär die Regel verständlich in eigenen Worten, gib 2 weitere Beispiele auf meinem Niveau und einen typischen Fehler, den ich vermeiden sollte.`;
+}
+
+export function ellieExplainGrammarPracticePrompt(opts: {
+  lessonTitle: string;
+  sentence: string;
+  answer: string;
+  userAnswer?: string;
+  hint?: string;
+  level?: string;
+  topic?: string;
+}): string {
+  const { lessonTitle, sentence, answer, userAnswer, hint, level, topic } = opts;
+  const ctx = [level && `Level ${level}`, topic && `Thema: ${topic}`].filter(Boolean).join(" · ");
+  const ctxLine = ctx ? `\nKontext: ${ctx}` : "";
+  const wrongLine = userAnswer && userAnswer.trim().toLowerCase() !== answer.toLowerCase()
+    ? `\nMeine Antwort: *${userAnswer}*`
+    : "";
+  return `Hmm, bei dieser Übung zur Lektion *${lessonTitle}* ist mir gerade etwas durchgerutscht.${ctxLine}
+Satz: *${sentence.replace("__", "___")}*
+Richtige Lösung: *${answer}*${wrongLine}${hint ? `\nHinweis war: ${hint}` : ""}
+
+Bitte erklär mir freundlich, warum *${answer}* hier richtig ist, welche Regel dahintersteckt und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+}
+
 export function ellieExplainGrammarPrompt(opts: {
   prompt: string;
   correctAnswer: string;
