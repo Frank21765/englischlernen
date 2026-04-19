@@ -115,6 +115,45 @@ export default function Chat() {
     }
   }, [messages]);
 
+  // Handle incoming context from Quiz/Vokabeln/Review (?prefill=...&auto=1&fresh=1)
+  useEffect(() => {
+    if (!user || handledIncomingRef.current) return;
+    const prefill = searchParams.get("prefill");
+    if (!prefill) return;
+    const auto = searchParams.get("auto") === "1";
+    const fresh = searchParams.get("fresh") !== "0";
+    handledIncomingRef.current = true;
+
+    (async () => {
+      let targetId = activeId;
+      if (fresh) {
+        const { data: created } = await supabase
+          .from("chat_sessions")
+          .insert({ user_id: user.id, title: "Neuer Chat" })
+          .select("id,title,updated_at")
+          .single();
+        if (created) {
+          setSessions((prev) => [created as ChatSession, ...prev]);
+          setActiveId(created.id);
+          setMessages([]);
+          targetId = created.id;
+        }
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete("prefill");
+      next.delete("auto");
+      next.delete("fresh");
+      setSearchParams(next, { replace: true });
+
+      if (auto && targetId) {
+        setTimeout(() => { void send(prefill); }, 60);
+      } else {
+        setInput(prefill);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeId, searchParams]);
+
   const refreshSessions = async () => {
     if (!user) return;
     const { data } = await supabase
