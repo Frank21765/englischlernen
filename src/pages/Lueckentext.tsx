@@ -31,6 +31,7 @@ function maskSentence(sentence: string, word: string): { before: string; after: 
 export default function Lueckentext() {
   const { user } = useAuth();
   const { level, topic, hasSelection } = useLearning();
+  const navigate = useNavigate();
 
   const [items, setItems] = useState<ClozeItem[]>([]);
   const [idx, setIdx] = useState(0);
@@ -39,6 +40,34 @@ export default function Lueckentext() {
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  // Restore a paused Lückentext session after a "Frag Ellie" side-trip.
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+    const resumeId = search.get("resume");
+    if (!resumeId) return;
+    try {
+      const raw = sessionStorage.getItem(`cloze-resume-${resumeId}`);
+      if (!raw) return;
+      const snap = JSON.parse(raw) as {
+        items: ClozeItem[]; idx: number; answer: string; revealed: null | boolean;
+        stats: { correct: number; total: number }; combo: number;
+      };
+      setItems(snap.items);
+      setIdx(snap.idx);
+      setAnswer(snap.answer);
+      setRevealed(snap.revealed);
+      setStats(snap.stats);
+      setCombo(snap.combo);
+      sessionStorage.removeItem(`cloze-resume-${resumeId}`);
+      search.delete("resume");
+      const qs = search.toString();
+      navigate({ pathname: window.location.pathname, search: qs ? `?${qs}` : "" }, { replace: true });
+    } catch (e) {
+      console.error("[cloze] resume failed", e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const generate = async () => {
     if (!user) return;
