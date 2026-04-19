@@ -89,6 +89,40 @@ export default function Quiz() {
     setTopic(ctxTopic);
   }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
 
+  // Restore a quiz session that was paused for "Frag Ellie"
+  useEffect(() => {
+    const resumeId = params.get("resume");
+    if (!resumeId || started) return;
+    try {
+      const raw = sessionStorage.getItem(`quiz-resume-${resumeId}`);
+      if (!raw) return;
+      const snap = JSON.parse(raw) as {
+        mode: QuizMode; queue: QuizItem[]; pool: Vocab[]; idx: number; picked: string | null;
+        stats: { correct: number; total: number }; combo: number; sessionId: string | null;
+        directionMode: "de_en" | "en_de" | "random"; vocabSource: VocabSource;
+      };
+      setMode(snap.mode);
+      setQueue(snap.queue);
+      setPool(snap.pool);
+      setIdx(snap.idx);
+      setPicked(snap.picked);
+      setStats(snap.stats);
+      setCombo(snap.combo);
+      setSessionId(snap.sessionId);
+      setDirectionMode(snap.directionMode);
+      setVocabSource(snap.vocabSource);
+      setStarted(true);
+      sessionStorage.removeItem(`quiz-resume-${resumeId}`);
+      // strip the resume param from URL
+      const next = new URLSearchParams(params);
+      next.delete("resume");
+      navigate({ pathname: "/quiz", search: next.toString() ? `?${next.toString()}` : "" }, { replace: true });
+    } catch {
+      // ignore corrupt snapshot
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // count saved vocab for current context (refreshed when picker shown)
   useEffect(() => {
     if (!user || !ctxReady || started) return;
@@ -506,13 +540,26 @@ export default function Quiz() {
               level: ctxLevel,
               topic: ctxTopic,
             });
+        const handleAskEllie = () => {
+          // Snapshot current quiz state so we can resume after Ellie.
+          const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          const snap = {
+            mode, queue, pool, idx, picked, stats, combo, sessionId, directionMode, vocabSource,
+          };
+          try { sessionStorage.setItem(`quiz-resume-${resumeId}`, JSON.stringify(snap)); } catch { /* ignore quota */ }
+          const url = buildEllieUrl({
+            prefill: prompt,
+            auto: true,
+            returnTo: `/quiz?resume=${resumeId}`,
+            returnLabel: "Zurück zum Quiz",
+          });
+          navigate(url);
+        };
         return (
           <div className="flex justify-center">
-            <Button asChild variant="soft" size="sm" className="rounded-full">
-              <Link to={buildEllieUrl({ prefill: prompt, auto: true })}>
-                <MessageCircle className="h-4 w-4" />
-                {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
-              </Link>
+            <Button variant="soft" size="sm" className="rounded-full" onClick={handleAskEllie}>
+              <MessageCircle className="h-4 w-4" />
+              {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
             </Button>
           </div>
         );

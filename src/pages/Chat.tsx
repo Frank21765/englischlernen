@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
@@ -45,6 +45,7 @@ export default function Chat() {
   const { level, topic, hasSelection } = useLearning();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -53,6 +54,9 @@ export default function Chat() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showSessions, setShowSessions] = useState(false);
+  // Sessions opened via a context launcher (Frag Ellie / explain mistake / etc.).
+  // For these, we suppress the generic starter prompts and show a "Zurück zur Übung" button.
+  const [contextSessions, setContextSessions] = useState<Record<string, { returnTo: string; returnLabel: string }>>({});
   const handledIncomingRef = useRef(false);
   // Sessions whose messages we should NOT auto-load (because we just created them
   // for a context-prefill flow and are about to stream the first answer).
@@ -130,6 +134,9 @@ export default function Chat() {
     if (!prefill) return;
     const auto = searchParams.get("auto") === "1";
     const fresh = searchParams.get("fresh") !== "0";
+    const isContext = searchParams.get("ctx") === "1";
+    const returnTo = searchParams.get("return") ?? "";
+    const returnLabel = searchParams.get("returnLabel") ?? "Zurück zur Übung";
     handledIncomingRef.current = true;
 
     (async () => {
@@ -149,10 +156,16 @@ export default function Chat() {
           targetId = created.id;
         }
       }
+      if (isContext && targetId) {
+        setContextSessions((prev) => ({ ...prev, [targetId!]: { returnTo, returnLabel } }));
+      }
       const next = new URLSearchParams(searchParams);
       next.delete("prefill");
       next.delete("auto");
       next.delete("fresh");
+      next.delete("ctx");
+      next.delete("return");
+      next.delete("returnLabel");
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
@@ -412,6 +425,23 @@ export default function Chat() {
 
         {/* Chat area */}
         <div className="space-y-4 min-w-0 w-full">
+        {activeId && contextSessions[activeId] && (
+          <div className="flex">
+            <Button
+              variant="soft"
+              size="sm"
+              className="rounded-full"
+              onClick={() => {
+                const ctx = contextSessions[activeId];
+                if (ctx?.returnTo) navigate(ctx.returnTo);
+                else navigate(-1);
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {contextSessions[activeId].returnLabel || "Zurück zur Übung"}
+            </Button>
+          </div>
+        )}
         <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
@@ -431,7 +461,7 @@ export default function Chat() {
 
         <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 w-full overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4">
-            {messages.length === 0 && (
+            {messages.length === 0 && !(activeId && contextSessions[activeId]) && (
               <div className="space-y-4 py-6">
                 <div className="text-center space-y-2">
                   <div className="text-4xl">👩‍🏫</div>
@@ -450,6 +480,12 @@ export default function Chat() {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {messages.length === 0 && activeId && contextSessions[activeId] && (
+              <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Ellie bereitet eine Erklärung vor…
               </div>
             )}
             {(() => {
