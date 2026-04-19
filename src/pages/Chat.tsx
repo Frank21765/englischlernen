@@ -141,6 +141,8 @@ export default function Chat() {
           .select("id,title,updated_at")
           .single();
         if (created) {
+          // Prevent the load-messages effect from wiping our about-to-stream content.
+          skipLoadRef.current.add(created.id);
           setSessions((prev) => [created as ChatSession, ...prev]);
           setActiveId(created.id);
           setMessages([]);
@@ -154,7 +156,8 @@ export default function Chat() {
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
-        setTimeout(() => { void send(prefill); }, 60);
+        // Pass session id explicitly so we don't depend on a stale closure.
+        setTimeout(() => { void send(prefill, targetId!); }, 60);
       } else {
         setInput(prefill);
       }
