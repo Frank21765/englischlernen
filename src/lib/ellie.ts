@@ -7,13 +7,21 @@ export interface EllieLaunchOptions {
   auto?: boolean;
   /** Open in a fresh chat session. Default: true (so context isn't mixed). */
   fresh?: boolean;
+  /** Where to send the user when they click "Zurück zur Übung". E.g. "/quiz?resume=abc". */
+  returnTo?: string;
+  /** Short label for the back button (e.g. "Zurück zum Quiz"). */
+  returnLabel?: string;
 }
 
-export function buildEllieUrl({ prefill, auto = false, fresh = true }: EllieLaunchOptions): string {
+export function buildEllieUrl({ prefill, auto = false, fresh = true, returnTo, returnLabel }: EllieLaunchOptions): string {
   const p = new URLSearchParams();
   p.set("prefill", prefill);
   if (auto) p.set("auto", "1");
   if (!fresh) p.set("fresh", "0");
+  // Mark this as a context-triggered chat so the UI can suppress generic starter prompts.
+  p.set("ctx", "1");
+  if (returnTo) p.set("return", returnTo);
+  if (returnLabel) p.set("returnLabel", returnLabel);
   return `/chat?${p.toString()}`;
 }
 
