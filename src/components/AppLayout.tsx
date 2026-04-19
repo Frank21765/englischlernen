@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useLearning } from "@/hooks/useLearningContext";
@@ -24,6 +24,7 @@ export default function AppLayout() {
   const { level, topic, ready: ctxReady, hasSelection } = useLearning();
   const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield, match: ["/admin"] }] : baseNav;
   const navigate = useNavigate();
+  const location = useLocation();
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
 
@@ -99,7 +100,7 @@ export default function AppLayout() {
         </div>
         <nav className="container max-w-6xl flex gap-1 overflow-x-auto pb-2 -mt-1">
           {navItems.map(({ to, label, icon: Icon, match }) => {
-            const path = typeof window !== "undefined" ? window.location.pathname : "";
+            const path = location.pathname;
             const isActive = match.some((m) => path === m || path.startsWith(m + "/"));
             return (
               <NavLink
