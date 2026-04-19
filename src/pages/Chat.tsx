@@ -28,6 +28,8 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastAssistantRef = useRef<HTMLDivElement>(null);
+  const scrollToLastAssistantTop = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -47,7 +49,14 @@ export default function Chat() {
   }, [user]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    if (scrollToLastAssistantTop.current && lastAssistantRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const target = lastAssistantRef.current;
+      // Scroll so the top of the new assistant reply sits near the top of the visible area
+      const top = target.offsetTop - 8;
+      container.scrollTo({ top, behavior: "smooth" });
+      scrollToLastAssistantTop.current = false;
+    }
   }, [messages]);
 
   const send = async (text?: string) => {
