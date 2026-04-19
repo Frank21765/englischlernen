@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
+import { getProfileUsername } from "@/lib/profile";
 import { toast } from "sonner";
 import { CalendarClock, ChevronDown, GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, RefreshCw, Sparkles, Target } from "lucide-react";
 
@@ -35,13 +36,12 @@ export default function Lernen() {
           .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
-        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+        getProfileUsername(user),
       ]);
       if (cancelled) return;
       setVocabCount(total ?? 0);
       setDueCount((dueOld ?? 0) + (dueNew ?? 0));
-      const name = profileRes.data?.display_name?.trim();
-      setUsername(name || (user.email ? user.email.split("@")[0] : ""));
+      setUsername(profileRes.greetingUsername);
     };
     load();
     const onFocus = () => load();
