@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,6 +41,7 @@ function deriveTitle(text: string): string {
 
 export default function Chat() {
   const { user } = useAuth();
+  const { level, topic, hasSelection } = useLearning();
   const isMobile = useIsMobile();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -201,7 +203,11 @@ export default function Chat() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ messages: optimistic }),
+        body: JSON.stringify({
+          messages: optimistic,
+          level: hasSelection ? level : undefined,
+          topic: hasSelection ? topic : undefined,
+        }),
       });
 
       if (resp.status === 429) {
@@ -353,8 +359,18 @@ export default function Chat() {
 
         {/* Chat area */}
         <div className="space-y-4 min-w-0 w-full">
-        <header>
-          <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
+        <header className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
+            {hasSelection && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent-foreground/90">
+                <Sparkles className="h-3 w-3 text-accent" />
+                <span className="font-mono">{level}</span>
+                <span className="text-muted-foreground/60">·</span>
+                <span className="truncate max-w-[10rem]">{topic}</span>
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             Dein KI-Tutor. Schreib auf Deutsch oder Englisch – stell Fragen, übe Dialoge, lass dich korrigieren.
           </p>

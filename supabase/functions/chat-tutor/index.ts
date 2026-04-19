@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are "Coach Ellie", a warm, patient English teacher for German-speaking learners.
+const BASE_SYSTEM_PROMPT = `You are "Coach Ellie", a warm, patient English teacher for German-speaking learners.
 
 Rules:
 - By default, answer in German AND give English examples/translations.
@@ -18,6 +18,32 @@ Rules:
 - Be motivating, use occasional English exclamations like "Awesome!", "Brilliant!", "Let's go!".
 - Keep replies short and friendly (max ~150 words), use Markdown (lists, **bold**, *italic* for English words/phrases).
 - For vocab questions: give German meaning, English word, part of speech, and an example sentence.`;
+
+const LEVEL_GUIDANCE: Record<string, string> = {
+  A1: "Learner level: A1 (beginner). Use very simple, high-frequency vocabulary. Short sentences (max ~8 words). Present tense mostly. Explain in German with very basic English examples. Avoid idioms and complex grammar.",
+  A2: "Learner level: A2 (elementary). Simple vocabulary, common everyday phrases. Short and clear sentences. Use past simple and future with 'will/going to' carefully. Explanations mostly in German with clear English examples.",
+  B1: "Learner level: B1 (intermediate). Use common everyday vocabulary plus some less common words with brief explanations. Mix tenses naturally. Encourage the learner to respond in English. Corrections should be gentle but clear.",
+  B2: "Learner level: B2 (upper-intermediate). Use varied vocabulary including some idiomatic expressions. Natural sentence complexity. Discuss nuance. Encourage longer English replies. Point out collocations and register.",
+  C1: "Learner level: C1 (advanced). Use sophisticated vocabulary, idioms, phrasal verbs and varied register. Discuss subtle nuances, connotation, and style. Push the learner with challenging follow-up questions in English.",
+  C2: "Learner level: C2 (proficient). Near-native level. Discuss nuance, style, register, irony, and cultural context. Use advanced vocabulary naturally. Most of the conversation should happen in English; German only for tricky nuances.",
+};
+
+function buildSystemPrompt(level?: string, topic?: string): string {
+  const parts = [BASE_SYSTEM_PROMPT];
+  const lvl = level && LEVEL_GUIDANCE[level] ? level : null;
+  if (lvl) parts.push(LEVEL_GUIDANCE[lvl]);
+  if (topic && topic.trim()) {
+    parts.push(
+      `Active learning topic: "${topic.trim()}". When relevant and natural, prefer examples, vocabulary, dialogues and exercises related to this topic. If the learner asks about something else, help them naturally — don't refuse or force the topic.`,
+    );
+  }
+  if (lvl || topic) {
+    parts.push(
+      `Briefly acknowledge the active context only if it makes sense (don't repeat it every turn). Keep the tutoring style aligned to the level above.`,
+    );
+  }
+  return parts.join("\n\n");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -68,7 +94,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { messages } = await req.json();
+    const { messages, level, topic } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
@@ -78,6 +104,11 @@ Deno.serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY fehlt");
+
+    const systemPrompt = buildSystemPrompt(
+      typeof level === "string" ? level : undefined,
+      typeof topic === "string" ? topic : undefined,
+    );
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -89,7 +120,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash",
         stream: true,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...messages.slice(-30).map((m: { role: string; content: string }) => ({
             role: m.role,
             content: m.content,
