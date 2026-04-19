@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, X } from "lucide-react";
 
 interface Vocab {
   id: string;
@@ -22,7 +22,11 @@ interface Vocab {
   wrong_count: number;
 }
 
-interface QueueItem { vocab: Vocab; direction: CardDirection; options: string[] }
+type QuizMode = "vocab" | "grammar";
+
+interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
+interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: string }
+type QuizItem = VocabQ | GrammarQ;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -45,13 +49,14 @@ function buildOptions(target: Vocab, pool: Vocab[], direction: CardDirection): s
 
 export default function Quiz() {
   const { user } = useAuth();
-  const { level: ctxLevel, topic: ctxTopic, ready: ctxReady, setSelection } = useLearning();
+  const { level: ctxLevel, topic: ctxTopic, ready: ctxReady, hasSelection, setSelection } = useLearning();
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const [mode, setMode] = useState<QuizMode>("vocab");
   const [level, setLevel] = useState<Level | null>(null);
   const [topic, setTopic] = useState<string | null>(null);
 
-  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [queue, setQueue] = useState<QuizItem[]>([]);
   const [pool, setPool] = useState<Vocab[]>([]);
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -59,69 +64,168 @@ export default function Quiz() {
   const [combo, setCombo] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [directionMode, setDirectionMode] = useState<"de_en" | "en_de" | "random">("random");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [started, setStarted] = useState(false);
 
+  // sync URL deep links
   useEffect(() => {
-    if (!user || !ctxReady) return;
-    (async () => {
-      setLoading(true);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("direction_mode")
-        .eq("user_id", user.id)
-        .maybeSingle();
+    if (!ctxReady) return;
+    const urlLevel = params.get("level");
+    const urlTopic = params.get("topic");
+    if ((urlLevel && urlLevel !== ctxLevel) || (urlTopic && urlTopic !== ctxTopic)) {
+      setSelection((urlLevel ?? ctxLevel) as Level, urlTopic ?? ctxTopic);
+    }
+    setLevel(ctxLevel);
+    setTopic(ctxTopic);
+  }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
 
-      const urlLevel = params.get("level");
-      const urlTopic = params.get("topic");
-      const effectiveLevel = (urlLevel ?? ctxLevel) as Level;
-      const effectiveTopic = urlTopic ?? ctxTopic;
-      if ((urlLevel && urlLevel !== ctxLevel) || (urlTopic && urlTopic !== ctxTopic)) {
-        setSelection(effectiveLevel, effectiveTopic);
-      }
-      setLevel(effectiveLevel);
-      setTopic(effectiveTopic);
+  const startVocab = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles").select("direction_mode").eq("user_id", user.id).maybeSingle();
+      const dm = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
+      setDirectionMode(dm);
 
       const { data: vocab } = await supabase
-        .from("vocabulary")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("level", effectiveLevel)
-        .eq("topic", effectiveTopic);
-
-      const mode = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
-      setDirectionMode(mode);
-
+        .from("vocabulary").select("*")
+        .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
       const all = (vocab ?? []) as Vocab[];
       setPool(all);
-      const shuffled = shuffle(all);
-      const items: QueueItem[] = shuffled.map((v) => {
-        const dir = pickDirection(mode);
-        return { vocab: v, direction: dir, options: buildOptions(v, all, dir) };
+      if (!all.length) {
+        toast.error(`Noch keine Vokabeln für ${ctxLevel} · ${ctxTopic}. Generiere zuerst welche.`);
+        setLoading(false);
+        return;
+      }
+      const items: QuizItem[] = shuffle(all).map((v) => {
+        const dir = pickDirection(dm);
+        return { kind: "vocab", vocab: v, direction: dir, options: buildOptions(v, all, dir) };
       });
       setQueue(items);
-      setIdx(0);
-      setPicked(null);
-      setStats({ correct: 0, total: 0 });
+      setIdx(0); setPicked(null); setStats({ correct: 0, total: 0 }); setCombo(0);
 
-      if (items.length) {
-        const { data: ses } = await supabase
-          .from("learning_sessions")
-          .insert({ user_id: user.id, mode: "quiz", level: effectiveLevel, topic: effectiveTopic, total_answers: 0, correct_answers: 0 })
-          .select("id")
-          .single();
-        setSessionId(ses?.id ?? null);
-      }
+      const { data: ses } = await supabase
+        .from("learning_sessions")
+        .insert({ user_id: user.id, mode: "quiz", level: ctxLevel, topic: ctxTopic, total_answers: 0, correct_answers: 0 })
+        .select("id").single();
+      setSessionId(ses?.id ?? null);
+      setStarted(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
+    } finally {
       setLoading(false);
-    })();
-  }, [user, params, ctxReady, ctxLevel, ctxTopic, setSelection]);
+    }
+  };
 
-  if (loading) return <div className="text-muted-foreground animate-shimmer">Lade Quiz…</div>;
+  const startGrammar = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-grammar", {
+        body: { level: ctxLevel, topic: ctxTopic, mode: "quiz" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const qs: GrammarQ[] = (data?.questions ?? []).map((q: { prompt: string; options: string[]; correct: string; explanation: string }) => ({
+        kind: "grammar" as const,
+        prompt: q.prompt,
+        options: shuffle(q.options),
+        correct: q.correct,
+        explanation: q.explanation,
+      }));
+      if (!qs.length) throw new Error("Keine Fragen erhalten");
+      setQueue(qs);
+      setIdx(0); setPicked(null); setStats({ correct: 0, total: 0 }); setCombo(0);
+      const { data: ses } = await supabase
+        .from("learning_sessions")
+        .insert({ user_id: user.id, mode: "grammar_quiz", level: ctxLevel, topic: ctxTopic, total_answers: 0, correct_answers: 0 })
+        .select("id").single();
+      setSessionId(ses?.id ?? null);
+      setStarted(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!hasSelection) {
+    return (
+      <Card className="p-6 sm:p-8 text-center space-y-4 max-w-xl mx-auto">
+        <GraduationCap className="h-10 w-10 mx-auto text-primary" />
+        <h2 className="text-xl sm:text-2xl">Wähle Niveau und Thema</h2>
+        <p className="text-sm text-muted-foreground">
+          Damit das Quiz zu dir passt, wähle bitte zuerst ein CEFR-Niveau und ein Thema.
+        </p>
+        <Button variant="hero" onClick={() => navigate("/lernen")}>
+          <ArrowLeft className="h-4 w-4" /> Zur Auswahl
+        </Button>
+      </Card>
+    );
+  }
+
+  if (!started) {
+    return (
+      <div className="space-y-5 max-w-2xl mx-auto">
+        <header className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl">Quiz 🎯</h1>
+          <p className="text-sm text-muted-foreground">
+            Aktuell: <span className="font-semibold text-foreground">{level ?? ctxLevel}</span> · {topic ?? ctxTopic}
+          </p>
+        </header>
+
+        <Card className="p-4 sm:p-5 space-y-4 bg-gradient-card shadow-card">
+          <div>
+            <div className="text-sm font-semibold mb-2">Quiz-Art wählen</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setMode("vocab")}
+                className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                  mode === "vocab" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                }`}
+              >
+                <BookOpen className="h-5 w-5 text-primary mb-1" />
+                <div className="font-bold text-sm">Vokabel-Quiz</div>
+                <div className="text-xs text-muted-foreground">Übersetzung wählen</div>
+              </button>
+              <button
+                onClick={() => setMode("grammar")}
+                className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                  mode === "grammar" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                }`}
+              >
+                <Library className="h-5 w-5 text-primary mb-1" />
+                <div className="font-bold text-sm">Grammatik-Quiz</div>
+                <div className="text-xs text-muted-foreground">Richtige Form wählen</div>
+              </button>
+            </div>
+          </div>
+          <Button
+            variant="hero"
+            size="xl"
+            disabled={loading}
+            onClick={mode === "vocab" ? startVocab : startGrammar}
+            className="w-full"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <GraduationCap className="h-5 w-5" />}
+            {mode === "vocab" ? "Vokabel-Quiz starten" : "Grammatik-Quiz starten"}
+          </Button>
+          {mode === "vocab" && (
+            <p className="text-xs text-muted-foreground">
+              Tipp: Das Vokabel-Quiz nutzt deine vorhandenen Vokabeln für {ctxLevel} · {ctxTopic}.
+            </p>
+          )}
+        </Card>
+      </div>
+    );
+  }
 
   if (!queue.length) {
     return (
-      <Card className="p-8 text-center space-y-4">
-        <h2 className="text-2xl">Noch keine Vokabeln für {level} · {topic}</h2>
-        <p className="text-muted-foreground">Lass dir zuerst welche generieren.</p>
+      <Card className="p-6 sm:p-8 text-center space-y-4">
+        <h2 className="text-xl sm:text-2xl">Noch keine Vokabeln für {ctxLevel} · {ctxTopic}</h2>
+        <p className="text-muted-foreground text-sm">Lass dir zuerst welche generieren.</p>
         <Button variant="hero" onClick={() => navigate("/lernen")}>
           <ArrowLeft className="h-4 w-4" /> Zur Themenwahl
         </Button>
@@ -130,10 +234,18 @@ export default function Quiz() {
   }
 
   const current = queue[idx];
-  const correctAnswer = current.direction === "de_en" ? current.vocab.english : current.vocab.german;
-  const promptText = current.direction === "de_en" ? current.vocab.german : current.vocab.english;
-  const promptLang = current.direction === "de_en" ? "Deutsch" : "English";
-  const answerLang = current.direction === "de_en" ? "English" : "Deutsch";
+  const correctAnswer = current.kind === "vocab"
+    ? (current.direction === "de_en" ? current.vocab.english : current.vocab.german)
+    : current.correct;
+  const promptText = current.kind === "vocab"
+    ? (current.direction === "de_en" ? current.vocab.german : current.vocab.english)
+    : current.prompt;
+  const promptLang = current.kind === "vocab"
+    ? (current.direction === "de_en" ? "Deutsch" : "English")
+    : "Grammatik";
+  const answerLang = current.kind === "vocab"
+    ? (current.direction === "de_en" ? "English" : "Deutsch")
+    : "die richtige Form";
 
   const finish = async (finalStats: { correct: number; total: number }) => {
     if (sessionId) {
@@ -152,7 +264,8 @@ export default function Quiz() {
     }
     if (perfect) fireConfetti(true);
     toast.success(`Quiz fertig! ${finalStats.correct}/${finalStats.total} richtig`);
-    navigate("/lernen");
+    setStarted(false);
+    setQueue([]);
   };
 
   const handlePick = async (opt: string) => {
@@ -164,19 +277,18 @@ export default function Quiz() {
     const newCombo = isCorrect ? combo + 1 : 0;
     setCombo(newCombo);
 
-    const v = current.vocab;
-    const newCorrect = v.correct_count + (isCorrect ? 1 : 0);
-    const newWrong = v.wrong_count + (isCorrect ? 0 : 1);
-    let status: "new" | "learning" | "mastered" = "learning";
-    if (newCorrect >= 3 && newWrong === 0) status = "mastered";
-    else if (newCorrect >= 5 && newCorrect > newWrong * 2) status = "mastered";
-
-    await supabase.from("vocabulary").update({
-      correct_count: newCorrect,
-      wrong_count: newWrong,
-      status,
-      last_seen_at: new Date().toISOString(),
-    }).eq("id", v.id);
+    if (current.kind === "vocab") {
+      const v = current.vocab;
+      const newCorrect = v.correct_count + (isCorrect ? 1 : 0);
+      const newWrong = v.wrong_count + (isCorrect ? 0 : 1);
+      let status: "new" | "learning" | "mastered" = "learning";
+      if (newCorrect >= 3 && newWrong === 0) status = "mastered";
+      else if (newCorrect >= 5 && newCorrect > newWrong * 2) status = "mastered";
+      await supabase.from("vocabulary").update({
+        correct_count: newCorrect, wrong_count: newWrong, status,
+        last_seen_at: new Date().toISOString(),
+      }).eq("id", v.id);
+    }
 
     if (isCorrect && user) {
       awardActivity(user.id, 5, { comboReached: newCombo }).then((r) => {
@@ -188,13 +300,14 @@ export default function Quiz() {
       }
     }
 
+    const delay = current.kind === "grammar" ? 1500 : 900;
     setTimeout(() => {
       let nextQueue = queue;
-      if (!isCorrect) {
+      if (!isCorrect && current.kind === "vocab") {
         const offset = 3 + Math.floor(Math.random() * 3);
         const insertAt = Math.min(idx + 1 + offset, queue.length);
         const dir = pickDirection(directionMode);
-        const replay: QueueItem = { vocab: v, direction: dir, options: buildOptions(v, pool, dir) };
+        const replay: VocabQ = { kind: "vocab", vocab: current.vocab, direction: dir, options: buildOptions(current.vocab, pool, dir) };
         nextQueue = [...queue.slice(0, insertAt), replay, ...queue.slice(insertAt)];
         setQueue(nextQueue);
       }
@@ -205,7 +318,7 @@ export default function Quiz() {
       }
       setIdx(nextIdx);
       setPicked(null);
-    }, 900);
+    }, delay);
   };
 
   const remaining = queue.length - idx;
@@ -213,21 +326,21 @@ export default function Quiz() {
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/lernen")}>
+        <Button variant="ghost" size="sm" onClick={() => { setStarted(false); setQueue([]); }}>
           <ArrowLeft className="h-4 w-4" /> Zurück
         </Button>
-        <div className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{level}</span> · {topic} · noch {remaining}
+        <div className="text-xs sm:text-sm text-muted-foreground truncate">
+          <span className="font-semibold text-foreground">{ctxLevel}</span> · {ctxTopic} · noch {remaining}
         </div>
       </div>
 
-      <Card className="p-6 md:p-8 text-center bg-gradient-card shadow-card animate-pop">
+      <Card className="p-5 sm:p-6 md:p-8 text-center bg-gradient-card shadow-card animate-pop">
         <div className="text-xs font-bold uppercase tracking-widest text-primary mb-2">{promptLang}</div>
-        <div className="font-display text-2xl md:text-3xl leading-tight">{promptText}</div>
-        <div className="text-xs text-muted-foreground mt-3">Wähle die richtige Übersetzung auf {answerLang}</div>
+        <div className="font-display text-xl sm:text-2xl md:text-3xl leading-tight break-words">{promptText}</div>
+        <div className="text-xs text-muted-foreground mt-3">Wähle {answerLang}</div>
       </Card>
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid sm:grid-cols-2 gap-2 sm:gap-3">
         {current.options.map((opt) => {
           const isCorrect = opt === correctAnswer;
           const isPicked = opt === picked;
@@ -242,19 +355,25 @@ export default function Quiz() {
               key={opt}
               onClick={() => handlePick(opt)}
               disabled={!!picked}
-              className={`rounded-2xl border-2 p-4 text-left text-base font-semibold transition-bounce ${cls}`}
+              className={`rounded-2xl border-2 p-3 sm:p-4 text-left text-sm sm:text-base font-semibold transition-bounce ${cls}`}
             >
-              <div className="flex items-center gap-3">
-                {picked && isCorrect && <Check className="h-5 w-5 shrink-0" />}
-                {picked && isPicked && !isCorrect && <X className="h-5 w-5 shrink-0" />}
-                <span>{opt}</span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                {picked && isCorrect && <Check className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />}
+                {picked && isPicked && !isCorrect && <X className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />}
+                <span className="break-words">{opt}</span>
               </div>
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+      {picked && current.kind === "grammar" && (
+        <Card className="p-3 sm:p-4 bg-muted/40 text-sm">
+          <span className="font-semibold">💡 </span>{current.explanation}
+        </Card>
+      )}
+
+      <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>
         <span>Beantwortet: <span className="font-semibold text-foreground">{stats.total}</span></span>
         {combo > 1 && <span className="text-primary font-bold">🔥 {combo}</span>}
