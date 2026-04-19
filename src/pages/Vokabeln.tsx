@@ -243,6 +243,8 @@ export default function Vokabeln() {
                   to={buildEllieUrl({
                     prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
                     auto: true,
+                    returnTo: "/vokabeln",
+                    returnLabel: "Zurück zu Vokabeln",
                   })}
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
