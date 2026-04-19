@@ -103,53 +103,32 @@ export default function Lueckentext() {
 
   if (!items.length) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto">
-        <header>
+      <div className="space-y-5 max-w-2xl mx-auto">
+        <header className="space-y-2">
           <h1 className="text-2xl sm:text-3xl">Lückentext-Modus 🧩</h1>
+          <FocusChip />
           <p className="text-sm text-muted-foreground">
             Setze das fehlende Wort ein. Trainiert Konjugation, Vokabeln und Satzbau auf Englisch.
           </p>
         </header>
 
-        <Card className="p-5 space-y-5 bg-gradient-card shadow-card">
-          <div>
-            <div className="text-sm font-semibold mb-2">Niveau</div>
-            <div className="flex flex-wrap gap-2">
-              {LEVELS.map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLevel(l)}
-                  className={`min-w-[3rem] rounded-2xl px-3 py-1.5 text-sm font-bold transition-bounce ${
-                    level === l ? "bg-primary text-primary-foreground shadow-glow" : "bg-muted text-foreground hover:bg-muted/70"
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="text-sm font-semibold mb-2">Thema</div>
-            <Input value={topic} onChange={(e) => setTopic(e.target.value)} className="rounded-2xl h-11" />
-            <div className="flex flex-wrap gap-2 mt-2">
-              {QUICK_TOPICS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTopic(t)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-smooth ${
-                    topic === t ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Button variant="hero" size="xl" disabled={busy} onClick={generate} className="w-full">
-            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
-            Lückentext-Übung starten
-          </Button>
-        </Card>
+        {!hasSelection ? (
+          <Card className="p-6 sm:p-8 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Bitte zuerst auf der Lernen-Seite einen Fokus (Niveau & Thema) wählen.
+            </p>
+          </Card>
+        ) : (
+          <Card className="p-5 space-y-4 bg-gradient-card shadow-card">
+            <p className="text-sm text-muted-foreground">
+              Wir generieren Lückensätze passend zu <span className="font-semibold text-foreground">{level}</span> · {topic}.
+            </p>
+            <Button variant="hero" size="xl" disabled={busy} onClick={generate} className="w-full">
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+              Lückentext-Übung starten
+            </Button>
+          </Card>
+        )}
       </div>
     );
   }
