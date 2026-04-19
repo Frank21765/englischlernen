@@ -92,6 +92,11 @@ export default function Chat() {
   // Load messages for the active session
   useEffect(() => {
     if (!user || !activeId) return;
+    if (skipLoadRef.current.has(activeId)) {
+      // We're about to stream into this freshly-created session — don't wipe it.
+      skipLoadRef.current.delete(activeId);
+      return;
+    }
     (async () => {
       const { data } = await supabase
         .from("chat_messages")
