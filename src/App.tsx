@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,8 @@ import Vokabeln from "./pages/Vokabeln";
 import Statistik from "./pages/Statistik";
 import Einstellungen from "./pages/Einstellungen";
 import Admin from "./pages/Admin";
+import Uben from "./pages/Uben";
+import Profil from "./pages/Profil";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -35,14 +37,25 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/lernen" element={<Lernen />} />
-              <Route path="/grammatik" element={<Grammar />} />
-              <Route path="/quiz" element={<Quiz />} />
-              <Route path="/lueckentext" element={<Lueckentext />} />
               <Route path="/chat" element={<Chat />} />
-              <Route path="/erfolge" element={<Erfolge />} />
               <Route path="/vokabeln" element={<Vokabeln />} />
-              <Route path="/statistik" element={<Statistik />} />
-              <Route path="/einstellungen" element={<Einstellungen />} />
+              <Route path="/uben" element={<Uben />}>
+                <Route path="quiz" element={<Quiz />} />
+                <Route path="grammatik" element={<Grammar />} />
+                <Route path="lueckentext" element={<Lueckentext />} />
+              </Route>
+              <Route path="/profil" element={<Profil />}>
+                <Route path="erfolge" element={<Erfolge />} />
+                <Route path="statistik" element={<Statistik />} />
+                <Route path="einstellungen" element={<Einstellungen />} />
+              </Route>
+              {/* Legacy redirects */}
+              <Route path="/quiz" element={<Navigate to="/uben/quiz" replace />} />
+              <Route path="/grammatik" element={<Navigate to="/uben/grammatik" replace />} />
+              <Route path="/lueckentext" element={<Navigate to="/uben/lueckentext" replace />} />
+              <Route path="/erfolge" element={<Navigate to="/profil/erfolge" replace />} />
+              <Route path="/statistik" element={<Navigate to="/profil/statistik" replace />} />
+              <Route path="/einstellungen" element={<Navigate to="/profil/einstellungen" replace />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
