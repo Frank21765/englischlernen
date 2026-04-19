@@ -277,7 +277,7 @@ export default function Chat() {
   const activeTitle = sessions.find((s) => s.id === activeId)?.title ?? "Neuer Chat";
 
   return (
-    <div className="grid md:grid-cols-[260px_minmax(0,1fr)] gap-3 sm:gap-4 max-w-5xl mx-auto min-w-0">
+    <div className="grid md:grid-cols-[260px_minmax(0,1fr)] gap-3 sm:gap-4 w-full max-w-5xl mx-auto min-w-0">
       {/* Mobile session toggle */}
       <div className="md:hidden flex gap-2">
         <Button
