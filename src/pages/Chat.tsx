@@ -203,7 +203,11 @@ export default function Chat() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ messages: optimistic }),
+        body: JSON.stringify({
+          messages: optimistic,
+          level: hasSelection ? level : undefined,
+          topic: hasSelection ? topic : undefined,
+        }),
       });
 
       if (resp.status === 429) {
