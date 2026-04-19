@@ -95,14 +95,44 @@ export default function Quiz() {
     })();
   }, [user, ctxReady, ctxLevel, ctxTopic, started]);
 
-  const startVocab = async () => {
+  const startVocab = async (source: VocabSource = vocabSource) => {
     if (!user) return;
     setLoading(true);
+    setEmptyReview(false);
     try {
       const { data: profile } = await supabase
         .from("profiles").select("direction_mode").eq("user_id", user.id).maybeSingle();
       const dm = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
       setDirectionMode(dm);
+
+      // If "Neu starten": generate fresh vocab and persist before quizzing
+      if (source === "fresh") {
+        const { data: existing } = await supabase
+          .from("vocabulary").select("german")
+          .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
+        const existingGerman = (existing ?? []).map((r) => r.german);
+
+        const { data: gen, error: genErr } = await supabase.functions.invoke("generate-vocabulary", {
+          body: { level: ctxLevel, topic: ctxTopic, existing: existingGerman },
+        });
+        if (genErr) throw genErr;
+        if (gen?.error) throw new Error(gen.error);
+        const pairs: Array<{ german: string; english: string; grammar_note?: string }> = gen?.pairs ?? [];
+        if (!pairs.length) throw new Error("Keine Vokabeln erhalten");
+        const rows = pairs.map((p) => ({
+          user_id: user.id,
+          level: ctxLevel,
+          topic: ctxTopic,
+          german: p.german.trim(),
+          english: p.english.trim(),
+          grammar_note: p.grammar_note ?? null,
+        }));
+        const { error: insErr } = await supabase
+          .from("vocabulary")
+          .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
+        if (insErr) throw insErr;
+        toast.success(`${pairs.length} neue Vokabeln erzeugt`);
+      }
 
       const { data: vocab } = await supabase
         .from("vocabulary").select("*")
@@ -110,7 +140,9 @@ export default function Quiz() {
       const all = (vocab ?? []) as Vocab[];
       setPool(all);
       if (!all.length) {
-        toast.error(`Noch keine Vokabeln für ${ctxLevel} · ${ctxTopic}. Generiere zuerst welche.`);
+        // Review path with empty pool → show inline fallback instead of an error toast
+        setEmptyReview(true);
+        setReviewCount(0);
         setLoading(false);
         return;
       }
