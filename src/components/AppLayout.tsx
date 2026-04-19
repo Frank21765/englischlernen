@@ -1,33 +1,30 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useLearning } from "@/hooks/useLearningContext";
 import AccessGate from "@/components/AccessGate";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Flame, GraduationCap, History, Library, LogOut, MessageCircle, PenLine, Settings, Shield, Sparkles, Trophy } from "lucide-react";
+import { BookOpen, Dumbbell, Flame, LogOut, MessageCircle, Shield, Sparkles, Trophy, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import appIcon from "@/assets/app-icon.png";
 import { supabase } from "@/integrations/supabase/client";
 import { levelFromXp } from "@/lib/gamification";
 
 const baseNav = [
-  { to: "/lernen", label: "Lernen", icon: Sparkles },
-  { to: "/chat", label: "Coach Ellie", icon: MessageCircle },
-  { to: "/grammatik", label: "Grammatik", icon: Library },
-  { to: "/quiz", label: "Quiz", icon: GraduationCap },
-  { to: "/lueckentext", label: "Lückentext", icon: PenLine },
-  { to: "/vokabeln", label: "Vokabeln", icon: BookOpen },
-  { to: "/erfolge", label: "Erfolge", icon: Trophy },
-  { to: "/statistik", label: "Statistik", icon: History },
-  { to: "/einstellungen", label: "Einstellungen", icon: Settings },
+  { to: "/lernen", label: "Lernen", icon: Sparkles, match: ["/lernen"] },
+  { to: "/uben", label: "Üben", icon: Dumbbell, match: ["/uben", "/quiz", "/grammatik", "/lueckentext"] },
+  { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: ["/vokabeln"] },
+  { to: "/chat", label: "Coach", icon: MessageCircle, match: ["/chat"] },
+  { to: "/profil", label: "Profil", icon: User, match: ["/profil", "/erfolge", "/statistik", "/einstellungen"] },
 ];
 
 export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useUserAccess();
   const { level, topic, ready: ctxReady, hasSelection } = useLearning();
-  const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield }] : baseNav;
+  const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield, match: ["/admin"] }] : baseNav;
   const navigate = useNavigate();
+  const location = useLocation();
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
 
@@ -102,22 +99,24 @@ export default function AppLayout() {
           </Button>
         </div>
         <nav className="container max-w-6xl flex gap-1 overflow-x-auto pb-2 -mt-1">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
+          {navItems.map(({ to, label, icon: Icon, match }) => {
+            const path = location.pathname;
+            const isActive = match.some((m) => path === m || path.startsWith(m + "/"));
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`
-              }
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            );
+          })}
         </nav>
       </header>
       <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden">
