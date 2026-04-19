@@ -288,7 +288,25 @@ export default function Vokabeln() {
               {v.grammar_note && <div className="text-xs text-muted-foreground italic mt-1">{v.grammar_note}</div>}
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
-              <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
+              <div className="flex items-center gap-1.5">
+                <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  title="Frag Ellie zu diesem Wort"
+                >
+                  <Link
+                    to={buildEllieUrl({
+                      prefill: ellieAskWordPrompt(v.german, v.english, v.level),
+                      auto: true,
+                    })}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses[v.status] ?? statusClasses.new}`}>
                 {statusLabels[v.status] ?? "Neu"}
               </span>
