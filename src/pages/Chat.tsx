@@ -71,9 +71,42 @@ export default function Chat() {
   const lastAssistantRef = useRef<HTMLDivElement>(null);
   const scrollToLastAssistantTop = useRef(false);
 
+  // Handle ?new=1 from the main Coach tab — always start a fresh generic chat.
+  const handledNewKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    if (searchParams.get("new") !== "1") return;
+    // Don't interfere with context-prefill flow.
+    if (searchParams.get("prefill")) return;
+    const key = `${user.id}:${searchParams.get("t") ?? ""}`;
+    if (handledNewKeyRef.current === key) return;
+    handledNewKeyRef.current = key;
+    (async () => {
+      const { data: created } = await supabase
+        .from("chat_sessions")
+        .insert({ user_id: user.id, title: "Neuer Chat" })
+        .select("id,title,updated_at")
+        .single();
+      if (created) {
+        setSessions((prev) => {
+          const without = prev.filter((s) => s.id !== created.id);
+          return [created as ChatSession, ...without];
+        });
+        setActiveId(created.id);
+        setMessages([]);
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete("new");
+      next.delete("t");
+      setSearchParams(next, { replace: true });
+    })();
+  }, [user, searchParams, setSearchParams]);
+
   // Load list of sessions; auto-create one if none exist
   useEffect(() => {
     if (!user) return;
+    // If we're about to create a fresh chat from the main Coach tab, skip auto-selecting old one.
+    const startingFresh = searchParams.get("new") === "1" && !searchParams.get("prefill");
     (async () => {
       const { data } = await supabase
         .from("chat_sessions")
@@ -93,9 +126,12 @@ export default function Chat() {
         }
       } else {
         setSessions(list);
-        setActiveId((prev) => prev ?? list[0].id);
+        if (!startingFresh) {
+          setActiveId((prev) => prev ?? list[0].id);
+        }
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Load messages for the active session
