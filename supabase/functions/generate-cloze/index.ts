@@ -1,4 +1,4 @@
-// Lückentext-Generator: erstellt spanische Sätze mit einer Lücke
+// Lückentext-Generator: erstellt englische Sätze mit einer Lücke
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -40,14 +40,14 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY fehlt");
 
-    const vocabList: Array<{ german: string; spanish: string }> = Array.isArray(vocab) ? vocab.slice(0, 20) : [];
+    const vocabList: Array<{ german: string; english: string }> = Array.isArray(vocab) ? vocab.slice(0, 20) : [];
     const vocabBlock = vocabList.length
-      ? `\n\nNutze möglichst diese Vokabeln:\n${vocabList.map((v) => `- ${v.spanish} (${v.german})`).join("\n")}`
+      ? `\n\nNutze möglichst diese Vokabeln:\n${vocabList.map((v) => `- ${v.english} (${v.german})`).join("\n")}`
       : "";
 
-    const systemPrompt = `Du erstellst Lückentext-Übungen auf Spanisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.`;
+    const systemPrompt = `Du erstellst Lückentext-Übungen auf Englisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.`;
 
-    const userPrompt = `Erstelle 10 Lückentext-Sätze. Jeder Eintrag braucht: full_sentence (kompletter spanischer Satz mit dem Zielwort), missing_word (das eine Wort, das fehlen soll – exakt wie im Satz), translation (deutsche Übersetzung), hint (kurze Hilfe auf Deutsch, z.B. Wortart oder Zeitform).${vocabBlock}`;
+    const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch. Jeder Eintrag braucht: full_sentence (kompletter englischer Satz mit dem Zielwort), missing_word (das eine Wort, das fehlen soll – exakt wie im Satz), translation (deutsche Übersetzung), hint (kurze Hilfe auf Deutsch, z.B. Wortart oder Zeitform).${vocabBlock}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

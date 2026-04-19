@@ -44,7 +44,6 @@ export default function Lernen() {
     }
     setBusy(true);
     try {
-      // Lade bereits vorhandene deutsche Begriffe für Level+Thema, um Duplikate zu vermeiden
       const { data: existing } = await supabase
         .from("vocabulary")
         .select("german")
@@ -58,7 +57,7 @@ export default function Lernen() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const pairs: Array<{ german: string; spanish: string; grammar_note?: string }> = data.pairs ?? [];
+      const pairs: Array<{ german: string; english: string; grammar_note?: string }> = data.pairs ?? [];
       if (!pairs.length) throw new Error("Keine Vokabeln erhalten");
 
       const rows = pairs.map((p) => ({
@@ -66,16 +65,14 @@ export default function Lernen() {
         level,
         topic,
         german: p.german.trim(),
-        spanish: p.spanish.trim(),
+        english: p.english.trim(),
         grammar_note: p.grammar_note ?? null,
       }));
-      // upsert verhindert Duplikate dank UNIQUE(user_id,german,spanish)
       const { error: insErr } = await supabase
         .from("vocabulary")
-        .upsert(rows, { onConflict: "user_id,german,spanish", ignoreDuplicates: true });
+        .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
       if (insErr) throw insErr;
 
-      // Standardwerte aktualisieren
       await supabase.from("profiles").update({ default_level: level, default_topic: topic }).eq("user_id", user.id);
 
       toast.success(`${pairs.length} neue Vokabeln erzeugt`);
@@ -97,7 +94,7 @@ export default function Lernen() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">¡Vamos! Was lernen wir heute?</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
           Wähle ein Niveau und ein Thema – die KI generiert 20 frische Vokabeln und Sätze für dich.
         </p>
@@ -178,7 +175,7 @@ export default function Lernen() {
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext-Übung</span>
           </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/chat")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Mit Profe Hola chatten</span>
+            <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Mit Coach Ellie chatten</span>
           </Button>
         </div>
       </Card>

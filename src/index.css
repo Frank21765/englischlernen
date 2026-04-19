@@ -4,13 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ¡Hola! – Warmes, freundliches Lern-Design-System
+/* Hello! – Warmes, freundliches Lern-Design-System (Englisch lernen)
    Alle Farben in HSL. Tokens hier zentral pflegen.
 */
 
 @layer base {
-  /* franxs-Style: tiefes Schwarz + Neon-Koralle.
-     :root und .dark identisch – die App läuft permanent im Dark-Mode. */
+  /* Tiefes Schwarz + Neon-Koralle. Permanent Dark-Mode. */
   :root,
   .dark {
     --background: 0 0% 4%;
@@ -22,20 +21,16 @@
     --popover: 0 0% 8%;
     --popover-foreground: 20 15% 96%;
 
-    /* Primär: Neon-Koralle wie im Icon */
     --primary: 6 95% 62%;
     --primary-foreground: 0 0% 6%;
     --primary-glow: 12 100% 70%;
 
-    /* Sekundär: tiefes Signal-Rot */
     --secondary: 358 80% 52%;
     --secondary-foreground: 20 15% 96%;
 
-    /* Akzent: warmes Glow-Rot */
     --accent: 12 95% 60%;
     --accent-foreground: 0 0% 6%;
 
-    /* Erfolg / Fehler */
     --success: 142 60% 48%;
     --success-foreground: 0 0% 6%;
     --destructive: 358 80% 58%;
@@ -50,17 +45,14 @@
 
     --radius: 1rem;
 
-    /* Gradients – Neon-Glow auf Schwarz */
     --gradient-warm: linear-gradient(135deg, hsl(6 95% 62%), hsl(12 100% 65%) 50%, hsl(358 85% 55%));
     --gradient-sun: linear-gradient(135deg, hsl(12 100% 65%), hsl(6 95% 60%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 9%), hsl(0 0% 6%));
 
-    /* Shadows mit Koralle-Glow */
     --shadow-soft: 0 4px 16px -4px hsl(0 0% 0% / 0.6);
     --shadow-glow: 0 0 32px -4px hsl(6 95% 62% / 0.55);
     --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.5);
 
-    /* Animations */
     --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 

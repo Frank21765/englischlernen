@@ -11,7 +11,7 @@ import { levelFromXp } from "@/lib/gamification";
 
 const baseNav = [
   { to: "/lernen", label: "Lernen", icon: Sparkles },
-  { to: "/chat", label: "Profe Hola", icon: MessageCircle },
+  { to: "/chat", label: "Coach Ellie", icon: MessageCircle },
   { to: "/karteikarten", label: "Karten", icon: Brain },
   { to: "/quiz", label: "Quiz", icon: GraduationCap },
   { to: "/lueckentext", label: "Lückentext", icon: PenLine },
@@ -45,7 +45,6 @@ export default function AppLayout() {
       setStreak(data?.current_streak ?? 0);
     };
     load();
-    // alle 30s aktualisieren, falls XP/Streak sich durch Übung ändert
     const id = setInterval(load, 30000);
     return () => clearInterval(id);
   }, [user]);
@@ -65,8 +64,8 @@ export default function AppLayout() {
         <div className="container max-w-6xl flex items-center justify-between gap-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <NavLink to="/lernen" className="flex items-center gap-2 shrink-0">
-              <img src={appIcon} alt="¡Hola!" className="h-9 w-9" />
-              <span className="font-display text-xl">¡Hola!</span>
+              <img src={appIcon} alt="Hello!" className="h-9 w-9" />
+              <span className="font-display text-xl">Hello!</span>
             </NavLink>
             <NavLink
               to="/erfolge"

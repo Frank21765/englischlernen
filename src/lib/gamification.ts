@@ -2,21 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
-export const PRAISES_ES = [
-  "¡Increíble!",
-  "¡Olé!",
-  "¡Qué bien!",
-  "¡Fantástico!",
-  "¡Eres un crack!",
-  "¡Sigue así!",
-  "¡Fenomenal!",
-  "¡Bravo!",
-  "¡Vamos!",
-  "¡Genial!",
+export const PRAISES_EN = [
+  "Awesome!",
+  "Brilliant!",
+  "Way to go!",
+  "Fantastic!",
+  "You're crushing it!",
+  "Keep it up!",
+  "Amazing!",
+  "Bravo!",
+  "Let's go!",
+  "Nailed it!",
 ];
 
 export function randomPraise(): string {
-  return PRAISES_ES[Math.floor(Math.random() * PRAISES_ES.length)];
+  return PRAISES_EN[Math.floor(Math.random() * PRAISES_EN.length)];
 }
 
 export function fireConfetti(intense = false) {
@@ -45,12 +45,12 @@ export function levelFromXp(xp: number): { level: number; current: number; neede
 }
 
 export function rankName(level: number): string {
-  if (level >= 25) return "Maestro";
-  if (level >= 18) return "Hablante";
-  if (level >= 12) return "Avanzado";
-  if (level >= 8) return "Viajero";
-  if (level >= 4) return "Estudiante";
-  return "Aprendiz";
+  if (level >= 25) return "Master";
+  if (level >= 18) return "Fluent Speaker";
+  if (level >= 12) return "Advanced";
+  if (level >= 8) return "Traveller";
+  if (level >= 4) return "Student";
+  return "Beginner";
 }
 
 export interface BadgeDef {
@@ -61,17 +61,17 @@ export interface BadgeDef {
 }
 
 export const BADGES: BadgeDef[] = [
-  { key: "first_steps", name: "Primeros pasos", description: "Erste 10 Vokabeln richtig beantwortet", icon: "👶" },
-  { key: "vocab_50", name: "Coleccionista", description: "50 Vokabeln in der Sammlung", icon: "📚" },
-  { key: "vocab_200", name: "Bibliotecario", description: "200 Vokabeln in der Sammlung", icon: "🏛️" },
-  { key: "streak_3", name: "Constante", description: "3 Tage in Folge gelernt", icon: "🔥" },
-  { key: "streak_7", name: "Una semana", description: "7 Tage in Folge gelernt", icon: "🌟" },
-  { key: "streak_30", name: "Imparable", description: "30 Tage in Folge gelernt", icon: "💎" },
-  { key: "perfect_quiz", name: "Sin errores", description: "Quiz mit 100% abgeschlossen", icon: "🎯" },
-  { key: "combo_10", name: "En racha", description: "10 richtige Antworten in Folge", icon: "⚡" },
-  { key: "level_5", name: "Estudiante", description: "Level 5 erreicht", icon: "🎓" },
-  { key: "level_10", name: "Viajero", description: "Level 10 erreicht", icon: "✈️" },
-  { key: "chat_first", name: "¡Hola Profe!", description: "Erste Nachricht an Profe Hola", icon: "💬" },
+  { key: "first_steps", name: "First Steps", description: "Erste 10 Vokabeln richtig beantwortet", icon: "👶" },
+  { key: "vocab_50", name: "Collector", description: "50 Vokabeln in der Sammlung", icon: "📚" },
+  { key: "vocab_200", name: "Librarian", description: "200 Vokabeln in der Sammlung", icon: "🏛️" },
+  { key: "streak_3", name: "Consistent", description: "3 Tage in Folge gelernt", icon: "🔥" },
+  { key: "streak_7", name: "One Week", description: "7 Tage in Folge gelernt", icon: "🌟" },
+  { key: "streak_30", name: "Unstoppable", description: "30 Tage in Folge gelernt", icon: "💎" },
+  { key: "perfect_quiz", name: "Flawless", description: "Quiz mit 100% abgeschlossen", icon: "🎯" },
+  { key: "combo_10", name: "On Fire", description: "10 richtige Antworten in Folge", icon: "⚡" },
+  { key: "level_5", name: "Student", description: "Level 5 erreicht", icon: "🎓" },
+  { key: "level_10", name: "Traveller", description: "Level 10 erreicht", icon: "✈️" },
+  { key: "chat_first", name: "Hello, Coach!", description: "Erste Nachricht an Coach Ellie", icon: "💬" },
 ];
 
 export const BADGE_BY_KEY = Object.fromEntries(BADGES.map((b) => [b.key, b]));
@@ -80,11 +80,6 @@ function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * Aktualisiert XP, Streak und prüft Badges.
- * @param xpDelta XP, die hinzugefügt werden sollen.
- * @param ctx zusätzlicher Kontext für Badge-Checks.
- */
 export async function awardActivity(
   userId: string,
   xpDelta: number,
@@ -101,7 +96,6 @@ export async function awardActivity(
   const newXp = oldXp + xpDelta;
   const newLevel = levelFromXp(newXp).level;
 
-  // Streak
   const today = todayStr();
   const last = profile?.last_active_date ?? null;
   let currentStreak = profile?.current_streak ?? 0;
@@ -128,7 +122,6 @@ export async function awardActivity(
     })
     .eq("user_id", userId);
 
-  // Badges
   const candidates: string[] = [];
   if (newXp >= 50) candidates.push("first_steps");
   if ((ctx.vocabCount ?? 0) >= 50) candidates.push("vocab_50");
@@ -170,7 +163,7 @@ export function celebrate(
 ) {
   if (result.leveledUp) {
     fireConfetti(true);
-    toast.success(`¡Nivel ${result.newLevel}! ${rankName(result.newLevel)}`, {
+    toast.success(`Level ${result.newLevel}! ${rankName(result.newLevel)}`, {
       description: "Du bist aufgestiegen!",
     });
   }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ function maskSentence(sentence: string, word: string): { before: string; after: 
 
 export default function Lueckentext() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [params] = useSearchParams();
   const [level, setLevel] = useState<Level>((params.get("level") as Level) ?? "A1");
   const [topic, setTopic] = useState(params.get("topic") ?? "Alltag");
@@ -47,7 +46,7 @@ export default function Lueckentext() {
     try {
       const { data: vocab } = await supabase
         .from("vocabulary")
-        .select("german,spanish")
+        .select("german,english")
         .eq("user_id", user.id)
         .eq("level", level)
         .eq("topic", topic)
@@ -110,7 +109,7 @@ export default function Lueckentext() {
         <header>
           <h1 className="text-2xl sm:text-3xl">Lückentext-Modus 🧩</h1>
           <p className="text-sm text-muted-foreground">
-            Setze das fehlende Wort ein. Trainiert Konjugation, Vokabeln und Satzbau.
+            Setze das fehlende Wort ein. Trainiert Konjugation, Vokabeln und Satzbau auf Englisch.
           </p>
         </header>
 

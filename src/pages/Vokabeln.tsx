@@ -11,7 +11,7 @@ import { Search } from "lucide-react";
 interface Vocab {
   id: string;
   german: string;
-  spanish: string;
+  english: string;
   grammar_note: string | null;
   level: string;
   topic: string;
@@ -51,7 +51,7 @@ export default function Vokabeln() {
     if (topicFilter !== "alle" && v.topic !== topicFilter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      if (!v.german.toLowerCase().includes(q) && !v.spanish.toLowerCase().includes(q)) return false;
+      if (!v.german.toLowerCase().includes(q) && !v.english.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -67,7 +67,7 @@ export default function Vokabeln() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Suchen auf Deutsch oder Spanisch…"
+            placeholder="Suchen auf Deutsch oder Englisch…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-11 rounded-xl"
@@ -106,7 +106,7 @@ export default function Vokabeln() {
               <div className="flex items-baseline gap-3 flex-wrap">
                 <div className="font-semibold">{v.german}</div>
                 <div className="text-muted-foreground">↔</div>
-                <div className="text-primary font-semibold">{v.spanish}</div>
+                <div className="text-primary font-semibold">{v.english}</div>
               </div>
               {v.grammar_note && <div className="text-xs text-muted-foreground italic mt-1">{v.grammar_note}</div>}
             </div>
