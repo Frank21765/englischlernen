@@ -18,6 +18,7 @@ export default function Lernen() {
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
+  const [username, setUsername] = useState<string>("");
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
   const [editFocus, setEditFocus] = useState<boolean>(!hasSelection);
@@ -26,15 +27,18 @@ export default function Lernen() {
     if (!user) return;
     (async () => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: dueOld }, { count: dueNew }] = await Promise.all([
+      const [{ count: total }, { count: dueOld }, { count: dueNew }, profileRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
+        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
       ]);
       setVocabCount(total ?? 0);
       setDueCount((dueOld ?? 0) + (dueNew ?? 0));
+      const name = profileRes.data?.display_name?.trim();
+      setUsername(name || (user.email ? user.email.split("@")[0] : ""));
     })();
   }, [user]);
 
@@ -85,6 +89,11 @@ export default function Lernen() {
   return (
     <div className="space-y-5">
       <header className="space-y-1">
+        {username && (
+          <p className="text-sm sm:text-base text-accent font-semibold">
+            Hello {username}, schön, dass du da bist.
+          </p>
+        )}
         <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
           Dein Lern-Hub – aktueller Fokus, fällige Wiederholungen und der nächste Schritt.
