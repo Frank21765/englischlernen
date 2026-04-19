@@ -48,12 +48,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { word } = await req.json();
+    const { word, level } = await req.json();
     if (!word || typeof word !== "string" || word.trim().length === 0 || word.length > 80) {
       return new Response(JSON.stringify({ error: "Bitte ein Wort oder eine kurze Phrase angeben" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const validLevels = ["A1","A2","B1","B2","C1","C2"];
+    const lvl = validLevels.includes(level) ? level : null;
+    const levelHint = lvl
+      ? ` Beispielsätze sollen ungefähr CEFR-Niveau ${lvl} entsprechen (A1/A2 sehr einfach, B1/B2 mittel, C1/C2 anspruchsvoll, natürlich).`
+      : "";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY fehlt");
@@ -67,7 +73,7 @@ Deno.serve(async (req) => {
           {
             role: "system",
             content:
-              "You translate single words or short phrases between German and English for a learner app. Detect the source language automatically. Always return concise output via the provided tool.",
+              `You translate single words or short phrases between German and English for a learner app. Detect the source language automatically. Provide 2-3 natural, varied example sentences in EACH language (not repetitive, different contexts).${levelHint} Always return concise output via the provided tool.`,
           },
           { role: "user", content: `Übersetze: "${word.trim()}"` },
         ],
@@ -83,11 +89,19 @@ Deno.serve(async (req) => {
                 german: { type: "string", description: "The German word/phrase." },
                 english: { type: "string", description: "The English word/phrase." },
                 part_of_speech: { type: "string", description: "Short word type, e.g. 'noun', 'verb', 'adjective', 'phrase'." },
-                example_de: { type: "string", description: "Short German example sentence using the word." },
-                example_en: { type: "string", description: "Short English example sentence using the word." },
+                examples_de: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "2-3 natürliche, abwechslungsreiche deutsche Beispielsätze.",
+                },
+                examples_en: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "2-3 natural, varied English example sentences.",
+                },
                 note: { type: "string", description: "Optional brief grammar/usage hint, e.g. 'der/die/das' or irregular form. Empty if not needed." },
               },
-              required: ["source_lang", "german", "english", "part_of_speech", "example_de", "example_en"],
+              required: ["source_lang", "german", "english", "part_of_speech", "examples_de", "examples_en"],
               additionalProperties: false,
             },
           },
@@ -97,36 +111,22 @@ Deno.serve(async (req) => {
     });
 
     if (!aiResp.ok) {
-      if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte gleich nochmal versuchen." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-Guthaben aufgebraucht." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte gleich nochmal versuchen." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResp.status === 402) return new Response(JSON.stringify({ error: "AI-Guthaben aufgebraucht." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const t = await aiResp.text();
       console.error("translate-word AI error", aiResp.status, t);
-      return new Response(JSON.stringify({ error: "Übersetzung fehlgeschlagen" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Übersetzung fehlgeschlagen" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const json = await aiResp.json();
     const toolCall = json.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
-      return new Response(JSON.stringify({ error: "Keine Übersetzung erhalten" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Keine Übersetzung erhalten" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     let result;
     try { result = JSON.parse(toolCall.function.arguments); }
     catch {
-      return new Response(JSON.stringify({ error: "Antwort konnte nicht gelesen werden" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Antwort konnte nicht gelesen werden" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ result }), {
