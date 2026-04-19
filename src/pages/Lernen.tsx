@@ -151,6 +151,11 @@ export default function Lernen() {
           </div>
         </div>
       </Card>
+
+      <Card className="p-4 sm:p-5 md:p-6 space-y-6 bg-gradient-card shadow-card">
+        <div>
+          <Label className="mb-3 block text-base font-semibold">Niveau</Label>
+          <div className="flex flex-wrap gap-2">
             {LEVELS.map((l) => (
               <button
                 key={l}
