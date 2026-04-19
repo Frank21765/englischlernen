@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/lib/learning";
-import { ArrowRightLeft, Loader2, Plus, Search, Sparkles } from "lucide-react";
+import { ArrowRightLeft, Loader2, MessageCircle, Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
+import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { Link } from "react-router-dom";
 
 interface Vocab {
   id: string;
