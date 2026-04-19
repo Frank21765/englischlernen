@@ -25,7 +25,8 @@ export default function Lernen() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    let cancelled = false;
+    const load = async () => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const [{ count: total }, { count: dueOld }, { count: dueNew }, profileRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -35,11 +36,21 @@ export default function Lernen() {
           .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
         supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
       ]);
+      if (cancelled) return;
       setVocabCount(total ?? 0);
       setDueCount((dueOld ?? 0) + (dueNew ?? 0));
       const name = profileRes.data?.display_name?.trim();
       setUsername(name || (user.email ? user.email.split("@")[0] : ""));
-    })();
+    };
+    load();
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [user]);
 
   const generateAndStartQuiz = async () => {
