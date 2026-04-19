@@ -445,11 +445,11 @@ export default function Chat() {
                   send();
                 }
               }}
-              placeholder="What would you like to learn? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
-              className="min-h-[44px] max-h-32 resize-none rounded-xl"
+              placeholder="What would you like to learn?"
+              className="min-h-[44px] max-h-32 resize-none rounded-xl flex-1 min-w-0 text-base sm:text-sm"
               disabled={busy}
             />
-            <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 rounded-xl">
+            <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 shrink-0 rounded-xl">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
