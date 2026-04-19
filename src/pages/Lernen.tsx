@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ export default function Lernen() {
   const { user } = useAuth();
   const { level, topic, hasSelection, setSelection } = useLearning();
   const navigate = useNavigate();
+  const location = useLocation();
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
