@@ -113,7 +113,7 @@ export default function Statistik() {
               <div key={s.id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0">
                 <div>
                   <div className="font-semibold text-sm">
-                    {s.mode === "flashcards" ? "Karteikarten" : "Quiz"} · {s.level} · {s.topic}
+                    {s.mode === "grammar_quiz" ? "Grammatik-Quiz" : s.mode === "flashcards" ? "Karteikarten" : "Quiz"} · {s.level} · {s.topic}
                   </div>
                   <div className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString("de-DE")}</div>
                 </div>

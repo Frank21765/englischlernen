@@ -51,8 +51,9 @@ Deno.serve(async (req) => {
     }
 
     const { level, topic, existing } = await req.json();
-    if (!level || !topic) {
-      return new Response(JSON.stringify({ error: "level und topic erforderlich" }), {
+    const validLevels = ["A1","A2","B1","B2","C1","C2"];
+    if (!level || !topic || !validLevels.includes(level)) {
+      return new Response(JSON.stringify({ error: "Gültiges CEFR-Niveau (A1–C2) und Thema erforderlich" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -66,9 +67,21 @@ Deno.serve(async (req) => {
       ? `\n\nVermeide diese bereits gelernten deutschen Begriffe/Sätze:\n${existingList.map((e) => `- ${e}`).join("\n")}`
       : "";
 
-    const systemPrompt = `Du bist ein erfahrener Englischlehrer für deutschsprachige Lernende. Du erstellst hochwertige Vokabel- und Satzpaare passend zu einem Niveau (CEFR-ähnlich, A1 bis C3) und einem Thema. Niveau-Logik: A1-A3 = einfache Wörter und kurze Sätze, B1-B3 = mittlere Sätze mit gängiger Grammatik, C1-C3 = komplexe Strukturen, idiomatische Wendungen. Die Grammatiknotiz ist optional und kurz (max. 1 Satz, auf Deutsch). Nutze gängiges britisches oder amerikanisches Englisch.`;
+    const cefrGuide = `Strikte CEFR-Niveau-Vorgaben:
+- A1: nur die häufigsten Grundwörter; sehr kurze Sätze (3–6 Wörter); simple present, einfache Substantive/Adjektive.
+- A2: alltägliche Wörter; kurze Sätze (4–8 Wörter); simple past basics, can/must, going to.
+- B1: alltagstaugliches Vokabular mit ein paar weniger häufigen Wörtern; mittlere Sätze (6–12 Wörter); present perfect, will, 1st conditional, Relativsätze.
+- B2: differenziertes Vokabular, einige Kollokationen/Phrasal verbs; mittellange Sätze (8–15 Wörter); reported speech, Passiv, 2nd/3rd conditional.
+- C1: gehobenes, präzises Vokabular, idiomatische Wendungen; längere/komplexere Sätze; nuancierte Modalverben, inversion in Beispielen wo natürlich.
+- C2: sehr nuanciertes, fast muttersprachliches Vokabular, formelle/literarische Wendungen; komplexe Satzstrukturen, register-bewusst.
 
-    const userPrompt = `Erstelle GENAU 20 deutsch-englische Lernpaare für Niveau ${level} zum Thema "${topic}".${avoidBlock}\n\nMische Einzelvokabeln und kurze Beispielsätze. Keine Duplikate. Nutze die Funktion vocabulary_pairs.`;
+WICHTIG: Beispielsätze müssen wirklich zum Niveau passen – KEINE A1-Sätze für C1/C2! Inhalt soll natürlich klingen, nicht künstlich kompliziert.`;
+
+    const systemPrompt = `Du bist ein erfahrener Englischlehrer für deutschsprachige Lernende. Du erstellst hochwertige Vokabel- und Satzpaare passend zu CEFR-Niveau (A1–C2) und Thema.
+${cefrGuide}
+Die Grammatiknotiz ist optional, kurz (max. 1 Satz, Deutsch). Nutze gängiges britisches oder amerikanisches Englisch.`;
+
+    const userPrompt = `Erstelle GENAU 20 deutsch-englische Lernpaare für CEFR-Niveau ${level} zum Thema "${topic}".${avoidBlock}\n\nMische Einzelvokabeln (ca. 8) und Beispielsätze (ca. 12). Sätze MÜSSEN dem Niveau ${level} entsprechen. Keine Duplikate. Nutze die Funktion vocabulary_pairs.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

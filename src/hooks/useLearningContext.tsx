@@ -7,6 +7,7 @@ interface LearningCtx {
   level: Level;
   topic: string;
   ready: boolean;
+  hasSelection: boolean;
   setSelection: (level: Level, topic: string, opts?: { persist?: boolean }) => void;
 }
 
@@ -15,10 +16,12 @@ const Ctx = createContext<LearningCtx>({
   level: "A1",
   topic: "Alltag",
   ready: false,
+  hasSelection: false,
   setSelection: () => {},
 });
 
-function loadLocal(): { level: Level; topic: string } | null {
+interface Stored { level: Level; topic: string }
+function loadLocal(): Stored | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -33,10 +36,10 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
   const local = loadLocal();
   const [level, setLevel] = useState<Level>(local?.level ?? "A1");
   const [topic, setTopic] = useState<string>(local?.topic ?? "Alltag");
+  const [hasSelection, setHasSelection] = useState<boolean>(!!local);
   const [ready, setReady] = useState<boolean>(!!local);
   const hydratedForUser = useRef<string | null>(null);
 
-  // Hydrate from profile on first login (only if no local override yet)
   useEffect(() => {
     if (!user) {
       hydratedForUser.current = null;
@@ -50,12 +53,11 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
         .select("default_level, default_topic")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (!local && data) {
-        const lv = (data.default_level as Level) ?? "A1";
-        const tp = data.default_topic ?? "Alltag";
-        setLevel(lv);
-        setTopic(tp);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ level: lv, topic: tp })); } catch { /* ignore */ }
+      if (!local && data?.default_level && data?.default_topic) {
+        setLevel(data.default_level as Level);
+        setTopic(data.default_topic);
+        setHasSelection(true);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ level: data.default_level, topic: data.default_topic })); } catch { /* ignore */ }
       }
       setReady(true);
     })();
@@ -64,6 +66,7 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
   const setSelection = useCallback((nextLevel: Level, nextTopic: string, opts?: { persist?: boolean }) => {
     setLevel(nextLevel);
     setTopic(nextTopic);
+    setHasSelection(true);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ level: nextLevel, topic: nextTopic }));
     } catch { /* ignore */ }
@@ -75,7 +78,7 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  return <Ctx.Provider value={{ level, topic, ready, setSelection }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ level, topic, ready, hasSelection, setSelection }}>{children}</Ctx.Provider>;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

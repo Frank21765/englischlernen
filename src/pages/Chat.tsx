@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Check, Loader2, MessageSquare, Pencil, Plus, Send, Sparkles, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, MessageSquare, Pencil, Plus, Send, Sparkles, Trash2, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
@@ -44,6 +44,7 @@ export default function Chat() {
   const [busy, setBusy] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [showSessions, setShowSessions] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
@@ -273,11 +274,32 @@ export default function Chat() {
     }
   };
 
+  const activeTitle = sessions.find((s) => s.id === activeId)?.title ?? "Neuer Chat";
+
   return (
-    <div className="grid md:grid-cols-[260px_1fr] gap-4 max-w-5xl mx-auto">
+    <div className="grid md:grid-cols-[260px_1fr] gap-3 sm:gap-4 max-w-5xl mx-auto">
+      {/* Mobile session toggle */}
+      <div className="md:hidden flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowSessions((s) => !s)}
+          className="flex-1 justify-between rounded-xl"
+        >
+          <span className="flex items-center gap-2 truncate">
+            <MessageSquare className="h-4 w-4 shrink-0" />
+            <span className="truncate">{activeTitle}</span>
+          </span>
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${showSessions ? "rotate-180" : ""}`} />
+        </Button>
+        <Button onClick={newChat} size="sm" variant="hero" className="rounded-xl">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Sidebar with sessions */}
-      <aside className="space-y-3">
-        <Button onClick={newChat} variant="hero" className="w-full">
+      <aside className={`${showSessions ? "block" : "hidden"} md:block space-y-3`}>
+        <Button onClick={newChat} variant="hero" className="w-full hidden md:flex">
           <Plus className="h-4 w-4" /> Neuer Chat
         </Button>
         <Card className="p-2 space-y-1 max-h-[60vh] overflow-y-auto">
@@ -316,7 +338,7 @@ export default function Chat() {
                 ) : (
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => setActiveId(s.id)}
+                      onClick={() => { setActiveId(s.id); setShowSessions(false); }}
                       className={`flex-1 min-w-0 text-left flex items-center gap-1.5 ${
                         isActive ? "font-semibold text-foreground" : "text-foreground/80"
                       }`}
@@ -327,7 +349,7 @@ export default function Chat() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth"
+                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth"
                       onClick={() => startRename(s)}
                       title="Umbenennen"
                     >
@@ -336,7 +358,7 @@ export default function Chat() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth text-destructive"
+                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth text-destructive"
                       onClick={() => deleteSession(s.id)}
                       title="Löschen"
                     >
