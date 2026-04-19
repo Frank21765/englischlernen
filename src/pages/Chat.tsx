@@ -3,9 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Send, Sparkles, Trash2 } from "lucide-react";
+import { Check, Loader2, MessageSquare, Pencil, Plus, Send, Sparkles, Trash2, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
@@ -15,6 +16,12 @@ interface Msg {
   content: string;
 }
 
+interface ChatSession {
+  id: string;
+  title: string;
+  updated_at: string;
+}
+
 const SUGGESTIONS = [
   "Erklär mir den Unterschied zwischen 'do' und 'make'.",
   "Lass uns ein Rollenspiel im Café machen!",
@@ -22,56 +29,161 @@ const SUGGESTIONS = [
   "Gib mir 5 typische Reise-Sätze auf Englisch.",
 ];
 
+function deriveTitle(text: string): string {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "Neuer Chat";
+  return cleaned.length > 48 ? cleaned.slice(0, 45) + "…" : cleaned;
+}
+
 export default function Chat() {
   const { user } = useAuth();
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
   const scrollToLastAssistantTop = useRef(false);
 
+  // Load list of sessions; auto-create one if none exist
   useEffect(() => {
     if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("chat_sessions")
+        .select("id,title,updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+      const list = (data ?? []) as ChatSession[];
+      if (list.length === 0) {
+        const { data: created } = await supabase
+          .from("chat_sessions")
+          .insert({ user_id: user.id, title: "Neuer Chat" })
+          .select("id,title,updated_at")
+          .single();
+        if (created) {
+          setSessions([created as ChatSession]);
+          setActiveId(created.id);
+        }
+      } else {
+        setSessions(list);
+        setActiveId(list[0].id);
+      }
+    })();
+  }, [user]);
+
+  // Load messages for the active session
+  useEffect(() => {
+    if (!user || !activeId) return;
     (async () => {
       const { data } = await supabase
         .from("chat_messages")
         .select("id,role,content")
         .eq("user_id", user.id)
+        .eq("session_id", activeId)
         .order("created_at", { ascending: true })
-        .limit(100);
+        .limit(200);
       setMessages(
         (data ?? [])
           .filter((m) => m.role === "user" || m.role === "assistant")
           .map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content })),
       );
     })();
-  }, [user]);
+  }, [user, activeId]);
 
   useEffect(() => {
     if (scrollToLastAssistantTop.current && lastAssistantRef.current && scrollRef.current) {
       const container = scrollRef.current;
       const target = lastAssistantRef.current;
-      // Scroll so the top of the new assistant reply sits near the top of the visible area
       const top = target.offsetTop - 8;
       container.scrollTo({ top, behavior: "smooth" });
       scrollToLastAssistantTop.current = false;
     }
   }, [messages]);
 
+  const refreshSessions = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("chat_sessions")
+      .select("id,title,updated_at")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false });
+    setSessions((data ?? []) as ChatSession[]);
+  };
+
+  const newChat = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("chat_sessions")
+      .insert({ user_id: user.id, title: "Neuer Chat" })
+      .select("id,title,updated_at")
+      .single();
+    if (data) {
+      setSessions((prev) => [data as ChatSession, ...prev]);
+      setActiveId(data.id);
+      setMessages([]);
+    }
+  };
+
+  const deleteSession = async (id: string) => {
+    if (!user) return;
+    if (!confirm("Diesen Chat wirklich löschen?")) return;
+    await supabase.from("chat_messages").delete().eq("user_id", user.id).eq("session_id", id);
+    await supabase.from("chat_sessions").delete().eq("id", id);
+    const remaining = sessions.filter((s) => s.id !== id);
+    setSessions(remaining);
+    if (activeId === id) {
+      if (remaining.length) {
+        setActiveId(remaining[0].id);
+      } else {
+        setActiveId(null);
+        setMessages([]);
+        await newChat();
+      }
+    }
+  };
+
+  const startRename = (s: ChatSession) => {
+    setRenamingId(s.id);
+    setRenameValue(s.title);
+  };
+
+  const commitRename = async () => {
+    if (!renamingId) return;
+    const title = renameValue.trim() || "Neuer Chat";
+    await supabase.from("chat_sessions").update({ title }).eq("id", renamingId);
+    setSessions((prev) => prev.map((s) => (s.id === renamingId ? { ...s, title } : s)));
+    setRenamingId(null);
+  };
+
   const send = async (text?: string) => {
-    if (!user || busy) return;
+    if (!user || busy || !activeId) return;
     const content = (text ?? input).trim();
     if (!content) return;
     setInput("");
     const isFirstChat = messages.length === 0;
+    const sessionId = activeId;
 
     const userMsg: Msg = { role: "user", content };
     const optimistic = [...messages, userMsg];
     setMessages(optimistic);
     setBusy(true);
 
-    supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content }).then(() => {});
+    supabase
+      .from("chat_messages")
+      .insert({ user_id: user.id, session_id: sessionId, role: "user", content })
+      .then(() => {});
+
+    // If this is the first message, derive a title
+    if (isFirstChat) {
+      const title = deriveTitle(content);
+      await supabase.from("chat_sessions").update({ title }).eq("id", sessionId);
+      setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, title } : s)));
+    }
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -142,9 +254,13 @@ export default function Chat() {
       if (assistantText.trim()) {
         await supabase.from("chat_messages").insert({
           user_id: user.id,
+          session_id: sessionId,
           role: "assistant",
           content: assistantText,
         });
+        // Bump session updated_at so it climbs to the top of the list
+        await supabase.from("chat_sessions").update({ updated_at: new Date().toISOString() }).eq("id", sessionId);
+        await refreshSessions();
         const result = await awardActivity(user.id, 5, { firstChat: isFirstChat });
         celebrate(result);
       }
@@ -157,103 +273,166 @@ export default function Chat() {
     }
   };
 
-  const clearHistory = async () => {
-    if (!user) return;
-    if (!confirm("Wirklich den ganzen Chatverlauf mit Coach Ellie löschen?")) return;
-    await supabase.from("chat_messages").delete().eq("user_id", user.id);
-    setMessages([]);
-    toast.success("Verlauf gelöscht");
-  };
-
   return (
-    <div className="space-y-4 max-w-3xl mx-auto">
-      <header className="flex items-start justify-between gap-3">
-        <div>
+    <div className="grid md:grid-cols-[260px_1fr] gap-4 max-w-5xl mx-auto">
+      {/* Sidebar with sessions */}
+      <aside className="space-y-3">
+        <Button onClick={newChat} variant="hero" className="w-full">
+          <Plus className="h-4 w-4" /> Neuer Chat
+        </Button>
+        <Card className="p-2 space-y-1 max-h-[60vh] overflow-y-auto">
+          {sessions.length === 0 && (
+            <p className="text-xs text-muted-foreground p-3 text-center">Noch keine Chats.</p>
+          )}
+          {sessions.map((s) => {
+            const isActive = s.id === activeId;
+            const isRenaming = renamingId === s.id;
+            return (
+              <div
+                key={s.id}
+                className={`group rounded-xl px-2 py-1.5 text-sm transition-smooth ${
+                  isActive ? "bg-primary/10" : "hover:bg-muted"
+                }`}
+              >
+                {isRenaming ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); commitRename(); }
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
+                      className="h-8 text-sm"
+                      autoFocus
+                    />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={commitRename}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setRenamingId(null)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setActiveId(s.id)}
+                      className={`flex-1 min-w-0 text-left flex items-center gap-1.5 ${
+                        isActive ? "font-semibold text-foreground" : "text-foreground/80"
+                      }`}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{s.title}</span>
+                    </button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth"
+                      onClick={() => startRename(s)}
+                      title="Umbenennen"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth text-destructive"
+                      onClick={() => deleteSession(s.id)}
+                      title="Löschen"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </Card>
+      </aside>
+
+      {/* Chat area */}
+      <div className="space-y-4">
+        <header>
           <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
           <p className="text-sm text-muted-foreground">
             Dein KI-Tutor. Schreib auf Deutsch oder Englisch – stell Fragen, übe Dialoge, lass dich korrigieren.
           </p>
-        </div>
-        {messages.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearHistory}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
-      </header>
+        </header>
 
-      <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px]">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
-            <div className="space-y-4 py-6">
-              <div className="text-center space-y-2">
-                <div className="text-4xl">👩‍🏫</div>
-                <p className="font-display text-xl">Hello! I'm Coach Ellie.</p>
-                <p className="text-sm text-muted-foreground">Was möchtest du heute lernen?</p>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="text-left rounded-xl bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth"
-                  >
-                    <Sparkles className="inline h-3.5 w-3.5 mr-1.5 text-primary" />
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {(() => {
-            let lastAssistantIdx = -1;
-            for (let i = messages.length - 1; i >= 0; i--) {
-              if (messages[i].role === "assistant") { lastAssistantIdx = i; break; }
-            }
-            return messages.map((m, i) => (
-              <div
-                key={i}
-                ref={i === lastAssistantIdx ? lastAssistantRef : undefined}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  {m.role === "assistant" ? (
-                    <div className="prose prose-sm prose-invert max-w-none break-words">
-                      <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">{m.content}</div>
-                  )}
+        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px]">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 && (
+              <div className="space-y-4 py-6">
+                <div className="text-center space-y-2">
+                  <div className="text-4xl">👩‍🏫</div>
+                  <p className="font-display text-xl">Hello! I'm Coach Ellie.</p>
+                  <p className="text-sm text-muted-foreground">Was möchtest du heute lernen?</p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="text-left rounded-xl bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth"
+                    >
+                      <Sparkles className="inline h-3.5 w-3.5 mr-1.5 text-primary" />
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
-            ));
-          })()}
-        </div>
-
-        <div className="border-t border-border p-3 flex gap-2 items-end">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
+            )}
+            {(() => {
+              let lastAssistantIdx = -1;
+              for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].role === "assistant") { lastAssistantIdx = i; break; }
               }
-            }}
-            placeholder="What would you like to learn? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
-            className="min-h-[44px] max-h-32 resize-none rounded-xl"
-            disabled={busy}
-          />
-          <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 rounded-xl">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
-        </div>
-      </Card>
+              return messages.map((m, i) => (
+                <div
+                  key={i}
+                  ref={i === lastAssistantIdx ? lastAssistantRef : undefined}
+                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
+                      m.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
+                    }`}
+                  >
+                    {m.role === "assistant" ? (
+                      <div className="prose prose-sm prose-invert max-w-none break-words">
+                        <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                    )}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+
+          <div className="border-t border-border p-3 flex gap-2 items-end">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder="What would you like to learn? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
+              className="min-h-[44px] max-h-32 resize-none rounded-xl"
+              disabled={busy}
+            />
+            <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 rounded-xl">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

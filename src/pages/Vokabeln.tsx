@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, KeyboardEvent } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { LEVELS } from "@/lib/learning";
-import { Search } from "lucide-react";
+import { ArrowRightLeft, Loader2, Plus, Search, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { useLearning } from "@/hooks/useLearningContext";
 
 interface Vocab {
   id: string;
@@ -18,6 +21,16 @@ interface Vocab {
   status: string;
 }
 
+interface LookupResult {
+  source_lang: "de" | "en";
+  german: string;
+  english: string;
+  part_of_speech: string;
+  example_de: string;
+  example_en: string;
+  note?: string;
+}
+
 const statusLabels: Record<string, string> = { new: "Neu", learning: "Lernend", mastered: "Gemeistert" };
 const statusClasses: Record<string, string> = {
   new: "bg-muted text-muted-foreground",
@@ -27,21 +40,30 @@ const statusClasses: Record<string, string> = {
 
 export default function Vokabeln() {
   const { user } = useAuth();
+  const { level: activeLevel, topic: activeTopic } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("alle");
   const [topicFilter, setTopicFilter] = useState<string>("alle");
 
-  useEffect(() => {
+  const [lookup, setLookup] = useState<LookupResult | null>(null);
+  const [lookingUp, setLookingUp] = useState(false);
+  const [lookupQuery, setLookupQuery] = useState<string>("");
+  const [savingLookup, setSavingLookup] = useState(false);
+
+  const loadItems = async () => {
     if (!user) return;
-    (async () => {
-      const { data } = await supabase
-        .from("vocabulary")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      setItems((data ?? []) as Vocab[]);
-    })();
+    const { data } = await supabase
+      .from("vocabulary")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setItems((data ?? []) as Vocab[]);
+  };
+
+  useEffect(() => {
+    loadItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const topics = useMemo(() => Array.from(new Set(items.map((i) => i.topic))).sort(), [items]);
@@ -56,23 +78,93 @@ export default function Vokabeln() {
     return true;
   });
 
+  const runLookup = async () => {
+    const word = search.trim();
+    if (!word) return;
+    setLookingUp(true);
+    setLookup(null);
+    setLookupQuery(word);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-word", { body: { word } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.result) throw new Error("Keine Übersetzung erhalten");
+      setLookup(data.result as LookupResult);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Übersetzung fehlgeschlagen");
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runLookup();
+    }
+  };
+
+  const saveLookupToCollection = async () => {
+    if (!user || !lookup) return;
+    setSavingLookup(true);
+    try {
+      const row = {
+        user_id: user.id,
+        level: activeLevel,
+        topic: activeTopic || "Wörterbuch",
+        german: lookup.german.trim(),
+        english: lookup.english.trim(),
+        grammar_note: [lookup.part_of_speech, lookup.note].filter(Boolean).join(" · ") || null,
+      };
+      const { error } = await supabase
+        .from("vocabulary")
+        .upsert(row, { onConflict: "user_id,german,english", ignoreDuplicates: false });
+      if (error) throw error;
+      toast.success(`Gespeichert unter ${activeLevel} · ${row.topic}`);
+      await loadItems();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    } finally {
+      setSavingLookup(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <header>
         <h1 className="text-3xl">Deine Vokabeln</h1>
-        <p className="text-muted-foreground">Alles, was du je gelernt hast – durchsuchbar und filterbar.</p>
+        <p className="text-muted-foreground">
+          Suche in deiner Sammlung – oder lass jedes andere Wort übersetzen.
+        </p>
       </header>
 
       <Card className="p-4 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Suchen auf Deutsch oder Englisch…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-11 rounded-xl"
-          />
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Wort suchen oder übersetzen (DE ↔ EN)…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={onKeyDown}
+              className="pl-9 h-11 rounded-xl"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={runLookup}
+            disabled={lookingUp || !search.trim()}
+            className="h-11 rounded-xl shrink-0"
+            variant="hero"
+          >
+            {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
+            <span className="hidden sm:inline">Übersetzen</span>
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Tipp: Enter drückt „Übersetzen". Die Liste filtert sich automatisch.
+        </p>
+
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-[160px]">
             <Label className="text-xs mb-1 block">Niveau</Label>
@@ -97,7 +189,48 @@ export default function Vokabeln() {
         )}
       </Card>
 
-      <div className="text-sm text-muted-foreground">{filtered.length} Vokabeln</div>
+      {lookup && (
+        <Card className="p-5 space-y-3 bg-gradient-card shadow-card animate-pop">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1 min-w-0">
+              <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> Übersetzung für „{lookupQuery}"
+              </div>
+              <div className="flex items-baseline flex-wrap gap-3">
+                <div className="font-display text-2xl">{lookup.german}</div>
+                <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                <div className="font-display text-2xl text-primary">{lookup.english}</div>
+              </div>
+              {lookup.part_of_speech && (
+                <Badge variant="outline" className="text-[10px] uppercase">{lookup.part_of_speech}</Badge>
+              )}
+              {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
+            </div>
+            <Button
+              size="sm"
+              variant="soft"
+              onClick={saveLookupToCollection}
+              disabled={savingLookup}
+              className="shrink-0"
+            >
+              {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              <span className="hidden sm:inline">In Sammlung</span>
+            </Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 text-sm">
+            <div className="rounded-xl bg-muted/60 p-3">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Beispiel (DE)</div>
+              <div>{lookup.example_de}</div>
+            </div>
+            <div className="rounded-xl bg-muted/60 p-3">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Beispiel (EN)</div>
+              <div>{lookup.example_en}</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="text-sm text-muted-foreground">{filtered.length} Vokabeln in deiner Sammlung</div>
 
       <div className="space-y-2">
         {filtered.map((v) => (
@@ -119,8 +252,13 @@ export default function Vokabeln() {
             </div>
           </Card>
         ))}
-        {filtered.length === 0 && (
-          <Card className="p-8 text-center text-muted-foreground">Noch keine Vokabeln gefunden.</Card>
+        {filtered.length === 0 && !lookup && (
+          <Card className="p-8 text-center text-muted-foreground space-y-2">
+            <p>Noch keine Vokabeln in der Sammlung gefunden.</p>
+            <p className="text-xs">
+              Tipp: Tippe ein Wort ein und drücke <kbd className="px-1.5 py-0.5 rounded bg-muted text-foreground">Enter</kbd> oder „Übersetzen", um eine Übersetzung zu erhalten.
+            </p>
+          </Card>
         )}
       </div>
     </div>

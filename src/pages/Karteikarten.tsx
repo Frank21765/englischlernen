@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface QueueItem { vocab: Vocab; direction: CardDirection }
 
 export default function Karteikarten() {
   const { user } = useAuth();
+  const { level: ctxLevel, topic: ctxTopic, ready: ctxReady, setSelection } = useLearning();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [level, setLevel] = useState<Level | null>(null);
@@ -40,17 +42,24 @@ export default function Karteikarten() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !ctxReady) return;
     (async () => {
       setLoading(true);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("direction_mode, default_level, default_topic")
+        .select("direction_mode")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const effectiveLevel = (params.get("level") ?? profile?.default_level ?? "A1") as Level;
-      const effectiveTopic = params.get("topic") ?? profile?.default_topic ?? "Alltag";
+      // Active selection: URL params override (deep links), otherwise the in-app selection
+      const urlLevel = params.get("level");
+      const urlTopic = params.get("topic");
+      const effectiveLevel = (urlLevel ?? ctxLevel) as Level;
+      const effectiveTopic = urlTopic ?? ctxTopic;
+      // Sync URL-based deep links back into the active context
+      if ((urlLevel && urlLevel !== ctxLevel) || (urlTopic && urlTopic !== ctxTopic)) {
+        setSelection(effectiveLevel, effectiveTopic);
+      }
       setLevel(effectiveLevel);
       setTopic(effectiveTopic);
 
@@ -82,7 +91,7 @@ export default function Karteikarten() {
       }
       setLoading(false);
     })();
-  }, [user, params]);
+  }, [user, params, ctxReady, ctxLevel, ctxTopic, setSelection]);
 
   const current = queue[idx];
   const remaining = queue.length - idx;

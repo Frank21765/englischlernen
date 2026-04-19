@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { LearningProvider } from "@/hooks/useLearningContext";
 import AppLayout from "@/components/AppLayout";
 import Auth from "./pages/Auth";
 import Lernen from "./pages/Lernen";
@@ -28,6 +29,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <LearningProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route element={<AppLayout />}>
@@ -45,6 +47,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </LearningProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

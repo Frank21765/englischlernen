@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserAccess } from "@/hooks/useUserAccess";
+import { useLearning } from "@/hooks/useLearningContext";
 import AccessGate from "@/components/AccessGate";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Brain, Flame, GraduationCap, History, LogOut, MessageCircle, PenLine, Settings, Shield, Sparkles, Trophy } from "lucide-react";
@@ -24,6 +25,7 @@ const baseNav = [
 export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useUserAccess();
+  const { level, topic, ready: ctxReady } = useLearning();
   const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield }] : baseNav;
   const navigate = useNavigate();
   const [xp, setXp] = useState(0);
@@ -82,6 +84,18 @@ export default function AppLayout() {
                 </>
               )}
             </NavLink>
+            {ctxReady && (
+              <NavLink
+                to="/lernen"
+                title="Aktuelles Niveau und Thema – tippen zum Ändern"
+                className="hidden xs:flex items-center gap-1 rounded-full bg-accent/15 hover:bg-accent/25 px-2.5 py-1 text-xs font-bold text-accent-foreground/90 transition-smooth max-w-[10rem] truncate"
+              >
+                <Sparkles className="h-3 w-3 text-accent" />
+                <span className="font-mono">{level}</span>
+                <span className="text-muted-foreground/60">·</span>
+                <span className="truncate">{topic}</span>
+              </NavLink>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/auth"); }}>
             <LogOut className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Abmelden</span>
