@@ -102,10 +102,55 @@ export default function Lernen() {
         )}
       </header>
 
-      <Card className="p-4 sm:p-5 md:p-6 space-y-6 bg-gradient-card shadow-card">
-        <div>
-          <Label className="mb-3 block text-base font-semibold">Niveau</Label>
-          <div className="flex flex-wrap gap-2">
+      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="rounded-2xl bg-primary/10 p-2.5 sm:p-3 shrink-0">
+            <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <h2 className="text-base sm:text-lg font-bold">Heute fällig</h2>
+              {dueCount !== null && dueCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {dueCount} {dueCount === 1 ? "Vokabel" : "Vokabeln"} bereit
+                </span>
+              )}
+            </div>
+            {dueCount === null ? (
+              <p className="text-sm text-muted-foreground">Lade Wiederholungen…</p>
+            ) : dueCount > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Kurze Wiederholung jetzt – so bleibt dein Wortschatz lebendig. 💪
+              </p>
+            ) : vocabCount && vocabCount > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Alles wiederholt für heute! 🎉 Lust auf neue Vokabeln oder ein Quiz?
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Noch keine Vokabeln gespeichert. Starte unten dein erstes Set!
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {dueCount && dueCount > 0 ? (
+                <Button variant="hero" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
+                  <RefreshCw className="h-4 w-4 shrink-0" />
+                  <span>Jetzt wiederholen</span>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="soft" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
+                    <GraduationCap className="h-4 w-4 shrink-0" /> <span>Quiz starten</span>
+                  </Button>
+                  <Button variant="soft" size="sm" onClick={() => navigate("/chat")} className="whitespace-normal text-center leading-tight">
+                    <MessageCircle className="h-4 w-4 shrink-0" /> <span>Coach Ellie</span>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
             {LEVELS.map((l) => (
               <button
                 key={l}
