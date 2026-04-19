@@ -29,18 +29,19 @@ export default function Lernen() {
     if (!user) return;
     let cancelled = false;
     const load = async () => {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: dueOld }, { count: dueNew }, profileRes] = await Promise.all([
+      const nowIso = new Date().toISOString();
+      // SRS-based "due": items with next_review_at <= now, OR never scheduled & never seen (new items).
+      const [{ count: total }, { count: dueScheduled }, { count: dueUnseen }, profileRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
-          .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
+          .eq("user_id", user.id).lte("next_review_at", nowIso),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
-          .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
+          .eq("user_id", user.id).is("next_review_at", null).is("last_seen_at", null),
         getProfileUsername(user),
       ]);
       if (cancelled) return;
       setVocabCount(total ?? 0);
-      setDueCount((dueOld ?? 0) + (dueNew ?? 0));
+      setDueCount((dueScheduled ?? 0) + (dueUnseen ?? 0));
       setUsername(profileRes.greetingUsername);
     };
     load();

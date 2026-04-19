@@ -209,12 +209,15 @@ export type Database = {
         Row: {
           correct_count: number
           created_at: string
+          ease_factor: number
           english: string
           german: string
           grammar_note: string | null
           id: string
+          interval_days: number
           last_seen_at: string | null
           level: string
+          next_review_at: string | null
           status: string
           topic: string
           updated_at: string
@@ -224,12 +227,15 @@ export type Database = {
         Insert: {
           correct_count?: number
           created_at?: string
+          ease_factor?: number
           english: string
           german: string
           grammar_note?: string | null
           id?: string
+          interval_days?: number
           last_seen_at?: string | null
           level: string
+          next_review_at?: string | null
           status?: string
           topic: string
           updated_at?: string
@@ -239,12 +245,15 @@ export type Database = {
         Update: {
           correct_count?: number
           created_at?: string
+          ease_factor?: number
           english?: string
           german?: string
           grammar_note?: string | null
           id?: string
+          interval_days?: number
           last_seen_at?: string | null
           level?: string
+          next_review_at?: string | null
           status?: string
           topic?: string
           updated_at?: string
