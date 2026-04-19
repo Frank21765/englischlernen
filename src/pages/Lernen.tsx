@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { toast } from "sonner";
-import { GraduationCap, Library, Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
+import { GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, Sparkles } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
@@ -17,6 +17,8 @@ export default function Lernen() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
+  const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
+  const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
 
   useEffect(() => {
     if (!user) return;
