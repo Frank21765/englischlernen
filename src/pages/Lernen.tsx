@@ -18,6 +18,7 @@ export default function Lernen() {
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
+  const [username, setUsername] = useState<string>("");
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
   const [editFocus, setEditFocus] = useState<boolean>(!hasSelection);
