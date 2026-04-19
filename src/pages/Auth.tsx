@@ -43,14 +43,14 @@ export default function Auth() {
           options: { emailRedirectTo: `${window.location.origin}/lernen` },
         });
         if (error) throw error;
-        toast.success("Konto erstellt – ¡bienvenido!");
+        toast.success("Konto erstellt – welcome!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: parsed.data.email,
           password: parsed.data.password,
         });
         if (error) throw error;
-        toast.success("Willkommen zurück!");
+        toast.success("Welcome back!");
       }
       navigate("/lernen", { replace: true });
     } catch (err) {
@@ -67,11 +67,11 @@ export default function Auth() {
         <div className="text-center mb-8">
           <img
             src={appIcon}
-            alt="¡Hola! App-Icon"
+            alt="Hello! App-Icon"
             className="mx-auto h-24 w-24 mb-4 animate-pop"
           />
-          <h1 className="font-display text-4xl">¡Hola!</h1>
-          <p className="text-muted-foreground mt-2">Spanisch lernen mit KI – auf deinem Niveau.</p>
+          <h1 className="font-display text-4xl">Hello!</h1>
+          <p className="text-muted-foreground mt-2">Englisch lernen mit KI – auf deinem Niveau.</p>
         </div>
         <Card className="p-6 shadow-card">
           <div className="flex gap-1 p-1 mb-6 bg-muted rounded-full">

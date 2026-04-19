@@ -12,7 +12,7 @@ import { ArrowLeft, Check, X } from "lucide-react";
 interface Vocab {
   id: string;
   german: string;
-  spanish: string;
+  english: string;
   grammar_note: string | null;
   level: string;
   topic: string;
@@ -33,9 +33,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function buildOptions(target: Vocab, pool: Vocab[], direction: CardDirection): string[] {
-  const correct = direction === "de_es" ? target.spanish : target.german;
+  const correct = direction === "de_en" ? target.english : target.german;
   const distractors = shuffle(pool.filter((v) => v.id !== target.id))
-    .map((v) => (direction === "de_es" ? v.spanish : v.german))
+    .map((v) => (direction === "de_en" ? v.english : v.german))
     .filter((s, i, arr) => arr.indexOf(s) === i && s !== correct)
     .slice(0, 3);
   while (distractors.length < 3) distractors.push("—");
@@ -56,7 +56,7 @@ export default function Quiz() {
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [directionMode, setDirectionMode] = useState<"de_es" | "es_de" | "random">("random");
+  const [directionMode, setDirectionMode] = useState<"de_en" | "en_de" | "random">("random");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function Quiz() {
           .eq("level", level)
           .eq("topic", topic),
       ]);
-      const mode = (profile?.direction_mode as "de_es"|"es_de"|"random") ?? "random";
+      const mode = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
       setDirectionMode(mode);
 
       const all = (vocab ?? []) as Vocab[];
@@ -114,10 +114,10 @@ export default function Quiz() {
   }
 
   const current = queue[idx];
-  const correctAnswer = current.direction === "de_es" ? current.vocab.spanish : current.vocab.german;
-  const promptText = current.direction === "de_es" ? current.vocab.german : current.vocab.spanish;
-  const promptLang = current.direction === "de_es" ? "Deutsch" : "Español";
-  const answerLang = current.direction === "de_es" ? "Español" : "Deutsch";
+  const correctAnswer = current.direction === "de_en" ? current.vocab.english : current.vocab.german;
+  const promptText = current.direction === "de_en" ? current.vocab.german : current.vocab.english;
+  const promptLang = current.direction === "de_en" ? "Deutsch" : "English";
+  const answerLang = current.direction === "de_en" ? "English" : "Deutsch";
 
   const finish = async (finalStats: { correct: number; total: number }) => {
     if (sessionId) {
@@ -162,7 +162,6 @@ export default function Quiz() {
       last_seen_at: new Date().toISOString(),
     }).eq("id", v.id);
 
-    // XP fließend vergeben + Lob bei Combos
     if (isCorrect && user) {
       awardActivity(user.id, 5, { comboReached: newCombo }).then((r) => {
         if (r.leveledUp || r.newBadges.length) celebrate(r);

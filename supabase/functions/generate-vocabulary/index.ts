@@ -1,4 +1,4 @@
-// Vokabel-Generator via Lovable AI
+// Vokabel-Generator (Deutsch ↔ Englisch) via Lovable AI
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -10,7 +10,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // --- Auth-Check: nur eingeloggte Nutzer dürfen das AI-Budget verbrauchen ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -48,9 +47,9 @@ Deno.serve(async (req) => {
       ? `\n\nVermeide diese bereits gelernten deutschen Begriffe/Sätze:\n${existingList.map((e) => `- ${e}`).join("\n")}`
       : "";
 
-    const systemPrompt = `Du bist ein erfahrener Spanischlehrer für deutschsprachige Lernende. Du erstellst hochwertige Vokabel- und Satzpaare passend zu einem Niveau (CEFR-ähnlich, A1 bis C3) und einem Thema. Niveau-Logik: A1-A3 = einfache Wörter und kurze Sätze, B1-B3 = mittlere Sätze mit gängiger Grammatik, C1-C3 = komplexe Strukturen, idiomatische Wendungen. Die Grammatiknotiz ist optional und kurz (max. 1 Satz, auf Deutsch).`;
+    const systemPrompt = `Du bist ein erfahrener Englischlehrer für deutschsprachige Lernende. Du erstellst hochwertige Vokabel- und Satzpaare passend zu einem Niveau (CEFR-ähnlich, A1 bis C3) und einem Thema. Niveau-Logik: A1-A3 = einfache Wörter und kurze Sätze, B1-B3 = mittlere Sätze mit gängiger Grammatik, C1-C3 = komplexe Strukturen, idiomatische Wendungen. Die Grammatiknotiz ist optional und kurz (max. 1 Satz, auf Deutsch). Nutze gängiges britisches oder amerikanisches Englisch.`;
 
-    const userPrompt = `Erstelle GENAU 20 deutsch-spanische Lernpaare für Niveau ${level} zum Thema "${topic}".${avoidBlock}\n\nMische Einzelvokabeln und kurze Beispielsätze. Keine Duplikate. Nutze die Funktion vocabulary_pairs.`;
+    const userPrompt = `Erstelle GENAU 20 deutsch-englische Lernpaare für Niveau ${level} zum Thema "${topic}".${avoidBlock}\n\nMische Einzelvokabeln und kurze Beispielsätze. Keine Duplikate. Nutze die Funktion vocabulary_pairs.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -79,10 +78,10 @@ Deno.serve(async (req) => {
                       type: "object",
                       properties: {
                         german: { type: "string" },
-                        spanish: { type: "string" },
+                        english: { type: "string" },
                         grammar_note: { type: "string" },
                       },
-                      required: ["german", "spanish"],
+                      required: ["german", "english"],
                       additionalProperties: false,
                     },
                   },

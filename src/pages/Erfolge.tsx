@@ -36,7 +36,7 @@ export default function Erfolge() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl sm:text-3xl">Erfolge & Level 🏆</h1>
-        <p className="text-sm text-muted-foreground">Deine Reise vom Aprendiz zum Maestro.</p>
+        <p className="text-sm text-muted-foreground">Deine Reise vom Beginner zum Master.</p>
       </header>
 
       <Card className="p-5 md:p-6 bg-gradient-warm text-primary-foreground shadow-glow space-y-3">

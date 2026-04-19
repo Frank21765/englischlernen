@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import { ArrowLeft, Check, RotateCw, X } from "lucide-react";
 interface Vocab {
   id: string;
   german: string;
-  spanish: string;
+  english: string;
   grammar_note: string | null;
   level: string;
   topic: string;
@@ -36,7 +36,7 @@ export default function Karteikarten() {
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [directionMode, setDirectionMode] = useState<"de_es" | "es_de" | "random">("random");
+  const [directionMode, setDirectionMode] = useState<"de_en" | "en_de" | "random">("random");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function Karteikarten() {
           .order("last_seen_at", { ascending: true, nullsFirst: true })
           .limit(40),
       ]);
-      const mode = (profile?.direction_mode as "de_es"|"es_de"|"random") ?? "random";
+      const mode = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
       setDirectionMode(mode);
       const items = (vocab ?? []).map((v) => ({ vocab: v as Vocab, direction: pickDirection(mode) }));
       setQueue(items);
@@ -126,7 +126,6 @@ export default function Karteikarten() {
 
     let nextQueue = queue;
     if (!correct) {
-      // Wieder einreihen nach 3-5 Karten
       const offset = 3 + Math.floor(Math.random() * 3);
       const insertAt = Math.min(idx + 1 + offset, queue.length);
       nextQueue = [...queue.slice(0, insertAt), { vocab: v, direction: pickDirection(directionMode) }, ...queue.slice(insertAt)];
@@ -158,10 +157,10 @@ export default function Karteikarten() {
     );
   }
 
-  const front = current.direction === "de_es" ? current.vocab.german : current.vocab.spanish;
-  const back = current.direction === "de_es" ? current.vocab.spanish : current.vocab.german;
-  const frontLang = current.direction === "de_es" ? "Deutsch" : "Español";
-  const backLang = current.direction === "de_es" ? "Español" : "Deutsch";
+  const front = current.direction === "de_en" ? current.vocab.german : current.vocab.english;
+  const back = current.direction === "de_en" ? current.vocab.english : current.vocab.german;
+  const frontLang = current.direction === "de_en" ? "Deutsch" : "English";
+  const backLang = current.direction === "de_en" ? "English" : "Deutsch";
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">

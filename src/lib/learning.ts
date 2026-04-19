@@ -14,17 +14,17 @@ export const QUICK_TOPICS = [
   "Shopping",
 ] as const;
 
-export type DirectionMode = "de_es" | "es_de" | "random";
+export type DirectionMode = "de_en" | "en_de" | "random";
 
 export const directionLabel: Record<DirectionMode, string> = {
-  de_es: "Immer Deutsch → Spanisch",
-  es_de: "Immer Spanisch → Deutsch",
+  de_en: "Immer Deutsch → Englisch",
+  en_de: "Immer Englisch → Deutsch",
   random: "Zufällig wechseln",
 };
 
-export type CardDirection = "de_es" | "es_de";
+export type CardDirection = "de_en" | "en_de";
 
 export function pickDirection(mode: DirectionMode): CardDirection {
-  if (mode === "de_es" || mode === "es_de") return mode;
-  return Math.random() < 0.5 ? "de_es" : "es_de";
+  if (mode === "de_en" || mode === "en_de") return mode;
+  return Math.random() < 0.5 ? "de_en" : "en_de";
 }

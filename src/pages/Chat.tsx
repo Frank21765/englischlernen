@@ -16,10 +16,10 @@ interface Msg {
 }
 
 const SUGGESTIONS = [
-  "Erklär mir den Unterschied zwischen ser und estar.",
+  "Erklär mir den Unterschied zwischen 'do' und 'make'.",
   "Lass uns ein Rollenspiel im Café machen!",
-  "Wie konjugiere ich 'tener' im Präsens?",
-  "Gib mir 5 typische Reise-Sätze.",
+  "Wie bilde ich das Present Perfect richtig?",
+  "Gib mir 5 typische Reise-Sätze auf Englisch.",
 ];
 
 export default function Chat() {
@@ -62,7 +62,6 @@ export default function Chat() {
     setMessages(optimistic);
     setBusy(true);
 
-    // user msg sofort speichern
     supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content }).then(() => {});
 
     try {
@@ -93,7 +92,6 @@ export default function Chat() {
         throw new Error("Fehler beim Streamen");
       }
 
-      // Stream parsen
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -151,7 +149,7 @@ export default function Chat() {
 
   const clearHistory = async () => {
     if (!user) return;
-    if (!confirm("Wirklich den ganzen Chatverlauf mit Profe Hola löschen?")) return;
+    if (!confirm("Wirklich den ganzen Chatverlauf mit Coach Ellie löschen?")) return;
     await supabase.from("chat_messages").delete().eq("user_id", user.id);
     setMessages([]);
     toast.success("Verlauf gelöscht");
@@ -161,9 +159,9 @@ export default function Chat() {
     <div className="space-y-4 max-w-3xl mx-auto">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl">Profe Hola 💬</h1>
+          <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
           <p className="text-sm text-muted-foreground">
-            Dein KI-Tutor. Schreib auf Deutsch oder Spanisch – stell Fragen, übe Dialoge, lass dich korrigieren.
+            Dein KI-Tutor. Schreib auf Deutsch oder Englisch – stell Fragen, übe Dialoge, lass dich korrigieren.
           </p>
         </div>
         {messages.length > 0 && (
@@ -179,7 +177,7 @@ export default function Chat() {
             <div className="space-y-4 py-6">
               <div className="text-center space-y-2">
                 <div className="text-4xl">👩‍🏫</div>
-                <p className="font-display text-xl">¡Hola! Ich bin Profe Hola.</p>
+                <p className="font-display text-xl">Hello! I'm Coach Ellie.</p>
                 <p className="text-sm text-muted-foreground">Was möchtest du heute lernen?</p>
               </div>
               <div className="grid sm:grid-cols-2 gap-2">
@@ -227,7 +225,7 @@ export default function Chat() {
                 send();
               }
             }}
-            placeholder="¿Qué quieres aprender? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
+            placeholder="What would you like to learn? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
             className="min-h-[44px] max-h-32 resize-none rounded-xl"
             disabled={busy}
           />
