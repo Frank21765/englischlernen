@@ -413,21 +413,21 @@ export default function Chat() {
                 <div
                   key={i}
                   ref={i === lastAssistantIdx ? lastAssistantRef : undefined}
-                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex min-w-0 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
+                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden ${
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
                     }`}
                   >
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm prose-invert max-w-none break-words">
+                      <div className="prose prose-sm prose-invert max-w-none break-words [overflow-wrap:anywhere] [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_code]:break-words">
                         <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.content}</div>
                     )}
                   </div>
                 </div>
@@ -435,7 +435,7 @@ export default function Chat() {
             })()}
           </div>
 
-          <div className="border-t border-border p-3 flex gap-2 items-end">
+          <div className="border-t border-border p-2.5 sm:p-3 flex gap-2 items-end min-w-0">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
