@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { messages } = await req.json();
+    const { messages, level, topic } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
@@ -104,6 +104,11 @@ Deno.serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY fehlt");
+
+    const systemPrompt = buildSystemPrompt(
+      typeof level === "string" ? level : undefined,
+      typeof topic === "string" ? topic : undefined,
+    );
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -115,7 +120,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash",
         stream: true,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...messages.slice(-30).map((m: { role: string; content: string }) => ({
             role: m.role,
             content: m.content,
