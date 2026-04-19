@@ -41,6 +41,7 @@ function deriveTitle(text: string): string {
 
 export default function Chat() {
   const { user } = useAuth();
+  const { level, topic, hasSelection } = useLearning();
   const isMobile = useIsMobile();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
