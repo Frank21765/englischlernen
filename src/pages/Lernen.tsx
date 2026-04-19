@@ -52,7 +52,7 @@ export default function Lernen() {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
-  }, [user]);
+  }, [user, location.pathname]);
 
   const generateAndStartQuiz = async () => {
     if (!user) return;
