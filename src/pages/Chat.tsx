@@ -277,7 +277,7 @@ export default function Chat() {
   const activeTitle = sessions.find((s) => s.id === activeId)?.title ?? "Neuer Chat";
 
   return (
-    <div className="grid md:grid-cols-[260px_1fr] gap-3 sm:gap-4 max-w-5xl mx-auto">
+    <div className="grid md:grid-cols-[260px_minmax(0,1fr)] gap-3 sm:gap-4 max-w-5xl mx-auto min-w-0">
       {/* Mobile session toggle */}
       <div className="md:hidden flex gap-2">
         <Button
@@ -373,7 +373,7 @@ export default function Chat() {
       </aside>
 
       {/* Chat area */}
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0">
         <header>
           <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
           <p className="text-sm text-muted-foreground">
@@ -381,8 +381,8 @@ export default function Chat() {
           </p>
         </header>
 
-        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px]">
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 overflow-hidden">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4">
             {messages.length === 0 && (
               <div className="space-y-4 py-6">
                 <div className="text-center space-y-2">
@@ -413,21 +413,21 @@ export default function Chat() {
                 <div
                   key={i}
                   ref={i === lastAssistantIdx ? lastAssistantRef : undefined}
-                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex min-w-0 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
+                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden ${
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
                     }`}
                   >
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm prose-invert max-w-none break-words">
+                      <div className="prose prose-sm prose-invert max-w-none break-words [overflow-wrap:anywhere] [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_code]:break-words">
                         <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap break-words">{m.content}</div>
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.content}</div>
                     )}
                   </div>
                 </div>
@@ -435,7 +435,7 @@ export default function Chat() {
             })()}
           </div>
 
-          <div className="border-t border-border p-3 flex gap-2 items-end">
+          <div className="border-t border-border p-2.5 sm:p-3 flex gap-2 items-end min-w-0">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -445,11 +445,11 @@ export default function Chat() {
                   send();
                 }
               }}
-              placeholder="What would you like to learn? (Enter zum Senden, Shift+Enter für Zeilenumbruch)"
-              className="min-h-[44px] max-h-32 resize-none rounded-xl"
+              placeholder="What would you like to learn?"
+              className="min-h-[44px] max-h-32 resize-none rounded-xl flex-1 min-w-0 text-base sm:text-sm"
               disabled={busy}
             />
-            <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 rounded-xl">
+            <Button onClick={() => send()} disabled={busy || !input.trim()} size="icon" className="h-11 w-11 shrink-0 rounded-xl">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
