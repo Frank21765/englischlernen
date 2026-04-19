@@ -443,7 +443,7 @@ export default function Chat() {
 
         <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 w-full overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4">
-            {messages.length === 0 && (
+            {messages.length === 0 && !(activeId && contextSessions[activeId]) && (
               <div className="space-y-4 py-6">
                 <div className="text-center space-y-2">
                   <div className="text-4xl">👩‍🏫</div>
@@ -462,6 +462,12 @@ export default function Chat() {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {messages.length === 0 && activeId && contextSessions[activeId] && (
+              <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Ellie bereitet eine Erklärung vor…
               </div>
             )}
             {(() => {
