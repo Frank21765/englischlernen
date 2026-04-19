@@ -10,9 +10,12 @@ import { toast } from "sonner";
 import { z } from "zod";
 import appIcon from "@/assets/app-icon.png";
 
-const schema = z.object({
+const loginSchema = z.object({
   email: z.string().trim().email({ message: "Ungültige E-Mail-Adresse" }).max(255),
   password: z.string().min(6, { message: "Mindestens 6 Zeichen" }).max(100),
+});
+const signupSchema = loginSchema.extend({
+  username: z.string().trim().min(2, { message: "Benutzername min. 2 Zeichen" }).max(40),
 });
 
 export default function Auth() {
@@ -21,6 +24,7 @@ export default function Auth() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -29,7 +33,9 @@ export default function Auth() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ email, password });
+    const parsed = mode === "signup"
+      ? signupSchema.safeParse({ email, password, username })
+      : loginSchema.safeParse({ email, password });
     if (!parsed.success) {
       toast.error(parsed.error.errors[0].message);
       return;
@@ -37,10 +43,14 @@ export default function Auth() {
     setBusy(true);
     try {
       if (mode === "signup") {
+        const data = parsed.data as { email: string; password: string; username: string };
         const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: `${window.location.origin}/lernen` },
+          email: data.email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/lernen`,
+            data: { display_name: data.username },
+          },
         });
         if (error) throw error;
         toast.success("Konto erstellt – welcome!");
@@ -87,6 +97,12 @@ export default function Auth() {
             >Konto erstellen</button>
           </div>
           <form onSubmit={submit} className="space-y-4">
+            {mode === "signup" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="username">Benutzername</Label>
+                <Input id="username" type="text" autoComplete="nickname" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={40} required placeholder="z. B. EmmaLernt" />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="email">E-Mail</Label>
               <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
