@@ -169,8 +169,9 @@ export default function Chat() {
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
-        // Pass session id explicitly so we don't depend on a stale closure.
-        setTimeout(() => { void send(prefill, targetId!); }, 60);
+        // Pass session id AND empty base messages explicitly so we don't depend
+        // on stale closures (previous session's messages would otherwise leak in).
+        setTimeout(() => { void send(prefill, targetId!, []); }, 60);
       } else {
         setInput(prefill);
       }
