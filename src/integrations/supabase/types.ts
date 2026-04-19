@@ -119,6 +119,7 @@ export type Database = {
           last_active_date: string | null
           last_login_at: string | null
           longest_streak: number
+          onboarding_completed: boolean
           updated_at: string
           user_id: string
           valid_until: string | null
@@ -136,6 +137,7 @@ export type Database = {
           last_active_date?: string | null
           last_login_at?: string | null
           longest_streak?: number
+          onboarding_completed?: boolean
           updated_at?: string
           user_id: string
           valid_until?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           last_active_date?: string | null
           last_login_at?: string | null
           longest_streak?: number
+          onboarding_completed?: boolean
           updated_at?: string
           user_id?: string
           valid_until?: string | null
