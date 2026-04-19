@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { toast } from "sonner";
-import { CalendarClock, GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, RefreshCw, Sparkles } from "lucide-react";
+import { CalendarClock, ChevronDown, GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, RefreshCw, Sparkles, Target } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
@@ -20,6 +20,7 @@ export default function Lernen() {
   const [dueCount, setDueCount] = useState<number | null>(null);
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
+  const [editFocus, setEditFocus] = useState<boolean>(!hasSelection);
 
   useEffect(() => {
     if (!user) return;
@@ -46,11 +47,8 @@ export default function Lernen() {
     setBusy(true);
     try {
       const { data: existing } = await supabase
-        .from("vocabulary")
-        .select("german")
-        .eq("user_id", user.id)
-        .eq("level", level)
-        .eq("topic", topic);
+        .from("vocabulary").select("german")
+        .eq("user_id", user.id).eq("level", level).eq("topic", topic);
       const existingGerman = (existing ?? []).map((r) => r.german);
 
       const { data, error } = await supabase.functions.invoke("generate-vocabulary", {
@@ -75,33 +73,130 @@ export default function Lernen() {
       if (insErr) throw insErr;
 
       setSelection(level, topic, { persist: true });
-
       toast.success(`${pairs.length} neue Vokabeln erzeugt`);
       navigate("/quiz");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Fehler beim Erzeugen";
-      toast.error(msg);
+      toast.error(e instanceof Error ? e.message : "Fehler beim Erzeugen");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
+    <div className="space-y-5">
+      <header className="space-y-1">
         <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          {hasSelection
-            ? "Wähle ein Niveau und ein Thema – die KI generiert 20 frische Vokabeln und Sätze für dich."
-            : "Wähle zuerst ein CEFR-Niveau und ein Thema, um loszulegen."}
+          Dein Lern-Hub – aktueller Fokus, fällige Wiederholungen und der nächste Schritt.
         </p>
-        {vocabCount !== null && hasSelection && (
-          <p className="text-sm text-muted-foreground">
-            Du hast bereits <span className="font-semibold text-foreground">{vocabCount}</span> Vokabeln in deiner Sammlung.
-          </p>
-        )}
       </header>
 
+      {/* 1. Aktueller Fokus */}
+      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div className="rounded-2xl bg-accent/15 p-2.5 sm:p-3 shrink-0">
+              <Target className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Aktueller Fokus</div>
+              {hasSelection ? (
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-0.5">
+                  <span className="font-mono text-lg sm:text-xl font-bold text-primary">{level}</span>
+                  <span className="text-muted-foreground/60">·</span>
+                  <span className="text-base sm:text-lg font-semibold break-words">{topic || "—"}</span>
+                </div>
+              ) : (
+                <p className="text-sm mt-1">Noch nichts gewählt – leg unten dein Niveau und Thema fest.</p>
+              )}
+              {hasSelection && vocabCount !== null && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {vocabCount} Vokabel{vocabCount === 1 ? "" : "n"} insgesamt gespeichert
+                </p>
+              )}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditFocus((v) => !v)}
+            className="shrink-0"
+            aria-expanded={editFocus}
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="hidden sm:inline">{editFocus ? "Schließen" : "Ändern"}</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${editFocus ? "rotate-180" : ""}`} />
+          </Button>
+        </div>
+
+        {editFocus && (
+          <div className="mt-4 pt-4 border-t border-border space-y-4">
+            <div>
+              <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
+              <div className="flex flex-wrap gap-2">
+                {LEVELS.map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setSelection(l as Level, topic, { persist: true })}
+                    className={`min-w-[3rem] rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-bounce ${
+                      level === l
+                        ? "bg-primary text-primary-foreground shadow-glow scale-105"
+                        : "bg-muted text-foreground hover:bg-muted/70"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="topic" className="text-sm font-semibold">Thema</Label>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_TOPICS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => { setCustomMode(false); setSelection(level, t, { persist: true }); }}
+                    className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth ${
+                      !customMode && topic === t
+                        ? "bg-accent text-accent-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => { setCustomMode(true); if (!isCustomTopic) setSelection(level, ""); }}
+                  className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth inline-flex items-center gap-1.5 ${
+                    customMode
+                      ? "bg-accent text-accent-foreground shadow-soft"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                  }`}
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Eigenes Thema
+                </button>
+              </div>
+              {customMode && (
+                <Input
+                  id="topic"
+                  value={topic}
+                  maxLength={60}
+                  onChange={(e) => setSelection(level, e.target.value)}
+                  onBlur={() => topic.trim() && setSelection(level, topic.trim(), { persist: true })}
+                  placeholder="z. B. Weltraum, Autos, Büro-Englisch, Musik…"
+                  className="h-11 rounded-2xl text-base"
+                  autoFocus
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* 2. Heute fällig */}
       <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="rounded-2xl bg-primary/10 p-2.5 sm:p-3 shrink-0">
@@ -124,110 +219,49 @@ export default function Lernen() {
               </p>
             ) : vocabCount && vocabCount > 0 ? (
               <p className="text-sm text-muted-foreground">
-                Alles wiederholt für heute! 🎉 Lust auf neue Vokabeln oder ein Quiz?
+                Alles wiederholt für heute! 🎉 Lust auf neue Vokabeln?
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 Noch keine Vokabeln gespeichert. Starte unten dein erstes Set!
               </p>
             )}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {dueCount && dueCount > 0 ? (
+            {dueCount !== null && dueCount > 0 && (
+              <div className="pt-2">
                 <Button variant="hero" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
                   <RefreshCw className="h-4 w-4 shrink-0" />
                   <span>Jetzt wiederholen</span>
                 </Button>
-              ) : (
-                <>
-                  <Button variant="soft" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
-                    <GraduationCap className="h-4 w-4 shrink-0" /> <span>Quiz starten</span>
-                  </Button>
-                  <Button variant="soft" size="sm" onClick={() => navigate("/chat")} className="whitespace-normal text-center leading-tight">
-                    <MessageCircle className="h-4 w-4 shrink-0" /> <span>Coach Ellie</span>
-                  </Button>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 sm:p-5 md:p-6 space-y-6 bg-gradient-card shadow-card">
-        <div>
-          <Label className="mb-3 block text-base font-semibold">Niveau</Label>
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setSelection(l as Level, topic)}
-                className={`min-w-[3.25rem] rounded-2xl px-4 py-2 text-sm font-bold transition-bounce ${
-                  level === l
-                    ? "bg-primary text-primary-foreground shadow-glow scale-105"
-                    : "bg-muted text-foreground hover:bg-muted/70"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
+      {/* 3. Weiterlernen */}
+      <Card className="p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
+        <div className="flex items-baseline justify-between gap-3 flex-wrap">
+          <h2 className="text-base sm:text-lg font-bold">Weiterlernen</h2>
+          <span className="text-xs text-muted-foreground">Wähle deinen nächsten Schritt</span>
         </div>
 
-        <div className="space-y-3">
-          <Label htmlFor="topic" className="text-base font-semibold">Thema</Label>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_TOPICS.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => { setCustomMode(false); setSelection(level, t); }}
-                className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
-                  !customMode && topic === t
-                    ? "bg-accent text-accent-foreground shadow-soft"
-                    : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => { setCustomMode(true); if (!isCustomTopic) setSelection(level, ""); }}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth inline-flex items-center gap-1.5 ${
-                customMode
-                  ? "bg-accent text-accent-foreground shadow-soft"
-                  : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-              }`}
-            >
-              <Pencil className="h-3.5 w-3.5" /> Eigenes Thema
-            </button>
-          </div>
-          {customMode && (
-            <Input
-              id="topic"
-              value={topic}
-              maxLength={60}
-              onChange={(e) => setSelection(level, e.target.value)}
-              placeholder="z. B. Weltraum, Autos, Büro-Englisch, Musik…"
-              className="h-12 rounded-2xl text-base"
-              autoFocus
-            />
-          )}
-        </div>
+        <Button
+          variant="hero"
+          size="xl"
+          disabled={busy || !hasSelection}
+          onClick={generateAndStartQuiz}
+          className="w-full whitespace-normal text-center leading-tight px-3"
+        >
+          {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
+          <span className="min-w-0">Neue Vokabeln lernen</span>
+        </Button>
 
-        <div className="grid sm:grid-cols-2 gap-3 pt-2">
-          <Button variant="hero" size="xl" disabled={busy} onClick={generateAndStartQuiz} className="w-full whitespace-normal text-center leading-tight px-3">
-            {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
-            <span className="min-w-0">Neue Vokabeln lernen</span>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <Button variant="soft" size="lg" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
+            <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0">Grammatik</span>
           </Button>
-          <Button variant="hero" size="xl" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <Library className="h-5 w-5 shrink-0" />
-            <span className="min-w-0">Grammatik-Lektion</span>
-          </Button>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-3">
           <Button variant="soft" size="lg" onClick={() => navigate("/quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz starten</span>
+            <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz</span>
           </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
