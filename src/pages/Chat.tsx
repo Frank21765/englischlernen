@@ -373,7 +373,7 @@ export default function Chat() {
       </aside>
 
       {/* Chat area */}
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0">
         <header>
           <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
           <p className="text-sm text-muted-foreground">
@@ -381,8 +381,8 @@ export default function Chat() {
           </p>
         </header>
 
-        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px]">
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 overflow-hidden">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4">
             {messages.length === 0 && (
               <div className="space-y-4 py-6">
                 <div className="text-center space-y-2">
