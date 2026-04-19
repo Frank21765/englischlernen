@@ -121,10 +121,17 @@ export default function AppLayout() {
           {navItems.map(({ to, label, icon: Icon, match }) => {
             const path = location.pathname;
             const isActive = match.some((m) => path === m || path.startsWith(m + "/"));
+            const isCoach = to.startsWith("/chat");
             return (
               <NavLink
                 key={to}
                 to={to}
+                onClick={(e) => {
+                  if (isCoach) {
+                    e.preventDefault();
+                    navigate(`/chat?new=1&t=${Date.now()}`);
+                  }
+                }}
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-soft"
