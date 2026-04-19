@@ -540,13 +540,26 @@ export default function Quiz() {
               level: ctxLevel,
               topic: ctxTopic,
             });
+        const handleAskEllie = () => {
+          // Snapshot current quiz state so we can resume after Ellie.
+          const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          const snap = {
+            mode, queue, pool, idx, picked, stats, combo, sessionId, directionMode, vocabSource,
+          };
+          try { sessionStorage.setItem(`quiz-resume-${resumeId}`, JSON.stringify(snap)); } catch { /* ignore quota */ }
+          const url = buildEllieUrl({
+            prefill: prompt,
+            auto: true,
+            returnTo: `/quiz?resume=${resumeId}`,
+            returnLabel: "Zurück zum Quiz",
+          });
+          navigate(url);
+        };
         return (
           <div className="flex justify-center">
-            <Button asChild variant="soft" size="sm" className="rounded-full">
-              <Link to={buildEllieUrl({ prefill: prompt, auto: true })}>
-                <MessageCircle className="h-4 w-4" />
-                {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
-              </Link>
+            <Button variant="soft" size="sm" className="rounded-full" onClick={handleAskEllie}>
+              <MessageCircle className="h-4 w-4" />
+              {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
             </Button>
           </div>
         );
