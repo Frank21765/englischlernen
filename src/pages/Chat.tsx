@@ -338,7 +338,7 @@ export default function Chat() {
                 ) : (
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => setActiveId(s.id)}
+                      onClick={() => { setActiveId(s.id); setShowSessions(false); }}
                       className={`flex-1 min-w-0 text-left flex items-center gap-1.5 ${
                         isActive ? "font-semibold text-foreground" : "text-foreground/80"
                       }`}
@@ -349,7 +349,7 @@ export default function Chat() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth"
+                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth"
                       onClick={() => startRename(s)}
                       title="Umbenennen"
                     >
@@ -358,7 +358,7 @@ export default function Chat() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-smooth text-destructive"
+                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth text-destructive"
                       onClick={() => deleteSession(s.id)}
                       title="Löschen"
                     >
