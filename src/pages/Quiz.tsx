@@ -23,6 +23,7 @@ interface Vocab {
 }
 
 type QuizMode = "vocab" | "grammar";
+type VocabSource = "review" | "fresh";
 
 interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
 interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: string }
