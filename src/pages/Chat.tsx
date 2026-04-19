@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
