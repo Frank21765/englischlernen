@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, MessageCircle, RefreshCw, Sparkles, X } from "lucide-react";
 import { FocusChip } from "@/components/FocusChip";
 import { computeNextReview } from "@/lib/srs";
+import { buildEllieUrl, ellieExplainGrammarPrompt, ellieExplainQuizMistakePrompt } from "@/lib/ellie";
+import { Link } from "react-router-dom";
 
 interface Vocab {
   id: string;
