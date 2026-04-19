@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { toast } from "sonner";
-import { Brain, GraduationCap, Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
+import { Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
@@ -86,10 +86,6 @@ export default function Lernen() {
     }
   };
 
-  const startWithExisting = (mode: "flashcards" | "quiz") => {
-    const params = new URLSearchParams({ level, topic });
-    navigate(`/${mode === "flashcards" ? "karteikarten" : "quiz"}?${params.toString()}`);
-  };
 
   return (
     <div className="space-y-6">
