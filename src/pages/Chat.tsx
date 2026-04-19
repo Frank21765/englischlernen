@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ChatSessionList } from "@/components/chat/ChatSessionList";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Check, ChevronDown, Loader2, MessageSquare, Pencil, Plus, Send, Sparkles, Trash2, X } from "lucide-react";
+import { ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
@@ -37,6 +40,7 @@ function deriveTitle(text: string): string {
 
 export default function Chat() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -277,103 +281,78 @@ export default function Chat() {
   const activeTitle = sessions.find((s) => s.id === activeId)?.title ?? "Neuer Chat";
 
   return (
-    <div className="grid md:grid-cols-[260px_minmax(0,1fr)] gap-3 sm:gap-4 w-full max-w-5xl mx-auto min-w-0">
+    <div className="w-full max-w-5xl mx-auto min-w-0 overflow-x-hidden">
       {/* Mobile session toggle */}
-      <div className="md:hidden flex gap-2">
+      <div className="md:hidden flex gap-2 min-w-0 mb-3 sm:mb-4">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowSessions((s) => !s)}
-          className="flex-1 justify-between rounded-xl"
+          onClick={() => setShowSessions(true)}
+          className="flex-1 min-w-0 justify-between rounded-xl px-3"
         >
-          <span className="flex items-center gap-2 truncate">
+          <span className="flex items-center gap-2 min-w-0">
             <MessageSquare className="h-4 w-4 shrink-0" />
             <span className="truncate">{activeTitle}</span>
           </span>
           <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${showSessions ? "rotate-180" : ""}`} />
         </Button>
-        <Button onClick={newChat} size="sm" variant="hero" className="rounded-xl">
+        <Button onClick={newChat} size="sm" variant="hero" className="rounded-xl shrink-0">
           <Plus className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Sidebar with sessions */}
-      <aside className={`${showSessions ? "block" : "hidden"} md:block space-y-3`}>
-        <Button onClick={newChat} variant="hero" className="w-full hidden md:flex">
-          <Plus className="h-4 w-4" /> Neuer Chat
-        </Button>
-        <Card className="p-2 space-y-1 max-h-[60vh] overflow-y-auto">
-          {sessions.length === 0 && (
-            <p className="text-xs text-muted-foreground p-3 text-center">Noch keine Chats.</p>
-          )}
-          {sessions.map((s) => {
-            const isActive = s.id === activeId;
-            const isRenaming = renamingId === s.id;
-            return (
-              <div
-                key={s.id}
-                className={`group rounded-xl px-2 py-1.5 text-sm transition-smooth ${
-                  isActive ? "bg-primary/10" : "hover:bg-muted"
-                }`}
-              >
-                {isRenaming ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") { e.preventDefault(); commitRename(); }
-                        if (e.key === "Escape") setRenamingId(null);
-                      }}
-                      className="h-8 text-sm"
-                      autoFocus
-                    />
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={commitRename}>
-                      <Check className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setRenamingId(null)}>
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => { setActiveId(s.id); setShowSessions(false); }}
-                      className={`flex-1 min-w-0 text-left flex items-center gap-1.5 ${
-                        isActive ? "font-semibold text-foreground" : "text-foreground/80"
-                      }`}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{s.title}</span>
-                    </button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth"
-                      onClick={() => startRename(s)}
-                      title="Umbenennen"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 md:opacity-0 md:group-hover:opacity-100 transition-smooth text-destructive"
-                      onClick={() => deleteSession(s.id)}
-                      title="Löschen"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </Card>
-      </aside>
+      {isMobile && (
+        <Sheet open={showSessions} onOpenChange={setShowSessions}>
+          <SheetContent side="left" className="w-[85vw] max-w-xs p-3 sm:p-4">
+            <SheetHeader className="mb-3 pr-8">
+              <SheetTitle>Chats</SheetTitle>
+              <SheetDescription>Gespeicherte Unterhaltungen öffnen, umbenennen oder löschen.</SheetDescription>
+            </SheetHeader>
+            <ChatSessionList
+              activeId={activeId}
+              onCommitRename={commitRename}
+              onCreate={async () => {
+                await newChat();
+                setShowSessions(false);
+              }}
+              onDelete={deleteSession}
+              onRenameCancel={() => setRenamingId(null)}
+              onRenameChange={setRenameValue}
+              onSelect={(id) => {
+                setActiveId(id);
+                setShowSessions(false);
+              }}
+              onStartRename={startRename}
+              renameValue={renameValue}
+              renamingId={renamingId}
+              sessions={sessions}
+            />
+          </SheetContent>
+        </Sheet>
+      )}
 
-      {/* Chat area */}
-      <div className="space-y-4 min-w-0">
+      <div className="md:grid md:grid-cols-[260px_minmax(0,1fr)] gap-3 sm:gap-4 min-w-0">
+        {/* Sidebar with sessions */}
+        {!isMobile && (
+          <aside className="space-y-3 min-w-0">
+            <ChatSessionList
+              activeId={activeId}
+              onCommitRename={commitRename}
+              onCreate={newChat}
+              onDelete={deleteSession}
+              onRenameCancel={() => setRenamingId(null)}
+              onRenameChange={setRenameValue}
+              onSelect={setActiveId}
+              onStartRename={startRename}
+              renameValue={renameValue}
+              renamingId={renamingId}
+              sessions={sessions}
+            />
+          </aside>
+        )}
+
+        {/* Chat area */}
+        <div className="space-y-4 min-w-0 w-full">
         <header>
           <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
           <p className="text-sm text-muted-foreground">
@@ -381,7 +360,7 @@ export default function Chat() {
           </p>
         </header>
 
-        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 overflow-hidden">
+        <Card className="bg-gradient-card shadow-card flex flex-col h-[60vh] min-h-[400px] min-w-0 w-full overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4">
             {messages.length === 0 && (
               <div className="space-y-4 py-6">
@@ -454,6 +433,7 @@ export default function Chat() {
             </Button>
           </div>
         </Card>
+      </div>
       </div>
     </div>
   );
