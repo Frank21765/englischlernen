@@ -8,7 +8,7 @@ import { LearningProvider } from "@/hooks/useLearningContext";
 import AppLayout from "@/components/AppLayout";
 import Auth from "./pages/Auth";
 import Lernen from "./pages/Lernen";
-import Karteikarten from "./pages/Karteikarten";
+import Grammar from "./pages/Grammar";
 import Quiz from "./pages/Quiz";
 import Lueckentext from "./pages/Lueckentext";
 import Chat from "./pages/Chat";
@@ -35,7 +35,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/lernen" element={<Lernen />} />
-              <Route path="/karteikarten" element={<Karteikarten />} />
+              <Route path="/grammatik" element={<Grammar />} />
               <Route path="/quiz" element={<Quiz />} />
               <Route path="/lueckentext" element={<Lueckentext />} />
               <Route path="/chat" element={<Chat />} />
