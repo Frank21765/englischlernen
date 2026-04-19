@@ -98,21 +98,29 @@ export function ellieExplainGrammarPracticePrompt(opts: {
   sentence: string;
   answer: string;
   userAnswer?: string;
+  wasCorrect?: boolean;
   hint?: string;
   level?: string;
   topic?: string;
 }): string {
-  const { lessonTitle, sentence, answer, userAnswer, hint, level, topic } = opts;
+  const { lessonTitle, sentence, answer, userAnswer, wasCorrect, hint, level, topic } = opts;
   const ctx = [level && `Level ${level}`, topic && `Thema: ${topic}`].filter(Boolean).join(" · ");
   const ctxLine = ctx ? `\nKontext: ${ctx}` : "";
-  const wrongLine = userAnswer && userAnswer.trim().toLowerCase() !== answer.toLowerCase()
-    ? `\nMeine Antwort: *${userAnswer}*`
+  const isCorrect = wasCorrect ?? (!!userAnswer && userAnswer.trim().toLowerCase() === answer.toLowerCase());
+  const opener = isCorrect
+    ? `Ich habe diese Übung zur Lektion *${lessonTitle}* richtig gelöst, möchte die Regel dahinter aber noch besser verstehen.`
+    : `Hmm, bei dieser Übung zur Lektion *${lessonTitle}* war ich mir gerade unsicher.`;
+  const answerLine = userAnswer
+    ? `\nMeine Antwort: *${userAnswer}*${isCorrect ? " (richtig)" : ""}`
     : "";
-  return `Hmm, bei dieser Übung zur Lektion *${lessonTitle}* ist mir gerade etwas durchgerutscht.${ctxLine}
+  const closing = isCorrect
+    ? `Bitte erklär mir noch einmal einfach, warum *${answer}* hier richtig ist, welche Regel dahintersteckt und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`
+    : `Bitte erklär mir freundlich, warum *${answer}* hier richtig ist, welche Regel dahintersteckt und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+  return `${opener}${ctxLine}
 Satz: *${sentence.replace("__", "___")}*
-Richtige Lösung: *${answer}*${wrongLine}${hint ? `\nHinweis war: ${hint}` : ""}
+Richtige Lösung: *${answer}*${answerLine}${hint ? `\nHinweis war: ${hint}` : ""}
 
-Bitte erklär mir freundlich, warum *${answer}* hier richtig ist, welche Regel dahintersteckt und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+${closing}`;
 }
 
 export function ellieExplainGrammarPrompt(opts: {
