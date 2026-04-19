@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
 import { Check, History, Pencil, Settings, Trophy, User, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getProfileUsername, persistProfileUsername } from "@/lib/profile";
 
 const subNav = [
   { to: "/profil/erfolge", label: "Erfolge", icon: Trophy },
@@ -23,16 +23,24 @@ export default function Profil() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setUsername("");
+      setDraft("");
+      setEditing(false);
+      return;
+    }
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      setUsername(data?.display_name ?? "");
+      try {
+        const { savedUsername } = await getProfileUsername(user);
+        const metaUsername = user.user_metadata?.display_name?.trim?.() ?? "";
+        const nextUsername = savedUsername || metaUsername;
+        setUsername(nextUsername);
+        setDraft(nextUsername);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Benutzername konnte nicht geladen werden");
+      }
     })();
-  }, [user]);
+  }, [user, location.pathname]);
 
   const startEdit = () => {
     setDraft(username);
@@ -47,18 +55,17 @@ export default function Profil() {
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ display_name: next })
-      .eq("user_id", user.id);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const savedUsername = await persistProfileUsername(user, next);
+      setUsername(savedUsername);
+      setDraft(savedUsername);
+      setEditing(false);
+      toast.success("Benutzername aktualisiert");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Benutzername konnte nicht gespeichert werden");
+    } finally {
+      setSaving(false);
     }
-    setUsername(next);
-    setEditing(false);
-    toast.success("Benutzername aktualisiert");
   };
 
   if (location.pathname === "/profil" || location.pathname === "/profil/") {
@@ -99,11 +106,11 @@ export default function Profil() {
             ) : (
               <div className="flex items-center gap-2 min-w-0">
                 <div className="font-display text-xl sm:text-2xl truncate">
-                  {username || "—"}
+                  {username || "Noch kein Benutzername"}
                 </div>
                 <Button size="sm" variant="ghost" onClick={startEdit} className="shrink-0">
                   <Pencil className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Ändern</span>
+                  <span className="hidden sm:inline">{username ? "Ändern" : "Festlegen"}</span>
                 </Button>
               </div>
             )}
