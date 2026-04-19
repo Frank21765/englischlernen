@@ -407,25 +407,31 @@ export default function Quiz() {
       }
     }
 
-    const delay = current.kind === "grammar" ? 1500 : 900;
-    setTimeout(() => {
-      let nextQueue = queue;
-      if (!isCorrect && current.kind === "vocab") {
-        const offset = 3 + Math.floor(Math.random() * 3);
-        const insertAt = Math.min(idx + 1 + offset, queue.length);
-        const dir = pickDirection(directionMode);
-        const replay: VocabQ = { kind: "vocab", vocab: current.vocab, direction: dir, options: buildOptions(current.vocab, pool, dir) };
-        nextQueue = [...queue.slice(0, insertAt), replay, ...queue.slice(insertAt)];
-        setQueue(nextQueue);
-      }
-      const nextIdx = idx + 1;
-      if (nextIdx >= nextQueue.length) {
-        finish(newStats);
-        return;
-      }
-      setIdx(nextIdx);
-      setPicked(null);
-    }, delay);
+    // Auto-advance only on correct vocab answers (snappy flow).
+    // For wrong answers and ALL grammar questions, wait for the user to press
+    // "Weiter" so the explanation and "Frag Ellie" button stay usable.
+    if (current.kind === "vocab" && isCorrect) {
+      setTimeout(() => { advance(isCorrect); }, 900);
+    }
+  };
+
+  const advance = (wasCorrect: boolean) => {
+    let nextQueue = queue;
+    if (!wasCorrect && current.kind === "vocab") {
+      const offset = 3 + Math.floor(Math.random() * 3);
+      const insertAt = Math.min(idx + 1 + offset, queue.length);
+      const dir = pickDirection(directionMode);
+      const replay: VocabQ = { kind: "vocab", vocab: current.vocab, direction: dir, options: buildOptions(current.vocab, pool, dir) };
+      nextQueue = [...queue.slice(0, insertAt), replay, ...queue.slice(insertAt)];
+      setQueue(nextQueue);
+    }
+    const nextIdx = idx + 1;
+    if (nextIdx >= nextQueue.length) {
+      finish(stats);
+      return;
+    }
+    setIdx(nextIdx);
+    setPicked(null);
   };
 
   const remaining = queue.length - idx;
