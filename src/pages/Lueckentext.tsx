@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
+import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, MessageCircle, Sparkles, X } from "lucide-react";
 
 interface ClozeItem {
   full_sentence: string;
