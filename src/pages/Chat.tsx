@@ -133,6 +133,9 @@ export default function Chat() {
     if (!prefill) return;
     const auto = searchParams.get("auto") === "1";
     const fresh = searchParams.get("fresh") !== "0";
+    const isContext = searchParams.get("ctx") === "1";
+    const returnTo = searchParams.get("return") ?? "";
+    const returnLabel = searchParams.get("returnLabel") ?? "Zurück zur Übung";
     handledIncomingRef.current = true;
 
     (async () => {
@@ -152,10 +155,16 @@ export default function Chat() {
           targetId = created.id;
         }
       }
+      if (isContext && targetId) {
+        setContextSessions((prev) => ({ ...prev, [targetId!]: { returnTo, returnLabel } }));
+      }
       const next = new URLSearchParams(searchParams);
       next.delete("prefill");
       next.delete("auto");
       next.delete("fresh");
+      next.delete("ctx");
+      next.delete("return");
+      next.delete("returnLabel");
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
