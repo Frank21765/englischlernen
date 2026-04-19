@@ -220,13 +220,13 @@ export default function Chat() {
     setRenamingId(null);
   };
 
-  const send = async (text?: string) => {
-    if (!user || busy || !activeId) return;
+  const send = async (text?: string, sessionIdOverride?: string) => {
+    const sessionId = sessionIdOverride ?? activeId;
+    if (!user || busy || !sessionId) return;
     const content = (text ?? input).trim();
     if (!content) return;
     setInput("");
     const isFirstChat = messages.length === 0;
-    const sessionId = activeId;
 
     const userMsg: Msg = { role: "user", content };
     const optimistic = [...messages, userMsg];
