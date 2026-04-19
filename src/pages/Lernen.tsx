@@ -27,15 +27,18 @@ export default function Lernen() {
     if (!user) return;
     (async () => {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: dueOld }, { count: dueNew }] = await Promise.all([
+      const [{ count: total }, { count: dueOld }, { count: dueNew }, profileRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
+        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
       ]);
       setVocabCount(total ?? 0);
       setDueCount((dueOld ?? 0) + (dueNew ?? 0));
+      const name = profileRes.data?.display_name?.trim();
+      setUsername(name || (user.email ? user.email.split("@")[0] : ""));
     })();
   }, [user]);
 
