@@ -130,7 +130,9 @@ export default function Quiz() {
       sessionStorage.removeItem(`quiz-resume-${resumeId}`);
       search.delete("resume");
       const qs = search.toString();
-      navigate({ pathname: "/quiz", search: qs ? `?${qs}` : "" }, { replace: true });
+      // Use the canonical path so we don't bounce through LegacyRedirect,
+      // which would unmount Quiz and wipe the state we just restored.
+      navigate({ pathname: window.location.pathname, search: qs ? `?${qs}` : "" }, { replace: true });
     } catch (e) {
       console.error("[quiz] resume failed", e);
     }
