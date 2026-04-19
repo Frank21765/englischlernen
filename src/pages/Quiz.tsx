@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 
 interface Vocab {
   id: string;
