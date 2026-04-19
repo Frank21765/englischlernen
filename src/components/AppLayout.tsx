@@ -27,10 +27,29 @@ export default function AppLayout() {
   const location = useLocation();
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) { setOnboardingChecked(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!data?.onboarding_completed && location.pathname !== "/onboarding") {
+        navigate("/onboarding", { replace: true });
+      }
+      setOnboardingChecked(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user, navigate, location.pathname]);
 
   useEffect(() => {
     if (!user) return;

@@ -28,7 +28,15 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/lernen", { replace: true });
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      navigate(data?.onboarding_completed ? "/lernen" : "/onboarding", { replace: true });
+    })();
   }, [user, navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -48,7 +56,7 @@ export default function Auth() {
           email: data.email,
           password: data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/lernen`,
+            emailRedirectTo: `${window.location.origin}/onboarding`,
             data: { display_name: data.username },
           },
         });
@@ -62,7 +70,7 @@ export default function Auth() {
         if (error) throw error;
         toast.success("Welcome back!");
       }
-      navigate("/lernen", { replace: true });
+      // Routing now handled by the useEffect above based on onboarding state.
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Etwas ist schiefgelaufen";
       toast.error(msg.includes("Invalid login") ? "E-Mail oder Passwort falsch" : msg);

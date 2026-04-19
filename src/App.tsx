@@ -21,6 +21,7 @@ import Uben from "./pages/Uben";
 import Profil from "./pages/Profil";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <LearningProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/lernen" element={<Lernen />} />
