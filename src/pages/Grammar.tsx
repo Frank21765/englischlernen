@@ -95,7 +95,7 @@ export default function Grammar() {
         topic: hasSelection ? topic : undefined,
       }),
       auto: true,
-      title: `Grammatik-Übung · ${shortAns}`,
+      title: shortAns,
       returnTo: `/uben/grammatik?resume=${resumeId}`,
       returnLabel: "Zurück zur Lektion",
     });
