@@ -4,7 +4,7 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import { useLearning } from "@/hooks/useLearningContext";
 import AccessGate from "@/components/AccessGate";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, Flame, GraduationCap, History, LogOut, MessageCircle, PenLine, Settings, Shield, Sparkles, Trophy } from "lucide-react";
+import { BookOpen, Flame, GraduationCap, History, Library, LogOut, MessageCircle, PenLine, Settings, Shield, Sparkles, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import appIcon from "@/assets/app-icon.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { levelFromXp } from "@/lib/gamification";
 const baseNav = [
   { to: "/lernen", label: "Lernen", icon: Sparkles },
   { to: "/chat", label: "Coach Ellie", icon: MessageCircle },
-  { to: "/karteikarten", label: "Karten", icon: Brain },
+  { to: "/grammatik", label: "Grammatik", icon: Library },
   { to: "/quiz", label: "Quiz", icon: GraduationCap },
   { to: "/lueckentext", label: "Lückentext", icon: PenLine },
   { to: "/vokabeln", label: "Vokabeln", icon: BookOpen },
@@ -25,7 +25,7 @@ const baseNav = [
 export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useUserAccess();
-  const { level, topic, ready: ctxReady } = useLearning();
+  const { level, topic, ready: ctxReady, hasSelection } = useLearning();
   const navItems = isAdmin ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield }] : baseNav;
   const navigate = useNavigate();
   const [xp, setXp] = useState(0);
@@ -84,7 +84,7 @@ export default function AppLayout() {
                 </>
               )}
             </NavLink>
-            {ctxReady && (
+            {ctxReady && hasSelection && (
               <NavLink
                 to="/lernen"
                 title="Aktuelles Niveau und Thema – tippen zum Ändern"
