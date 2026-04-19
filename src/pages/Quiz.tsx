@@ -89,13 +89,19 @@ export default function Quiz() {
     setTopic(ctxTopic);
   }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
 
-  // Restore a quiz session that was paused for "Frag Ellie"
+  // Restore a quiz session that was paused for "Frag Ellie".
+  // Runs once on mount; reads from window.location so we don't depend on
+  // react-router's async state propagation.
   useEffect(() => {
-    const resumeId = params.get("resume");
-    if (!resumeId || started) return;
+    const search = new URLSearchParams(window.location.search);
+    const resumeId = search.get("resume");
+    if (!resumeId) return;
     try {
       const raw = sessionStorage.getItem(`quiz-resume-${resumeId}`);
-      if (!raw) return;
+      if (!raw) {
+        console.warn("[quiz] resume snapshot not found:", resumeId);
+        return;
+      }
       const snap = JSON.parse(raw) as {
         mode: QuizMode; queue: QuizItem[]; pool: Vocab[]; idx: number; picked: string | null;
         stats: { correct: number; total: number }; combo: number; sessionId: string | null;
@@ -113,12 +119,11 @@ export default function Quiz() {
       setVocabSource(snap.vocabSource);
       setStarted(true);
       sessionStorage.removeItem(`quiz-resume-${resumeId}`);
-      // strip the resume param from URL
-      const next = new URLSearchParams(params);
-      next.delete("resume");
-      navigate({ pathname: "/quiz", search: next.toString() ? `?${next.toString()}` : "" }, { replace: true });
-    } catch {
-      // ignore corrupt snapshot
+      search.delete("resume");
+      const qs = search.toString();
+      navigate({ pathname: "/quiz", search: qs ? `?${qs}` : "" }, { replace: true });
+    } catch (e) {
+      console.error("[quiz] resume failed", e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

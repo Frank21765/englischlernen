@@ -40,12 +40,12 @@ export function ellieExplainQuizMistakePrompt(opts: {
   const { prompt, userAnswer, correctAnswer, level, topic } = opts;
   const ctx = [level && `Level ${level}`, topic && `Thema: ${topic}`].filter(Boolean).join(" · ");
   const ctxLine = ctx ? `\nKontext: ${ctx}` : "";
-  return `Ich habe gerade einen Fehler im Quiz gemacht.${ctxLine}
+  return `Hmm, da ist mir gerade etwas durchgerutscht – kannst du mir kurz weiterhelfen?${ctxLine}
 Frage: *${prompt}*
 Meine Antwort: *${userAnswer}*
 Richtige Antwort: *${correctAnswer}*
 
-Bitte erklär mir kurz: Warum ist meine Antwort falsch, was bedeutet die richtige Antwort, und wie merke ich mir das am besten? Gib 1–2 Beispielsätze.`;
+Bitte erklär mir freundlich: Warum passt meine Antwort nicht so gut, was bedeutet die richtige Antwort genau, und wie kann ich mir das gut merken? Gib mir 1–2 kurze Beispielsätze auf meinem Niveau.`;
 }
 
 export function ellieExplainGrammarPrompt(opts: {

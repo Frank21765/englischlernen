@@ -169,8 +169,9 @@ export default function Chat() {
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
-        // Pass session id explicitly so we don't depend on a stale closure.
-        setTimeout(() => { void send(prefill, targetId!); }, 60);
+        // Pass session id AND empty base messages explicitly so we don't depend
+        // on stale closures (previous session's messages would otherwise leak in).
+        setTimeout(() => { void send(prefill, targetId!, []); }, 60);
       } else {
         setInput(prefill);
       }
@@ -233,16 +234,17 @@ export default function Chat() {
     setRenamingId(null);
   };
 
-  const send = async (text?: string, sessionIdOverride?: string) => {
+  const send = async (text?: string, sessionIdOverride?: string, baseMessagesOverride?: Msg[]) => {
     const sessionId = sessionIdOverride ?? activeId;
     if (!user || busy || !sessionId) return;
     const content = (text ?? input).trim();
     if (!content) return;
     setInput("");
-    const isFirstChat = messages.length === 0;
+    const baseMessages = baseMessagesOverride ?? messages;
+    const isFirstChat = baseMessages.length === 0;
 
     const userMsg: Msg = { role: "user", content };
-    const optimistic = [...messages, userMsg];
+    const optimistic = [...baseMessages, userMsg];
     setMessages(optimistic);
     setBusy(true);
 
