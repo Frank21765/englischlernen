@@ -53,6 +53,9 @@ export default function Chat() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showSessions, setShowSessions] = useState(false);
+  // Sessions opened via a context launcher (Frag Ellie / explain mistake / etc.).
+  // For these, we suppress the generic starter prompts and show a "Zurück zur Übung" button.
+  const [contextSessions, setContextSessions] = useState<Record<string, { returnTo: string; returnLabel: string }>>({});
   const handledIncomingRef = useRef(false);
   // Sessions whose messages we should NOT auto-load (because we just created them
   // for a context-prefill flow and are about to stream the first answer).
