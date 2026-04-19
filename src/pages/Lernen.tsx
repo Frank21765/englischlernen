@@ -89,6 +89,11 @@ export default function Lernen() {
   return (
     <div className="space-y-5">
       <header className="space-y-1">
+        {username && (
+          <p className="text-sm sm:text-base text-accent font-semibold">
+            Hello {username}, schön, dass du da bist.
+          </p>
+        )}
         <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
           Dein Lern-Hub – aktueller Fokus, fällige Wiederholungen und der nächste Schritt.
