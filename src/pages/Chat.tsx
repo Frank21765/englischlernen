@@ -359,8 +359,18 @@ export default function Chat() {
 
         {/* Chat area */}
         <div className="space-y-4 min-w-0 w-full">
-        <header>
-          <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
+        <header className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
+            {hasSelection && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent-foreground/90">
+                <Sparkles className="h-3 w-3 text-accent" />
+                <span className="font-mono">{level}</span>
+                <span className="text-muted-foreground/60">·</span>
+                <span className="truncate max-w-[10rem]">{topic}</span>
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             Dein KI-Tutor. Schreib auf Deutsch oder Englisch – stell Fragen, übe Dialoge, lass dich korrigieren.
           </p>
