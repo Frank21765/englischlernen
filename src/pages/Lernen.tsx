@@ -119,22 +119,14 @@ export default function Lernen() {
 
         <div className="space-y-3">
           <Label htmlFor="topic" className="text-base font-semibold">Thema</Label>
-          <Input
-            id="topic"
-            value={topic}
-            maxLength={60}
-            onChange={(e) => setSelection(level, e.target.value)}
-            placeholder="z. B. Kochen, Vorstellungsgespräch, Strandurlaub…"
-            className="h-12 rounded-2xl text-base"
-          />
           <div className="flex flex-wrap gap-2">
             {QUICK_TOPICS.map((t) => (
               <button
                 key={t}
                 type="button"
-                onClick={() => setSelection(level, t)}
+                onClick={() => { setCustomMode(false); setSelection(level, t); }}
                 className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
-                  topic === t
+                  !customMode && topic === t
                     ? "bg-accent text-accent-foreground shadow-soft"
                     : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 }`}
@@ -142,13 +134,35 @@ export default function Lernen() {
                 {t}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => { setCustomMode(true); if (!isCustomTopic) setSelection(level, ""); }}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth inline-flex items-center gap-1.5 ${
+                customMode
+                  ? "bg-accent text-accent-foreground shadow-soft"
+                  : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              }`}
+            >
+              <Pencil className="h-3.5 w-3.5" /> Eigenes Thema
+            </button>
           </div>
+          {customMode && (
+            <Input
+              id="topic"
+              value={topic}
+              maxLength={60}
+              onChange={(e) => setSelection(level, e.target.value)}
+              placeholder="z. B. Weltraum, Autos, Büro-Englisch, Musik…"
+              className="h-12 rounded-2xl text-base"
+              autoFocus
+            />
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-3 pt-2">
           <Button variant="hero" size="xl" disabled={busy} onClick={generateAndStartQuiz} className="w-full whitespace-normal text-center leading-tight px-3">
             {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
-            <span className="min-w-0">Neue Vokabeln + Quiz</span>
+            <span className="min-w-0">Neue Vokabeln lernen</span>
           </Button>
           <Button variant="hero" size="xl" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
             <Library className="h-5 w-5 shrink-0" />
