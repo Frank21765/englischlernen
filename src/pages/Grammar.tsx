@@ -256,6 +256,14 @@ export default function Grammar() {
                         </span>
                       )}
                     </div>
+                    {isRevealed && (
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="ghost" className="rounded-full text-xs h-7" onClick={() => askEllieAboutPractice(i)}>
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          {ok ? "Ellie vertieft die Regel" : "Frag Ellie zu dieser Übung"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
