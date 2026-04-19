@@ -26,8 +26,11 @@ interface LookupResult {
   german: string;
   english: string;
   part_of_speech: string;
-  example_de: string;
-  example_en: string;
+  examples_de: string[];
+  examples_en: string[];
+  // legacy fields (older edge function)
+  example_de?: string;
+  example_en?: string;
   note?: string;
 }
 
@@ -85,7 +88,7 @@ export default function Vokabeln() {
     setLookup(null);
     setLookupQuery(word);
     try {
-      const { data, error } = await supabase.functions.invoke("translate-word", { body: { word } });
+      const { data, error } = await supabase.functions.invoke("translate-word", { body: { word, level: activeLevel } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.result) throw new Error("Keine Übersetzung erhalten");
@@ -217,16 +220,26 @@ export default function Vokabeln() {
               <span className="hidden sm:inline">In Sammlung</span>
             </Button>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div className="rounded-xl bg-muted/60 p-3">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Beispiel (DE)</div>
-              <div>{lookup.example_de}</div>
-            </div>
-            <div className="rounded-xl bg-muted/60 p-3">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Beispiel (EN)</div>
-              <div>{lookup.example_en}</div>
-            </div>
-          </div>
+          {(() => {
+            const examplesDe = lookup.examples_de?.length ? lookup.examples_de : (lookup.example_de ? [lookup.example_de] : []);
+            const examplesEn = lookup.examples_en?.length ? lookup.examples_en : (lookup.example_en ? [lookup.example_en] : []);
+            return (
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-muted/60 p-3 space-y-1.5">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
+                  {examplesDe.slice(0, 3).map((ex, i) => (
+                    <div key={i} className="leading-snug">• {ex}</div>
+                  ))}
+                </div>
+                <div className="rounded-xl bg-muted/60 p-3 space-y-1.5">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
+                  {examplesEn.slice(0, 3).map((ex, i) => (
+                    <div key={i} className="leading-snug">• {ex}</div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </Card>
       )}
 
