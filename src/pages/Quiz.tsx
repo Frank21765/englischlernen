@@ -46,8 +46,8 @@ export default function Quiz() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const level = (params.get("level") ?? "A1") as Level;
-  const topic = params.get("topic") ?? "Alltag";
+  const [level, setLevel] = useState<Level | null>(null);
+  const [topic, setTopic] = useState<string | null>(null);
 
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [pool, setPool] = useState<Vocab[]>([]);
@@ -63,15 +63,24 @@ export default function Quiz() {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: profile }, { data: vocab }] = await Promise.all([
-        supabase.from("profiles").select("direction_mode").eq("user_id", user.id).maybeSingle(),
-        supabase
-          .from("vocabulary")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("level", level)
-          .eq("topic", topic),
-      ]);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("direction_mode, default_level, default_topic")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const effectiveLevel = (params.get("level") ?? profile?.default_level ?? "A1") as Level;
+      const effectiveTopic = params.get("topic") ?? profile?.default_topic ?? "Alltag";
+      setLevel(effectiveLevel);
+      setTopic(effectiveTopic);
+
+      const { data: vocab } = await supabase
+        .from("vocabulary")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("level", effectiveLevel)
+        .eq("topic", effectiveTopic);
+
       const mode = (profile?.direction_mode as "de_en"|"en_de"|"random") ?? "random";
       setDirectionMode(mode);
 
@@ -90,14 +99,14 @@ export default function Quiz() {
       if (items.length) {
         const { data: ses } = await supabase
           .from("learning_sessions")
-          .insert({ user_id: user.id, mode: "quiz", level, topic, total_answers: 0, correct_answers: 0 })
+          .insert({ user_id: user.id, mode: "quiz", level: effectiveLevel, topic: effectiveTopic, total_answers: 0, correct_answers: 0 })
           .select("id")
           .single();
         setSessionId(ses?.id ?? null);
       }
       setLoading(false);
     })();
-  }, [user, level, topic]);
+  }, [user, params]);
 
   if (loading) return <div className="text-muted-foreground animate-shimmer">Lade Quiz…</div>;
 
