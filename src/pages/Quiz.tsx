@@ -38,10 +38,10 @@ type QuizItem = VocabQ | GrammarQ;
 function buildEllieChatTitle(item: QuizItem): string {
   if (item.kind === "grammar") {
     const shortPrompt = item.prompt.replace(/\s+/g, " ").trim();
-    return `Grammatik · ${shortPrompt.length > 28 ? `${shortPrompt.slice(0, 25)}…` : shortPrompt}`;
+    return shortPrompt.length > 36 ? `${shortPrompt.slice(0, 33)}…` : shortPrompt;
   }
 
-  return `Quiz · ${item.vocab.english}`;
+  return item.vocab.english;
 }
 
 function shuffle<T>(arr: T[]): T[] {
