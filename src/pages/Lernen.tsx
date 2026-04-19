@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { toast } from "sonner";
-import { Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
+import { GraduationCap, Library, Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
-  const { level, topic, setSelection } = useLearning();
+  const { level, topic, hasSelection, setSelection } = useLearning();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
@@ -29,7 +29,7 @@ export default function Lernen() {
     })();
   }, [user]);
 
-  const generateAndStart = async (mode: "flashcards" | "quiz") => {
+  const generateAndStartQuiz = async () => {
     if (!user) return;
     if (!topic.trim()) {
       toast.error("Bitte ein Thema angeben");
@@ -69,7 +69,7 @@ export default function Lernen() {
       setSelection(level, topic, { persist: true });
 
       toast.success(`${pairs.length} neue Vokabeln erzeugt`);
-      navigate(`/${mode === "flashcards" ? "karteikarten" : "quiz"}`);
+      navigate("/quiz");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Fehler beim Erzeugen";
       toast.error(msg);
@@ -83,9 +83,11 @@ export default function Lernen() {
       <header className="space-y-2">
         <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Wähle ein Niveau und ein Thema – die KI generiert 20 frische Vokabeln und Sätze für dich.
+          {hasSelection
+            ? "Wähle ein Niveau und ein Thema – die KI generiert 20 frische Vokabeln und Sätze für dich."
+            : "Wähle zuerst ein CEFR-Niveau und ein Thema, um loszulegen."}
         </p>
-        {vocabCount !== null && (
+        {vocabCount !== null && hasSelection && (
           <p className="text-sm text-muted-foreground">
             Du hast bereits <span className="font-semibold text-foreground">{vocabCount}</span> Vokabeln in deiner Sammlung.
           </p>
@@ -142,21 +144,24 @@ export default function Lernen() {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-3 pt-2">
-          <Button variant="hero" size="xl" disabled={busy} onClick={() => generateAndStart("flashcards")} className="w-full whitespace-normal text-center leading-tight px-3">
-            {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
-            <span className="min-w-0">Neue Vokabeln + Karteikarten</span>
-          </Button>
-          <Button variant="hero" size="xl" disabled={busy} onClick={() => generateAndStart("quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="hero" size="xl" disabled={busy} onClick={generateAndStartQuiz} className="w-full whitespace-normal text-center leading-tight px-3">
             {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
             <span className="min-w-0">Neue Vokabeln + Quiz</span>
           </Button>
+          <Button variant="hero" size="xl" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
+            <Library className="h-5 w-5 shrink-0" />
+            <span className="min-w-0">Grammatik-Lektion</span>
+          </Button>
         </div>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Button variant="soft" size="lg" onClick={() => navigate("/quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
+            <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz starten</span>
+          </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext-Übung</span>
+            <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
           </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/chat")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Mit Coach Ellie chatten</span>
+            <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Coach Ellie</span>
           </Button>
         </div>
       </Card>
