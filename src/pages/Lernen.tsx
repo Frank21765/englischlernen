@@ -165,12 +165,6 @@ export default function Lernen() {
           </Button>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <Button variant="soft" size="lg" onClick={() => startWithExisting("flashcards")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <Brain className="h-4 w-4 shrink-0" /> <span className="min-w-0">Karteikarten ohne Neugenerierung</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => startWithExisting("quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
-            <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz ohne Neugenerierung</span>
-          </Button>
           <Button variant="soft" size="lg" onClick={() => navigate(`/lueckentext?level=${level}&topic=${encodeURIComponent(topic)}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext-Übung</span>
           </Button>
