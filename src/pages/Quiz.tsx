@@ -303,7 +303,7 @@ export default function Quiz() {
             size="xl"
             disabled={loading || (mode === "vocab" && vocabSource === "review" && reviewCount === 0)}
             onClick={() => mode === "vocab" ? startVocab(vocabSource) : startGrammar()}
-            className="w-full"
+            className="w-full text-sm sm:text-lg whitespace-normal leading-tight px-4 sm:px-10"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <GraduationCap className="h-5 w-5" />}
             {mode === "grammar"
