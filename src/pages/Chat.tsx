@@ -54,6 +54,9 @@ export default function Chat() {
   const [renameValue, setRenameValue] = useState("");
   const [showSessions, setShowSessions] = useState(false);
   const handledIncomingRef = useRef(false);
+  // Sessions whose messages we should NOT auto-load (because we just created them
+  // for a context-prefill flow and are about to stream the first answer).
+  const skipLoadRef = useRef<Set<string>>(new Set());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
@@ -89,6 +92,11 @@ export default function Chat() {
   // Load messages for the active session
   useEffect(() => {
     if (!user || !activeId) return;
+    if (skipLoadRef.current.has(activeId)) {
+      // We're about to stream into this freshly-created session — don't wipe it.
+      skipLoadRef.current.delete(activeId);
+      return;
+    }
     (async () => {
       const { data } = await supabase
         .from("chat_messages")
@@ -133,6 +141,8 @@ export default function Chat() {
           .select("id,title,updated_at")
           .single();
         if (created) {
+          // Prevent the load-messages effect from wiping our about-to-stream content.
+          skipLoadRef.current.add(created.id);
           setSessions((prev) => [created as ChatSession, ...prev]);
           setActiveId(created.id);
           setMessages([]);
@@ -146,7 +156,8 @@ export default function Chat() {
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
-        setTimeout(() => { void send(prefill); }, 60);
+        // Pass session id explicitly so we don't depend on a stale closure.
+        setTimeout(() => { void send(prefill, targetId!); }, 60);
       } else {
         setInput(prefill);
       }
@@ -209,13 +220,13 @@ export default function Chat() {
     setRenamingId(null);
   };
 
-  const send = async (text?: string) => {
-    if (!user || busy || !activeId) return;
+  const send = async (text?: string, sessionIdOverride?: string) => {
+    const sessionId = sessionIdOverride ?? activeId;
+    if (!user || busy || !sessionId) return;
     const content = (text ?? input).trim();
     if (!content) return;
     setInput("");
     const isFirstChat = messages.length === 0;
-    const sessionId = activeId;
 
     const userMsg: Msg = { role: "user", content };
     const optimistic = [...messages, userMsg];

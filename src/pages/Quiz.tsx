@@ -407,25 +407,31 @@ export default function Quiz() {
       }
     }
 
-    const delay = current.kind === "grammar" ? 1500 : 900;
-    setTimeout(() => {
-      let nextQueue = queue;
-      if (!isCorrect && current.kind === "vocab") {
-        const offset = 3 + Math.floor(Math.random() * 3);
-        const insertAt = Math.min(idx + 1 + offset, queue.length);
-        const dir = pickDirection(directionMode);
-        const replay: VocabQ = { kind: "vocab", vocab: current.vocab, direction: dir, options: buildOptions(current.vocab, pool, dir) };
-        nextQueue = [...queue.slice(0, insertAt), replay, ...queue.slice(insertAt)];
-        setQueue(nextQueue);
-      }
-      const nextIdx = idx + 1;
-      if (nextIdx >= nextQueue.length) {
-        finish(newStats);
-        return;
-      }
-      setIdx(nextIdx);
-      setPicked(null);
-    }, delay);
+    // Auto-advance only on correct vocab answers (snappy flow).
+    // For wrong answers and ALL grammar questions, wait for the user to press
+    // "Weiter" so the explanation and "Frag Ellie" button stay usable.
+    if (current.kind === "vocab" && isCorrect) {
+      setTimeout(() => { advance(isCorrect); }, 900);
+    }
+  };
+
+  const advance = (wasCorrect: boolean) => {
+    let nextQueue = queue;
+    if (!wasCorrect && current.kind === "vocab") {
+      const offset = 3 + Math.floor(Math.random() * 3);
+      const insertAt = Math.min(idx + 1 + offset, queue.length);
+      const dir = pickDirection(directionMode);
+      const replay: VocabQ = { kind: "vocab", vocab: current.vocab, direction: dir, options: buildOptions(current.vocab, pool, dir) };
+      nextQueue = [...queue.slice(0, insertAt), replay, ...queue.slice(insertAt)];
+      setQueue(nextQueue);
+    }
+    const nextIdx = idx + 1;
+    if (nextIdx >= nextQueue.length) {
+      finish(stats);
+      return;
+    }
+    setIdx(nextIdx);
+    setPicked(null);
   };
 
   const remaining = queue.length - idx;
@@ -483,7 +489,8 @@ export default function Quiz() {
       {picked && (() => {
         const isWrong = picked !== correctAnswer;
         // Show Ellie helper after a wrong vocab answer, or always for grammar (explanation deepening).
-        if (current.kind === "vocab" && !isWrong) return null;
+        const showEllie = (current.kind === "vocab" && isWrong) || current.kind === "grammar";
+        if (!showEllie) return null;
         const prompt = current.kind === "vocab"
           ? ellieExplainQuizMistakePrompt({
               prompt: promptText,
@@ -510,6 +517,19 @@ export default function Quiz() {
           </div>
         );
       })()}
+
+      {picked && !(current.kind === "vocab" && picked === correctAnswer) && (
+        <div className="flex justify-center">
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={() => advance(picked === correctAnswer)}
+            className="rounded-full px-8"
+          >
+            Weiter
+          </Button>
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>
