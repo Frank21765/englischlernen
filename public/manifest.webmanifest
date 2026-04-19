@@ -1,0 +1,26 @@
+{
+  "name": "¡Hola! – Spanisch lernen",
+  "short_name": "¡Hola!",
+  "description": "Spanisch lernen mit KI – Vokabeln, Karteikarten und Quiz auf deinem Niveau.",
+  "start_url": "/lernen",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/app-icon.png?v=2",
+      "sizes": "512x512 1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon.png?v=2",
+      "sizes": "512x512 1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
