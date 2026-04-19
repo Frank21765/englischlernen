@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +24,11 @@ import NotFound from "./pages/NotFound.tsx";
 import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
+
+const LegacyRedirect = ({ to }: { to: string }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -52,12 +57,12 @@ const App = () => (
                 <Route path="einstellungen" element={<Einstellungen />} />
               </Route>
               {/* Legacy redirects */}
-              <Route path="/quiz" element={<Navigate to="/uben/quiz" replace />} />
-              <Route path="/grammatik" element={<Navigate to="/uben/grammatik" replace />} />
-              <Route path="/lueckentext" element={<Navigate to="/uben/lueckentext" replace />} />
-              <Route path="/erfolge" element={<Navigate to="/profil/erfolge" replace />} />
-              <Route path="/statistik" element={<Navigate to="/profil/statistik" replace />} />
-              <Route path="/einstellungen" element={<Navigate to="/profil/einstellungen" replace />} />
+              <Route path="/quiz" element={<LegacyRedirect to="/uben/quiz" />} />
+              <Route path="/grammatik" element={<LegacyRedirect to="/uben/grammatik" />} />
+              <Route path="/lueckentext" element={<LegacyRedirect to="/uben/lueckentext" />} />
+              <Route path="/erfolge" element={<LegacyRedirect to="/profil/erfolge" />} />
+              <Route path="/statistik" element={<LegacyRedirect to="/profil/statistik" />} />
+              <Route path="/einstellungen" element={<LegacyRedirect to="/profil/einstellungen" />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />

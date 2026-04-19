@@ -35,6 +35,15 @@ interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; option
 interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: string }
 type QuizItem = VocabQ | GrammarQ;
 
+function buildEllieChatTitle(item: QuizItem): string {
+  if (item.kind === "grammar") {
+    const shortPrompt = item.prompt.replace(/\s+/g, " ").trim();
+    return `Grammatik · ${shortPrompt.length > 28 ? `${shortPrompt.slice(0, 25)}…` : shortPrompt}`;
+  }
+
+  return `Quiz · ${item.vocab.english}`;
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -555,6 +564,7 @@ export default function Quiz() {
           const url = buildEllieUrl({
             prefill: prompt,
             auto: true,
+            title: buildEllieChatTitle(current),
             returnTo: `/quiz?resume=${resumeId}`,
             returnLabel: "Zurück zum Quiz",
           });

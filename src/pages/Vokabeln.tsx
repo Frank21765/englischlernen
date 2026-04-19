@@ -243,6 +243,7 @@ export default function Vokabeln() {
                   to={buildEllieUrl({
                     prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
                     auto: true,
+                    title: `Vokabel · ${lookup.english}`,
                     returnTo: "/vokabeln",
                     returnLabel: "Zurück zu Vokabeln",
                   })}
@@ -303,6 +304,7 @@ export default function Vokabeln() {
                     to={buildEllieUrl({
                       prefill: ellieAskWordPrompt(v.german, v.english, v.level),
                       auto: true,
+                      title: `Vokabel · ${v.english}`,
                       returnTo: "/vokabeln",
                       returnLabel: "Zurück zu Vokabeln",
                     })}
