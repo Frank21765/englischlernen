@@ -185,6 +185,11 @@ export default function Grammar() {
               </Button>
             </div>
             <p className="text-sm leading-relaxed">{lesson.explanation}</p>
+            <div className="flex justify-end">
+              <Button size="sm" variant="soft" className="rounded-full" onClick={askEllieAboutLesson}>
+                <MessageCircle className="h-4 w-4" /> Lass es dir von Ellie erklären
+              </Button>
+            </div>
           </Card>
 
           <Card className="p-4 sm:p-5 space-y-3">
