@@ -1,0 +1,1 @@
+ALTER TABLE public.vocabulary RENAME COLUMN spanish TO english;
