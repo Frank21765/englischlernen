@@ -29,9 +29,18 @@ function maskSentence(sentence: string, word: string): { before: string; after: 
 
 export default function Lueckentext() {
   const { user } = useAuth();
+  const { level: ctxLevel, topic: ctxTopic, setSelection } = useLearning();
   const [params] = useSearchParams();
-  const [level, setLevel] = useState<Level>((params.get("level") as Level) ?? "A1");
-  const [topic, setTopic] = useState(params.get("topic") ?? "Alltag");
+  const [level, setLevelState] = useState<Level>(((params.get("level") as Level) ?? ctxLevel));
+  const [topic, setTopicState] = useState(params.get("topic") ?? ctxTopic);
+
+  useEffect(() => {
+    if (!params.get("level")) setLevelState(ctxLevel);
+    if (!params.get("topic")) setTopicState(ctxTopic);
+  }, [ctxLevel, ctxTopic, params]);
+
+  const setLevel = (l: Level) => { setLevelState(l); setSelection(l, topic); };
+  const setTopic = (t: string) => { setTopicState(t); setSelection(level, t); };
 
   const [items, setItems] = useState<ClozeItem[]>([]);
   const [idx, setIdx] = useState(0);
