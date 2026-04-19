@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,22 +13,14 @@ import { Loader2, MessageCircle, PenLine, Sparkles } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
+  const { level, topic, setSelection } = useLearning();
   const navigate = useNavigate();
-  const [level, setLevel] = useState<Level>("A1");
-  const [topic, setTopic] = useState("Alltag");
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("default_level, default_topic")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (profile?.default_level) setLevel(profile.default_level as Level);
-      if (profile?.default_topic) setTopic(profile.default_topic);
       const { count } = await supabase
         .from("vocabulary")
         .select("id", { count: "exact", head: true })
@@ -73,11 +66,10 @@ export default function Lernen() {
         .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
       if (insErr) throw insErr;
 
-      await supabase.from("profiles").update({ default_level: level, default_topic: topic }).eq("user_id", user.id);
+      setSelection(level, topic, { persist: true });
 
       toast.success(`${pairs.length} neue Vokabeln erzeugt`);
-      const params = new URLSearchParams({ level, topic });
-      navigate(`/${mode === "flashcards" ? "karteikarten" : "quiz"}?${params.toString()}`);
+      navigate(`/${mode === "flashcards" ? "karteikarten" : "quiz"}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Fehler beim Erzeugen";
       toast.error(msg);
@@ -85,7 +77,6 @@ export default function Lernen() {
       setBusy(false);
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -109,7 +100,7 @@ export default function Lernen() {
               <button
                 key={l}
                 type="button"
-                onClick={() => setLevel(l)}
+                onClick={() => setSelection(l as Level, topic)}
                 className={`min-w-[3.25rem] rounded-2xl px-4 py-2 text-sm font-bold transition-bounce ${
                   level === l
                     ? "bg-primary text-primary-foreground shadow-glow scale-105"
@@ -128,7 +119,7 @@ export default function Lernen() {
             id="topic"
             value={topic}
             maxLength={60}
-            onChange={(e) => setTopic(e.target.value)}
+            onChange={(e) => setSelection(level, e.target.value)}
             placeholder="z. B. Kochen, Vorstellungsgespräch, Strandurlaub…"
             className="h-12 rounded-2xl text-base"
           />
@@ -137,7 +128,7 @@ export default function Lernen() {
               <button
                 key={t}
                 type="button"
-                onClick={() => setTopic(t)}
+                onClick={() => setSelection(level, t)}
                 className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-smooth ${
                   topic === t
                     ? "bg-accent text-accent-foreground shadow-soft"
@@ -161,7 +152,7 @@ export default function Lernen() {
           </Button>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <Button variant="soft" size="lg" onClick={() => navigate(`/lueckentext?level=${level}&topic=${encodeURIComponent(topic)}`)} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext-Übung</span>
           </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/chat")} className="w-full whitespace-normal text-center leading-tight px-3">
