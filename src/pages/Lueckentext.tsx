@@ -230,6 +230,40 @@ export default function Lueckentext() {
         </div>
       )}
 
+      {revealed !== null && (
+        <div className="flex justify-center">
+          <Button
+            variant="soft"
+            size="sm"
+            className="rounded-full"
+            onClick={() => {
+              const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+              const snap = { items, idx, answer, revealed, stats, combo };
+              try { sessionStorage.setItem(`cloze-resume-${resumeId}`, JSON.stringify(snap)); } catch { /* ignore */ }
+              const shortWord = current.missing_word.length > 24 ? `${current.missing_word.slice(0, 21)}…` : current.missing_word;
+              const url = buildEllieUrl({
+                prefill: ellieExplainClozePrompt({
+                  sentence: current.full_sentence,
+                  missingWord: current.missing_word,
+                  translation: current.translation,
+                  userAnswer: answer,
+                  level,
+                  topic,
+                }),
+                auto: true,
+                title: `Lückentext · ${shortWord}`,
+                returnTo: `/uben/lueckentext?resume=${resumeId}`,
+                returnLabel: "Zurück zur Übung",
+              });
+              navigate(url);
+            }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            {revealed ? "Lass es dir von Ellie vertiefen" : "Frag Ellie zu dieser Lücke"}
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>
         <span>Beantwortet: <span className="font-semibold text-foreground">{stats.total}</span></span>
