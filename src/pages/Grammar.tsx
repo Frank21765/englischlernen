@@ -60,7 +60,7 @@ export default function Grammar() {
     if (!lesson) return;
     const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try { sessionStorage.setItem(`grammar-resume-${resumeId}`, JSON.stringify({ lesson, answers, revealed })); } catch { /* ignore */ }
-    const shortTitle = lesson.title.length > 28 ? `${lesson.title.slice(0, 25)}…` : lesson.title;
+    const shortTitle = lesson.title.length > 36 ? `${lesson.title.slice(0, 33)}…` : lesson.title;
     const url = buildEllieUrl({
       prefill: ellieExplainGrammarLessonPrompt({
         title: lesson.title,
@@ -69,7 +69,7 @@ export default function Grammar() {
         topic: hasSelection ? topic : undefined,
       }),
       auto: true,
-      title: `Grammatik · ${shortTitle}`,
+      title: shortTitle,
       returnTo: `/uben/grammatik?resume=${resumeId}`,
       returnLabel: "Zurück zur Lektion",
     });
@@ -95,7 +95,7 @@ export default function Grammar() {
         topic: hasSelection ? topic : undefined,
       }),
       auto: true,
-      title: `Grammatik-Übung · ${shortAns}`,
+      title: shortAns,
       returnTo: `/uben/grammatik?resume=${resumeId}`,
       returnLabel: "Zurück zur Lektion",
     });

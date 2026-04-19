@@ -252,7 +252,7 @@ export default function Lueckentext() {
                   topic,
                 }),
                 auto: true,
-                title: `Lückentext · ${shortWord}`,
+                title: shortWord,
                 returnTo: `/uben/lueckentext?resume=${resumeId}`,
                 returnLabel: "Zurück zur Übung",
               });
