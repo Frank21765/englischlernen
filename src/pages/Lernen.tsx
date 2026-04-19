@@ -17,17 +17,23 @@ export default function Lernen() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
+  const [dueCount, setDueCount] = useState<number | null>(null);
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { count } = await supabase
-        .from("vocabulary")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      setVocabCount(count ?? 0);
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const [{ count: total }, { count: dueOld }, { count: dueNew }] = await Promise.all([
+        supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("vocabulary").select("id", { count: "exact", head: true })
+          .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
+        supabase.from("vocabulary").select("id", { count: "exact", head: true })
+          .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
+      ]);
+      setVocabCount(total ?? 0);
+      setDueCount((dueOld ?? 0) + (dueNew ?? 0));
     })();
   }, [user]);
 
