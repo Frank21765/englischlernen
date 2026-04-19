@@ -83,6 +83,18 @@ export default function Quiz() {
     setTopic(ctxTopic);
   }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
 
+  // count saved vocab for current context (refreshed when picker shown)
+  useEffect(() => {
+    if (!user || !ctxReady || started) return;
+    (async () => {
+      const { count } = await supabase
+        .from("vocabulary")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
+      setReviewCount(count ?? 0);
+    })();
+  }, [user, ctxReady, ctxLevel, ctxTopic, started]);
+
   const startVocab = async () => {
     if (!user) return;
     setLoading(true);
