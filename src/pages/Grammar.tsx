@@ -79,6 +79,7 @@ export default function Grammar() {
   const askEllieAboutPractice = (i: number) => {
     if (!lesson) return;
     const p = lesson.practice[i];
+    const wasCorrect = (answers[i] ?? "").trim().toLowerCase() === p.answer.trim().toLowerCase();
     const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try { sessionStorage.setItem(`grammar-resume-${resumeId}`, JSON.stringify({ lesson, answers, revealed })); } catch { /* ignore */ }
     const shortAns = p.answer.length > 24 ? `${p.answer.slice(0, 21)}…` : p.answer;
@@ -88,6 +89,7 @@ export default function Grammar() {
         sentence: p.sentence,
         answer: p.answer,
         userAnswer: answers[i],
+        wasCorrect,
         hint: p.hint,
         level,
         topic: hasSelection ? topic : undefined,

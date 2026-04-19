@@ -247,6 +247,7 @@ export default function Lueckentext() {
                   missingWord: current.missing_word,
                   translation: current.translation,
                   userAnswer: answer,
+                  wasCorrect: revealed === true,
                   level,
                   topic,
                 }),
