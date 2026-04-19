@@ -120,7 +120,7 @@ export default function AppLayout() {
           ))}
         </nav>
       </header>
-      <main className="container max-w-6xl py-6">
+      <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden">
         <AccessGate>
           <Outlet />
         </AccessGate>
