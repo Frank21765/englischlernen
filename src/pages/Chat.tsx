@@ -40,6 +40,10 @@ function deriveTitle(text: string): string {
   return cleaned.length > 48 ? cleaned.slice(0, 45) + "…" : cleaned;
 }
 
+function isDefaultChatTitle(title?: string | null): boolean {
+  return !title || title === "Neuer Chat";
+}
+
 export default function Chat() {
   const { user } = useAuth();
   const { level, topic, hasSelection } = useLearning();
@@ -57,10 +61,11 @@ export default function Chat() {
   // Sessions opened via a context launcher (Frag Ellie / explain mistake / etc.).
   // For these, we suppress the generic starter prompts and show a "Zurück zur Übung" button.
   const [contextSessions, setContextSessions] = useState<Record<string, { returnTo: string; returnLabel: string }>>({});
-  const handledIncomingRef = useRef(false);
+  const handledIncomingKeyRef = useRef<string | null>(null);
   // Sessions whose messages we should NOT auto-load (because we just created them
   // for a context-prefill flow and are about to stream the first answer).
   const skipLoadRef = useRef<Set<string>>(new Set());
+  const messageLoadRequestRef = useRef(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
@@ -84,11 +89,11 @@ export default function Chat() {
           .single();
         if (created) {
           setSessions([created as ChatSession]);
-          setActiveId(created.id);
+          setActiveId((prev) => prev ?? created.id);
         }
       } else {
         setSessions(list);
-        setActiveId(list[0].id);
+        setActiveId((prev) => prev ?? list[0].id);
       }
     })();
   }, [user]);
@@ -96,19 +101,23 @@ export default function Chat() {
   // Load messages for the active session
   useEffect(() => {
     if (!user || !activeId) return;
-    if (skipLoadRef.current.has(activeId)) {
+    const sessionId = activeId;
+    const requestId = ++messageLoadRequestRef.current;
+    if (skipLoadRef.current.has(sessionId)) {
       // We're about to stream into this freshly-created session — don't wipe it.
-      skipLoadRef.current.delete(activeId);
+      skipLoadRef.current.delete(sessionId);
       return;
     }
+    setMessages([]);
     (async () => {
       const { data } = await supabase
         .from("chat_messages")
         .select("id,role,content")
         .eq("user_id", user.id)
-        .eq("session_id", activeId)
+        .eq("session_id", sessionId)
         .order("created_at", { ascending: true })
         .limit(200);
+      if (messageLoadRequestRef.current !== requestId) return;
       setMessages(
         (data ?? [])
           .filter((m) => m.role === "user" || m.role === "assistant")
@@ -129,22 +138,29 @@ export default function Chat() {
 
   // Handle incoming context from Quiz/Vokabeln/Review (?prefill=...&auto=1&fresh=1)
   useEffect(() => {
-    if (!user || handledIncomingRef.current) return;
+    if (!user) return;
     const prefill = searchParams.get("prefill");
-    if (!prefill) return;
+    if (!prefill) {
+      handledIncomingKeyRef.current = null;
+      return;
+    }
     const auto = searchParams.get("auto") === "1";
     const fresh = searchParams.get("fresh") !== "0";
     const isContext = searchParams.get("ctx") === "1";
     const returnTo = searchParams.get("return") ?? "";
     const returnLabel = searchParams.get("returnLabel") ?? "Zurück zur Übung";
-    handledIncomingRef.current = true;
+    const launchTitle = searchParams.get("title")?.trim() ?? "";
+    const incomingKey = [prefill, auto ? "1" : "0", fresh ? "1" : "0", isContext ? "1" : "0", returnTo, returnLabel, launchTitle].join("::");
+    if (handledIncomingKeyRef.current === incomingKey) return;
+    handledIncomingKeyRef.current = incomingKey;
 
     (async () => {
       let targetId = activeId;
+      let targetTitle = launchTitle;
       if (fresh) {
         const { data: created } = await supabase
           .from("chat_sessions")
-          .insert({ user_id: user.id, title: "Neuer Chat" })
+          .insert({ user_id: user.id, title: launchTitle || "Neuer Chat" })
           .select("id,title,updated_at")
           .single();
         if (created) {
@@ -154,6 +170,7 @@ export default function Chat() {
           setActiveId(created.id);
           setMessages([]);
           targetId = created.id;
+          targetTitle = created.title;
         }
       }
       if (isContext && targetId) {
@@ -169,9 +186,7 @@ export default function Chat() {
       setSearchParams(next, { replace: true });
 
       if (auto && targetId) {
-        // Pass session id AND empty base messages explicitly so we don't depend
-        // on stale closures (previous session's messages would otherwise leak in).
-        setTimeout(() => { void send(prefill, targetId!, []); }, 60);
+        void send(prefill, targetId, [], targetTitle);
       } else {
         setInput(prefill);
       }
@@ -234,7 +249,7 @@ export default function Chat() {
     setRenamingId(null);
   };
 
-  const send = async (text?: string, sessionIdOverride?: string, baseMessagesOverride?: Msg[]) => {
+  const send = async (text?: string, sessionIdOverride?: string, baseMessagesOverride?: Msg[], sessionTitleOverride?: string) => {
     const sessionId = sessionIdOverride ?? activeId;
     if (!user || busy || !sessionId) return;
     const content = (text ?? input).trim();
@@ -242,6 +257,7 @@ export default function Chat() {
     setInput("");
     const baseMessages = baseMessagesOverride ?? messages;
     const isFirstChat = baseMessages.length === 0;
+    const existingSessionTitle = sessionTitleOverride ?? sessions.find((s) => s.id === sessionId)?.title;
 
     const userMsg: Msg = { role: "user", content };
     const optimistic = [...baseMessages, userMsg];
@@ -254,7 +270,7 @@ export default function Chat() {
       .then(() => {});
 
     // If this is the first message, derive a title
-    if (isFirstChat) {
+    if (isFirstChat && isDefaultChatTitle(existingSessionTitle)) {
       const title = deriveTitle(content);
       await supabase.from("chat_sessions").update({ title }).eq("id", sessionId);
       setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, title } : s)));
@@ -280,12 +296,12 @@ export default function Chat() {
 
       if (resp.status === 429) {
         toast.error("Zu viele Anfragen. Bitte kurz warten.");
-        setMessages(messages);
+        setMessages(baseMessages);
         return;
       }
       if (resp.status === 402) {
         toast.error("AI-Guthaben aufgebraucht.");
-        setMessages(messages);
+        setMessages(baseMessages);
         return;
       }
       if (!resp.ok || !resp.body) {
@@ -346,7 +362,7 @@ export default function Chat() {
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Fehler beim Chat");
-      setMessages(messages);
+      setMessages(baseMessages);
     } finally {
       setBusy(false);
     }
