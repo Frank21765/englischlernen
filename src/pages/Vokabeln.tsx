@@ -10,6 +10,7 @@ import { LEVELS } from "@/lib/learning";
 import { ArrowRightLeft, Loader2, Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
+import { FocusChip } from "@/components/FocusChip";
 
 interface Vocab {
   id: string;
@@ -43,11 +44,12 @@ const statusClasses: Record<string, string> = {
 
 export default function Vokabeln() {
   const { user } = useAuth();
-  const { level: activeLevel, topic: activeTopic } = useLearning();
+  const { level: activeLevel, topic: activeTopic, hasSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
   const [search, setSearch] = useState("");
-  const [levelFilter, setLevelFilter] = useState<string>("alle");
-  const [topicFilter, setTopicFilter] = useState<string>("alle");
+  const [levelFilter, setLevelFilter] = useState<string>(hasSelection ? activeLevel : "alle");
+  const [topicFilter, setTopicFilter] = useState<string>(hasSelection ? activeTopic : "alle");
+  const [showFilters, setShowFilters] = useState(false);
 
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
@@ -134,10 +136,11 @@ export default function Vokabeln() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-3xl">Deine Vokabeln</h1>
-        <p className="text-muted-foreground">
-          Suche in deiner Sammlung – oder lass jedes andere Wort übersetzen.
+      <header className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl">Deine Vokabeln</h1>
+        <FocusChip />
+        <p className="text-sm text-muted-foreground">
+          Standardmäßig siehst du Vokabeln zu deinem aktuellen Fokus. Suche oder lass jedes andere Wort übersetzen.
         </p>
       </header>
 
@@ -164,30 +167,44 @@ export default function Vokabeln() {
             <span className="hidden sm:inline">Übersetzen</span>
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Tipp: Enter drückt „Übersetzen". Die Liste filtert sich automatisch.
-        </p>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="flex-1 min-w-[160px]">
-            <Label className="text-xs mb-1 block">Niveau</Label>
-            <div className="flex flex-wrap gap-1.5">
-              <button onClick={() => setLevelFilter("alle")} className={chip(levelFilter === "alle")}>Alle</button>
-              {LEVELS.map((l) => (
-                <button key={l} onClick={() => setLevelFilter(l)} className={chip(levelFilter === l)}>{l}</button>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            Tipp: Enter drückt „Übersetzen".
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            className="text-xs font-semibold text-primary hover:underline shrink-0"
+          >
+            {showFilters ? "Filter ausblenden" : "Weitere Filter"}
+          </button>
         </div>
-        {topics.length > 0 && (
-          <div>
-            <Label className="text-xs mb-1 block">Thema</Label>
-            <div className="flex flex-wrap gap-1.5">
-              <button onClick={() => setTopicFilter("alle")} className={chip(topicFilter === "alle")}>Alle</button>
-              {topics.map((t) => (
-                <button key={t} onClick={() => setTopicFilter(t)} className={chip(topicFilter === t)}>{t}</button>
-              ))}
+
+        {showFilters && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[160px]">
+                <Label className="text-xs mb-1 block">Niveau</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => setLevelFilter("alle")} className={chip(levelFilter === "alle")}>Alle</button>
+                  {LEVELS.map((l) => (
+                    <button key={l} onClick={() => setLevelFilter(l)} className={chip(levelFilter === l)}>{l}</button>
+                  ))}
+                </div>
+              </div>
             </div>
+            {topics.length > 0 && (
+              <div>
+                <Label className="text-xs mb-1 block">Thema</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => setTopicFilter("alle")} className={chip(topicFilter === "alle")}>Alle</button>
+                  {topics.map((t) => (
+                    <button key={t} onClick={() => setTopicFilter(t)} className={chip(topicFilter === t)}>{t}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Card>
