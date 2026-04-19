@@ -249,19 +249,72 @@ export default function Quiz() {
               </button>
             </div>
           </div>
+
+          {mode === "vocab" && (
+            <div>
+              <div className="text-sm font-semibold mb-2">Vokabel-Quelle wählen</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setVocabSource("review")}
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                    vocabSource === "review" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  <RefreshCw className="h-5 w-5 text-primary mb-1" />
+                  <div className="font-bold text-sm">Wiederholen</div>
+                  <div className="text-xs text-muted-foreground">
+                    {reviewCount === null ? "Gespeicherte Vokabeln" : `${reviewCount} gespeicherte Vokabeln`}
+                  </div>
+                </button>
+                <button
+                  onClick={() => setVocabSource("fresh")}
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                    vocabSource === "fresh" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  <Sparkles className="h-5 w-5 text-primary mb-1" />
+                  <div className="font-bold text-sm">Neu starten</div>
+                  <div className="text-xs text-muted-foreground">20 frische Vokabeln generieren</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {emptyReview && mode === "vocab" && vocabSource === "review" && (
+            <Card className="p-3 sm:p-4 bg-muted/40 text-sm space-y-3">
+              <p>
+                Für <span className="font-semibold">{ctxLevel} · {ctxTopic}</span> hast du noch keine gespeicherten Vokabeln.
+                Sollen wir frische Vokabeln generieren und direkt loslegen?
+              </p>
+              <Button
+                variant="hero"
+                size="sm"
+                disabled={loading}
+                onClick={() => { setVocabSource("fresh"); startVocab("fresh"); }}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                Neue Vokabeln generieren & starten
+              </Button>
+            </Card>
+          )}
+
           <Button
             variant="hero"
             size="xl"
-            disabled={loading}
-            onClick={mode === "vocab" ? startVocab : startGrammar}
+            disabled={loading || (mode === "vocab" && vocabSource === "review" && reviewCount === 0)}
+            onClick={() => mode === "vocab" ? startVocab(vocabSource) : startGrammar()}
             className="w-full"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <GraduationCap className="h-5 w-5" />}
-            {mode === "vocab" ? "Vokabel-Quiz starten" : "Grammatik-Quiz starten"}
+            {mode === "grammar"
+              ? "Grammatik-Quiz starten"
+              : vocabSource === "fresh"
+                ? "Neue Vokabeln generieren & Quiz starten"
+                : "Wiederholungs-Quiz starten"}
           </Button>
           {mode === "vocab" && (
             <p className="text-xs text-muted-foreground">
-              Tipp: Das Vokabel-Quiz nutzt deine vorhandenen Vokabeln für {ctxLevel} · {ctxTopic}.
+              Aktiver Kontext: <span className="font-semibold text-foreground">{ctxLevel}</span> · {ctxTopic}
             </p>
           )}
         </Card>
