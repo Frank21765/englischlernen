@@ -424,6 +424,23 @@ export default function Chat() {
 
         {/* Chat area */}
         <div className="space-y-4 min-w-0 w-full">
+        {activeId && contextSessions[activeId] && (
+          <div className="flex">
+            <Button
+              variant="soft"
+              size="sm"
+              className="rounded-full"
+              onClick={() => {
+                const ctx = contextSessions[activeId];
+                if (ctx?.returnTo) navigate(ctx.returnTo);
+                else navigate(-1);
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {contextSessions[activeId].returnLabel || "Zurück zur Übung"}
+            </Button>
+          </div>
+        )}
         <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
