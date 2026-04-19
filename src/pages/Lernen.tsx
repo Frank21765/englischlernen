@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { toast } from "sonner";
-import { GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, Sparkles } from "lucide-react";
+import { CalendarClock, GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, RefreshCw, Sparkles } from "lucide-react";
 
 export default function Lernen() {
   const { user } = useAuth();
@@ -17,17 +17,23 @@ export default function Lernen() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [vocabCount, setVocabCount] = useState<number | null>(null);
+  const [dueCount, setDueCount] = useState<number | null>(null);
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { count } = await supabase
-        .from("vocabulary")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      setVocabCount(count ?? 0);
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const [{ count: total }, { count: dueOld }, { count: dueNew }] = await Promise.all([
+        supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("vocabulary").select("id", { count: "exact", head: true })
+          .eq("user_id", user.id).neq("status", "mastered").lt("last_seen_at", since),
+        supabase.from("vocabulary").select("id", { count: "exact", head: true })
+          .eq("user_id", user.id).neq("status", "mastered").is("last_seen_at", null),
+      ]);
+      setVocabCount(total ?? 0);
+      setDueCount((dueOld ?? 0) + (dueNew ?? 0));
     })();
   }, [user]);
 
@@ -95,6 +101,56 @@ export default function Lernen() {
           </p>
         )}
       </header>
+
+      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="rounded-2xl bg-primary/10 p-2.5 sm:p-3 shrink-0">
+            <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <h2 className="text-base sm:text-lg font-bold">Heute fällig</h2>
+              {dueCount !== null && dueCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {dueCount} {dueCount === 1 ? "Vokabel" : "Vokabeln"} bereit
+                </span>
+              )}
+            </div>
+            {dueCount === null ? (
+              <p className="text-sm text-muted-foreground">Lade Wiederholungen…</p>
+            ) : dueCount > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Kurze Wiederholung jetzt – so bleibt dein Wortschatz lebendig. 💪
+              </p>
+            ) : vocabCount && vocabCount > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Alles wiederholt für heute! 🎉 Lust auf neue Vokabeln oder ein Quiz?
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Noch keine Vokabeln gespeichert. Starte unten dein erstes Set!
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {dueCount && dueCount > 0 ? (
+                <Button variant="hero" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
+                  <RefreshCw className="h-4 w-4 shrink-0" />
+                  <span>Jetzt wiederholen</span>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="soft" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
+                    <GraduationCap className="h-4 w-4 shrink-0" /> <span>Quiz starten</span>
+                  </Button>
+                  <Button variant="soft" size="sm" onClick={() => navigate("/chat")} className="whitespace-normal text-center leading-tight">
+                    <MessageCircle className="h-4 w-4 shrink-0" /> <span>Coach Ellie</span>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-4 sm:p-5 md:p-6 space-y-6 bg-gradient-card shadow-card">
         <div>
