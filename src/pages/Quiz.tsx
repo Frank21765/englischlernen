@@ -489,7 +489,8 @@ export default function Quiz() {
       {picked && (() => {
         const isWrong = picked !== correctAnswer;
         // Show Ellie helper after a wrong vocab answer, or always for grammar (explanation deepening).
-        if (current.kind === "vocab" && !isWrong) return null;
+        const showEllie = (current.kind === "vocab" && isWrong) || current.kind === "grammar";
+        if (!showEllie) return null;
         const prompt = current.kind === "vocab"
           ? ellieExplainQuizMistakePrompt({
               prompt: promptText,
@@ -516,6 +517,19 @@ export default function Quiz() {
           </div>
         );
       })()}
+
+      {picked && !(current.kind === "vocab" && picked === correctAnswer) && (
+        <div className="flex justify-center">
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={() => advance(picked === correctAnswer)}
+            className="rounded-full px-8"
+          >
+            Weiter
+          </Button>
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>
