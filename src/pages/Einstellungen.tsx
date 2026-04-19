@@ -71,7 +71,7 @@ export default function Einstellungen() {
         <div>
           <Label className="text-base font-semibold mb-2 block">Abfragerichtung</Label>
           <div className="grid sm:grid-cols-3 gap-2">
-            {(["de_es", "es_de", "random"] as DirectionMode[]).map((d) => (
+            {(["de_en", "en_de", "random"] as DirectionMode[]).map((d) => (
               <button
                 key={d}
                 onClick={() => setDirection(d)}
