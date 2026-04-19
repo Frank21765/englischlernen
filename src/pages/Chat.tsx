@@ -54,6 +54,9 @@ export default function Chat() {
   const [renameValue, setRenameValue] = useState("");
   const [showSessions, setShowSessions] = useState(false);
   const handledIncomingRef = useRef(false);
+  // Sessions whose messages we should NOT auto-load (because we just created them
+  // for a context-prefill flow and are about to stream the first answer).
+  const skipLoadRef = useRef<Set<string>>(new Set());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
