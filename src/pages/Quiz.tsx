@@ -67,6 +67,9 @@ export default function Quiz() {
   const [directionMode, setDirectionMode] = useState<"de_en" | "en_de" | "random">("random");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+  const [vocabSource, setVocabSource] = useState<VocabSource>("review");
+  const [reviewCount, setReviewCount] = useState<number | null>(null);
+  const [emptyReview, setEmptyReview] = useState(false);
 
   // sync URL deep links
   useEffect(() => {
