@@ -6,8 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LEVELS } from "@/lib/learning";
-import { ArrowRightLeft, Check, Loader2, MessageCircle, Plus, RefreshCw, Search, Sparkles } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { LEVELS, QUICK_TOPICS } from "@/lib/learning";
+import {
+  ArrowRightLeft,
+  Check,
+  ChevronDown,
+  Info,
+  Loader2,
+  MessageCircle,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
@@ -49,27 +61,35 @@ const statusClasses: Record<string, string> = {
   mastered: "bg-success text-success-foreground",
 };
 
+// Heuristic: count words to decide if input is "long" → hint toward Ellie.
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+const LONG_INPUT_WORDS = 12;
+
 export default function Vokabeln() {
   const { user } = useAuth();
-  const { level: activeLevel, topic: activeTopic, hasSelection } = useLearning();
+  const { level: activeLevel, topic: activeTopic, hasSelection, setSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
-  const [search, setSearch] = useState("");
-  const [levelFilter, setLevelFilter] = useState<string>(hasSelection ? activeLevel : "alle");
-  const [topicFilter, setTopicFilter] = useState<string>(hasSelection ? activeTopic : "alle");
-  const [showFilters, setShowFilters] = useState(false);
-  const [showLookup, setShowLookup] = useState(false);
 
+  // ---- Block 1: Frag mich! ----
+  const [askInput, setAskInput] = useState("");
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [lookupQuery, setLookupQuery] = useState<string>("");
   const [savingLookup, setSavingLookup] = useState(false);
 
-  // Suggestions
+  // ---- Block 2: Neue Vokabeln für dich ----
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [suggestKey, setSuggestKey] = useState<string>("");
+  const [showTopicPicker, setShowTopicPicker] = useState(false);
+
+  // ---- Block 3: Deine Sammlung ----
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collectionTopic, setCollectionTopic] = useState<string>("alle");
+  const [collectionStatus, setCollectionStatus] = useState<string>("alle");
+  const [collectionSearch, setCollectionSearch] = useState("");
 
   const loadItems = async () => {
     if (!user) return;
@@ -94,7 +114,7 @@ export default function Vokabeln() {
     return s;
   }, [items]);
 
-  // Load suggestions when active focus changes
+  // ---------- Suggestions ----------
   const loadSuggestions = async (force = false) => {
     if (!user || !hasSelection) return;
     const key = `${activeLevel}__${activeTopic}`;
@@ -112,11 +132,11 @@ export default function Vokabeln() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const pairs: Suggestion[] = Array.isArray(data?.pairs) ? data.pairs : [];
-      // Filter out anything the user already has, prefer single words + short phrases first
       const filtered = pairs.filter(
         (p) => !knownKeys.has(`${p.german.toLowerCase()}|${p.english.toLowerCase()}`),
       );
-      setSuggestions(filtered.slice(0, 8));
+      // Cap at 10 — focused, not overwhelming.
+      setSuggestions(filtered.slice(0, 10));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Vorschläge konnten nicht geladen werden");
     } finally {
@@ -131,24 +151,17 @@ export default function Vokabeln() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLevel, activeTopic, hasSelection, user, items.length === 0]);
 
-  const filtered = items.filter((v) => {
-    if (levelFilter !== "alle" && v.level !== levelFilter) return false;
-    if (topicFilter !== "alle" && v.topic !== topicFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      if (!v.german.toLowerCase().includes(q) && !v.english.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
-
+  // ---------- Lookup ("Frag mich!") ----------
   const runLookup = async () => {
-    const word = search.trim();
-    if (!word) return;
+    const text = askInput.trim();
+    if (!text) return;
     setLookingUp(true);
     setLookup(null);
-    setLookupQuery(word);
+    setLookupQuery(text);
     try {
-      const { data, error } = await supabase.functions.invoke("translate-word", { body: { word, level: activeLevel } });
+      const { data, error } = await supabase.functions.invoke("translate-word", {
+        body: { word: text, level: activeLevel },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.result) throw new Error("Keine Übersetzung erhalten");
@@ -160,12 +173,14 @@ export default function Vokabeln() {
     }
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const onAskKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       runLookup();
     }
   };
+
+  const askIsLong = wordCount(askInput) >= LONG_INPUT_WORDS;
 
   const saveLookupToCollection = async () => {
     if (!user || !lookup) return;
@@ -211,7 +226,6 @@ export default function Vokabeln() {
       if (error) throw error;
       setSavedKeys((prev) => new Set(prev).add(key));
       toast.success("Zur Sammlung hinzugefügt");
-      // refresh items in the background so future suggestions exclude it
       loadItems();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
@@ -220,35 +234,204 @@ export default function Vokabeln() {
     }
   };
 
+  const pickTopic = (t: string) => {
+    setSelection(activeLevel, t);
+    setShowTopicPicker(false);
+    setSavedKeys(new Set());
+  };
+
+  // ---------- Collection filtering ----------
+  const filtered = items.filter((v) => {
+    if (collectionTopic !== "alle" && v.topic !== collectionTopic) return false;
+    if (collectionStatus !== "alle" && v.status !== collectionStatus) return false;
+    if (collectionSearch.trim()) {
+      const q = collectionSearch.toLowerCase();
+      if (!v.german.toLowerCase().includes(q) && !v.english.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl">Deine Vokabeln</h1>
+        <h1 className="text-2xl sm:text-3xl">Vokabeln</h1>
         <FocusChip />
-        <p className="text-sm text-muted-foreground">
-          Entdecke neue Wörter zu deinem Fokus, schlage einzelne Begriffe nach und verwalte deine Sammlung.
-        </p>
       </header>
 
-      {/* 1) Suggestions */}
+      {/* ============ 1) Frag mich! ============ */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="space-y-0.5">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            Vorgeschlagene Vokabeln für dich
+            Frag mich!
           </h2>
+          <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
+        </div>
+
+        <Card className="p-4 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="z.B. „aufgeben" oder „I would like to…""
+                value={askInput}
+                onChange={(e) => setAskInput(e.target.value)}
+                onKeyDown={onAskKeyDown}
+                className="pl-9 h-11 rounded-xl"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={runLookup}
+              disabled={lookingUp || !askInput.trim()}
+              className="h-11 rounded-xl shrink-0 px-5"
+              variant="hero"
+            >
+              {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
+              <span>Los!</span>
+            </Button>
+          </div>
+
+          {askIsLong && !lookup && (
+            <div className="flex items-start gap-2 rounded-lg bg-accent/40 px-3 py-2 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+              <div>
+                Das ist schon ein längerer Text. Für komplexere Übersetzungen erklärt dir{" "}
+                <Link to="/chat" className="font-semibold text-primary hover:underline">
+                  Coach Ellie
+                </Link>{" "}
+                Bedeutung und Nuancen oft besser.
+              </div>
+            </div>
+          )}
+
+          {lookup && (
+            <div className="rounded-xl border border-border p-4 space-y-3 bg-gradient-card animate-pop">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
+                  <div className="text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+                  </div>
+                  <div className="flex items-baseline flex-wrap gap-3">
+                    <div className="font-display text-xl">{lookup.german}</div>
+                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                    <div className="font-display text-xl text-primary">{lookup.english}</div>
+                  </div>
+                  {lookup.part_of_speech && (
+                    <Badge variant="outline" className="text-[10px] uppercase">{lookup.part_of_speech}</Badge>
+                  )}
+                  {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
+                </div>
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <Button size="sm" variant="soft" onClick={saveLookupToCollection} disabled={savingLookup}>
+                    {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    <span className="hidden sm:inline">Speichern</span>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost" className="text-xs">
+                    <Link
+                      to={buildEllieUrl({
+                        prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
+                        auto: true,
+                        title: lookup.english,
+                        returnTo: "/vokabeln",
+                        returnLabel: "Zurück zu Vokabeln",
+                      })}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Frag Ellie</span>
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              {(() => {
+                const examplesDe = lookup.examples_de?.length
+                  ? lookup.examples_de
+                  : lookup.example_de ? [lookup.example_de] : [];
+                const examplesEn = lookup.examples_en?.length
+                  ? lookup.examples_en
+                  : lookup.example_en ? [lookup.example_en] : [];
+                if (!examplesDe.length && !examplesEn.length) return null;
+                return (
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
+                      {examplesDe.slice(0, 4).map((ex, i) => (
+                        <div key={i} className="leading-snug">• {ex}</div>
+                      ))}
+                    </div>
+                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
+                      {examplesEn.slice(0, 4).map((ex, i) => (
+                        <div key={i} className="leading-snug">• {ex}</div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      {/* ============ 2) Neue Vokabeln für dich ============ */}
+      <section className="space-y-3">
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Neue Vokabeln für dich
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Vorschläge passend zu deinem Fokus: <span className="font-semibold">{activeLevel}</span>
+            {" · "}
+            <span className="font-semibold">{activeTopic || "—"}</span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            variant="ghost"
+            variant="soft"
+            size="sm"
+            onClick={() => setShowTopicPicker((v) => !v)}
+            disabled={!hasSelection}
+            className="h-9"
+          >
+            Thema ändern
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showTopicPicker ? "rotate-180" : ""}`} />
+          </Button>
+          <Button
+            type="button"
+            variant="hero"
             size="sm"
             onClick={() => loadSuggestions(true)}
             disabled={loadingSuggestions || !hasSelection}
-            className="h-8"
+            className="h-9"
           >
-            {loadingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline text-xs">Neu</span>
+            {loadingSuggestions ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            10 neue Vokabeln laden
           </Button>
         </div>
+
+        {showTopicPicker && (
+          <Card className="p-3">
+            <Label className="text-xs mb-2 block">Wähle ein Thema</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_TOPICS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => pickTopic(t)}
+                  className={chip(activeTopic === t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {!hasSelection && (
           <Card className="p-4 text-sm text-muted-foreground">
@@ -283,7 +466,9 @@ export default function Vokabeln() {
                       <div className="text-primary font-semibold truncate">{s.english}</div>
                     </div>
                     {s.grammar_note && (
-                      <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">{s.grammar_note}</div>
+                      <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">
+                        {s.grammar_note}
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -331,191 +516,117 @@ export default function Vokabeln() {
         )}
       </section>
 
-      {/* 2) Dictionary lookup (secondary) */}
+      {/* ============ 3) Deine Sammlung ============ */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-muted-foreground">Wörterbuch & Suche</h2>
-          <button
-            type="button"
-            onClick={() => setShowLookup((v) => !v)}
-            className="text-xs font-semibold text-primary hover:underline shrink-0"
-          >
-            {showLookup ? "Einklappen" : "Öffnen"}
-          </button>
-        </div>
+        <Collapsible open={collectionOpen} onOpenChange={setCollectionOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/40 transition-smooth"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base font-semibold">Deine Sammlung</span>
+                <span className="text-xs text-muted-foreground">· {items.length}</span>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform ${collectionOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </CollapsibleTrigger>
 
-        {showLookup && (
-          <Card className="p-4 space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <CollapsibleContent className="space-y-3 pt-3">
+            {/* Secondary filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Wort suchen oder übersetzen (DE ↔ EN)…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  className="pl-9 h-11 rounded-xl"
+                  placeholder="Suchen…"
+                  value={collectionSearch}
+                  onChange={(e) => setCollectionSearch(e.target.value)}
+                  className="pl-8 h-9 text-sm rounded-lg"
                 />
               </div>
-              <Button
-                type="button"
-                onClick={runLookup}
-                disabled={lookingUp || !search.trim()}
-                className="h-11 rounded-xl shrink-0"
-                variant="hero"
+              <select
+                value={collectionTopic}
+                onChange={(e) => setCollectionTopic(e.target.value)}
+                className="h-9 rounded-lg border border-border bg-background px-2 text-xs"
               >
-                {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
-                <span className="hidden sm:inline">Übersetzen</span>
-              </Button>
+                <option value="alle">Alle Themen</option>
+                {topics.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <select
+                value={collectionStatus}
+                onChange={(e) => setCollectionStatus(e.target.value)}
+                className="h-9 rounded-lg border border-border bg-background px-2 text-xs"
+              >
+                <option value="alle">Alle Typen</option>
+                <option value="new">Neu</option>
+                <option value="learning">Lernend</option>
+                <option value="mastered">Gemeistert</option>
+              </select>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tipp: Enter drückt „Übersetzen". Die Suche filtert auch deine Sammlung unten.
-            </p>
 
-            {lookup && (
-              <div className="rounded-xl border border-border p-4 space-y-3 bg-gradient-card animate-pop">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
-                      <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+            <div className="text-xs text-muted-foreground">
+              {filtered.length} von {items.length} angezeigt
+            </div>
+
+            <div className="space-y-2">
+              {filtered.map((v) => (
+                <Card key={v.id} className="p-3 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <div className="font-semibold truncate">{v.german}</div>
+                      <span className="text-muted-foreground text-xs">↔</span>
+                      <div className="text-primary font-semibold truncate">{v.english}</div>
                     </div>
-                    <div className="flex items-baseline flex-wrap gap-3">
-                      <div className="font-display text-xl">{lookup.german}</div>
-                      <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                      <div className="font-display text-xl text-primary">{lookup.english}</div>
-                    </div>
-                    {lookup.part_of_speech && (
-                      <Badge variant="outline" className="text-[10px] uppercase">{lookup.part_of_speech}</Badge>
+                    {v.grammar_note && (
+                      <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">
+                        {v.grammar_note}
+                      </div>
                     )}
-                    {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
                   </div>
-                  <div className="flex flex-col gap-1.5 shrink-0">
-                    <Button size="sm" variant="soft" onClick={saveLookupToCollection} disabled={savingLookup}>
-                      {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                      <span className="hidden sm:inline">Speichern</span>
-                    </Button>
-                    <Button asChild size="sm" variant="ghost" className="text-xs">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses[v.status] ?? statusClasses.new}`}
+                    >
+                      {statusLabels[v.status] ?? "Neu"}
+                    </span>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="Frag Ellie zu diesem Wort"
+                    >
                       <Link
                         to={buildEllieUrl({
-                          prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
+                          prefill: ellieAskWordPrompt(v.german, v.english, v.level),
                           auto: true,
-                          title: lookup.english,
+                          title: v.english,
                           returnTo: "/vokabeln",
                           returnLabel: "Zurück zu Vokabeln",
                         })}
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Frag Ellie</span>
                       </Link>
                     </Button>
                   </div>
-                </div>
-                {(() => {
-                  const examplesDe = lookup.examples_de?.length ? lookup.examples_de : (lookup.example_de ? [lookup.example_de] : []);
-                  const examplesEn = lookup.examples_en?.length ? lookup.examples_en : (lookup.example_en ? [lookup.example_en] : []);
-                  if (!examplesDe.length && !examplesEn.length) return null;
-                  return (
-                    <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                      <div className="rounded-lg bg-muted/60 p-3 space-y-1">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
-                        {examplesDe.slice(0, 2).map((ex, i) => (
-                          <div key={i} className="leading-snug">• {ex}</div>
-                        ))}
-                      </div>
-                      <div className="rounded-lg bg-muted/60 p-3 space-y-1">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
-                        {examplesEn.slice(0, 2).map((ex, i) => (
-                          <div key={i} className="leading-snug">• {ex}</div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-          </Card>
-        )}
-      </section>
-
-      {/* 3) Saved collection */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <h2 className="text-base font-semibold text-muted-foreground">
-            Deine Sammlung <span className="text-xs font-normal">· {filtered.length}</span>
-          </h2>
-          <button
-            type="button"
-            onClick={() => setShowFilters((v) => !v)}
-            className="text-xs font-semibold text-primary hover:underline shrink-0"
-          >
-            {showFilters ? "Filter ausblenden" : "Filter"}
-          </button>
-        </div>
-
-        {showFilters && (
-          <Card className="p-3 space-y-3">
-            <div>
-              <Label className="text-xs mb-1 block">Niveau</Label>
-              <div className="flex flex-wrap gap-1.5">
-                <button onClick={() => setLevelFilter("alle")} className={chip(levelFilter === "alle")}>Alle</button>
-                {LEVELS.map((l) => (
-                  <button key={l} onClick={() => setLevelFilter(l)} className={chip(levelFilter === l)}>{l}</button>
-                ))}
-              </div>
+                </Card>
+              ))}
+              {filtered.length === 0 && (
+                <Card className="p-6 text-center text-muted-foreground space-y-1 text-sm">
+                  <p>Noch keine Vokabeln in deiner Sammlung für diesen Filter.</p>
+                  <p className="text-xs">
+                    Speichere oben einen Vorschlag oder schlage ein Wort mit „Frag mich!" nach.
+                  </p>
+                </Card>
+              )}
             </div>
-            {topics.length > 0 && (
-              <div>
-                <Label className="text-xs mb-1 block">Thema</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  <button onClick={() => setTopicFilter("alle")} className={chip(topicFilter === "alle")}>Alle</button>
-                  {topics.map((t) => (
-                    <button key={t} onClick={() => setTopicFilter(t)} className={chip(topicFilter === t)}>{t}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </Card>
-        )}
-
-        <div className="space-y-2">
-          {filtered.map((v) => (
-            <Card key={v.id} className="p-3 flex items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <div className="font-semibold truncate">{v.german}</div>
-                  <span className="text-muted-foreground text-xs">↔</span>
-                  <div className="text-primary font-semibold truncate">{v.english}</div>
-                </div>
-                {v.grammar_note && <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">{v.grammar_note}</div>}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Badge variant="outline" className="font-mono text-[10px]">{v.level}</Badge>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses[v.status] ?? statusClasses.new}`}>
-                  {statusLabels[v.status] ?? "Neu"}
-                </span>
-                <Button asChild variant="ghost" size="icon" className="h-7 w-7" title="Frag Ellie zu diesem Wort">
-                  <Link
-                    to={buildEllieUrl({
-                      prefill: ellieAskWordPrompt(v.german, v.english, v.level),
-                      auto: true,
-                      title: v.english,
-                      returnTo: "/vokabeln",
-                      returnLabel: "Zurück zu Vokabeln",
-                    })}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              </div>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
-            <Card className="p-6 text-center text-muted-foreground space-y-1 text-sm">
-              <p>Noch keine Vokabeln in deiner Sammlung für diesen Filter.</p>
-              <p className="text-xs">Speichere oben einen Vorschlag oder schlage ein Wort im Wörterbuch nach.</p>
-            </Card>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       </section>
     </div>
   );
