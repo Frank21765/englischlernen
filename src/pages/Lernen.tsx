@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, KeyboardEvent } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,30 +7,122 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { getProfileUsername } from "@/lib/profile";
+import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { CalendarClock, ChevronDown, GraduationCap, Library, Loader2, MessageCircle, PenLine, Pencil, RefreshCw, Sparkles, Target } from "lucide-react";
+import {
+  ArrowRightLeft,
+  CalendarClock,
+  ChevronDown,
+  GraduationCap,
+  Info,
+  Library,
+  Loader2,
+  MessageCircle,
+  PenLine,
+  Pencil,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Target,
+} from "lucide-react";
+
+interface LookupResult {
+  source_lang: "de" | "en";
+  german: string;
+  english: string;
+  part_of_speech: string;
+  examples_de: string[];
+  examples_en: string[];
+  example_de?: string;
+  example_en?: string;
+  note?: string;
+}
+
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+const LONG_INPUT_WORDS = 12;
+
+// Persist UI state across navigation (e.g. side-trip to Coach Ellie).
+const STATE_KEY = "lernen.uiState.v1";
+interface PersistedState {
+  askInput: string;
+  lookup: LookupResult | null;
+  lookupQuery: string;
+  editFocus: boolean;
+  customMode: boolean;
+}
+function loadPersisted(): Partial<PersistedState> {
+  try {
+    const raw = sessionStorage.getItem(STATE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Partial<PersistedState>;
+  } catch {
+    return {};
+  }
+}
+
+// Consistent Ellie button used everywhere on this page.
+function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
+  return (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9 text-primary hover:bg-primary/10"
+      title="Mit Coach Ellie besprechen"
+    >
+      <Link
+        to={buildEllieUrl({
+          prefill,
+          auto: true,
+          title,
+          returnTo: "/lernen",
+          returnLabel: "Zurück zum Lernen",
+        })}
+      >
+        <MessageCircle className="h-4 w-4" />
+      </Link>
+    </Button>
+  );
+}
 
 export default function Lernen() {
   const { user } = useAuth();
   const { level, topic, hasSelection, setSelection } = useLearning();
   const navigate = useNavigate();
   const location = useLocation();
-  const [busy, setBusy] = useState(false);
+
+  const persisted = useMemo(loadPersisted, []);
+
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [username, setUsername] = useState<string>("");
+
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
-  const [customMode, setCustomMode] = useState<boolean>(isCustomTopic);
-  const [editFocus, setEditFocus] = useState<boolean>(!hasSelection);
+  const [customMode, setCustomMode] = useState<boolean>(persisted.customMode ?? isCustomTopic);
+  const [editFocus, setEditFocus] = useState<boolean>(persisted.editFocus ?? !hasSelection);
+
+  // ---- Box 1: Frag mich! ----
+  const [askInput, setAskInput] = useState(persisted.askInput ?? "");
+  const [lookup, setLookup] = useState<LookupResult | null>(persisted.lookup ?? null);
+  const [lookupQuery, setLookupQuery] = useState<string>(persisted.lookupQuery ?? "");
+  const [lookingUp, setLookingUp] = useState(false);
+
+  // Persist relevant UI state.
+  useEffect(() => {
+    const snapshot: PersistedState = { askInput, lookup, lookupQuery, editFocus, customMode };
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
+    } catch { /* ignore quota */ }
+  }, [askInput, lookup, lookupQuery, editFocus, customMode]);
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     const load = async () => {
       const nowIso = new Date().toISOString();
-      // SRS-based "due": items with next_review_at <= now, OR never scheduled & never seen (new items).
       const [{ count: total }, { count: dueScheduled }, { count: dueUnseen }, profileRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
@@ -55,49 +147,36 @@ export default function Lernen() {
     };
   }, [user, location.pathname]);
 
-  const generateAndStartQuiz = async () => {
-    if (!user) return;
-    if (!topic.trim()) {
-      toast.error("Bitte ein Thema angeben");
-      return;
-    }
-    setBusy(true);
+  // ---------- Lookup ("Frag mich!") ----------
+  const runLookup = async () => {
+    const text = askInput.trim();
+    if (!text) return;
+    setLookingUp(true);
+    setLookup(null);
+    setLookupQuery(text);
     try {
-      const { data: existing } = await supabase
-        .from("vocabulary").select("german")
-        .eq("user_id", user.id).eq("level", level).eq("topic", topic);
-      const existingGerman = (existing ?? []).map((r) => r.german);
-
-      const { data, error } = await supabase.functions.invoke("generate-vocabulary", {
-        body: { level, topic, existing: existingGerman },
+      const { data, error } = await supabase.functions.invoke("translate-word", {
+        body: { word: text, level },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const pairs: Array<{ german: string; english: string; grammar_note?: string }> = data.pairs ?? [];
-      if (!pairs.length) throw new Error("Keine Vokabeln erhalten");
-
-      const rows = pairs.map((p) => ({
-        user_id: user.id,
-        level,
-        topic,
-        german: p.german.trim(),
-        english: p.english.trim(),
-        grammar_note: p.grammar_note ?? null,
-      }));
-      const { error: insErr } = await supabase
-        .from("vocabulary")
-        .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
-      if (insErr) throw insErr;
-
-      setSelection(level, topic, { persist: true });
-      toast.success(`${pairs.length} neue Vokabeln erzeugt`);
-      navigate("/quiz");
+      if (!data?.result) throw new Error("Keine Übersetzung erhalten");
+      setLookup(data.result as LookupResult);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fehler beim Erzeugen");
+      toast.error(e instanceof Error ? e.message : "Übersetzung fehlgeschlagen");
     } finally {
-      setBusy(false);
+      setLookingUp(false);
     }
   };
+
+  const onAskKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runLookup();
+    }
+  };
+
+  const askIsLong = wordCount(askInput) >= LONG_INPUT_WORDS;
 
   return (
     <div className="space-y-5">
@@ -107,13 +186,115 @@ export default function Lernen() {
             Hello {username}, schön, dass du da bist.
           </p>
         )}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go! Was lernen wir heute?</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Dein Lern-Hub – aktueller Fokus, fällige Wiederholungen und der nächste Schritt.
-        </p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go!</h1>
       </header>
 
-      {/* 1. Aktueller Fokus */}
+      {/* ============ 1) Frag mich! ============ */}
+      <section className="space-y-3">
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Frag mich!
+          </h2>
+          <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
+        </div>
+
+        <Card className="p-4 space-y-3 bg-gradient-card shadow-card">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder='z.B. „aufgeben" oder „I would like to…"'
+                value={askInput}
+                onChange={(e) => setAskInput(e.target.value)}
+                onKeyDown={onAskKeyDown}
+                className="pl-9 h-11 rounded-xl"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={runLookup}
+              disabled={lookingUp || !askInput.trim()}
+              className="h-11 rounded-xl shrink-0 px-5"
+              variant="hero"
+            >
+              {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
+              <span>Los!</span>
+            </Button>
+          </div>
+
+          {askIsLong && !lookup && (
+            <div className="flex items-start gap-2 rounded-lg bg-accent/40 px-3 py-2 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+              <div>
+                Das ist schon ein längerer Text. Für komplexere Übersetzungen erklärt dir{" "}
+                <Link to="/chat" className="font-semibold text-primary hover:underline">
+                  Coach Ellie
+                </Link>{" "}
+                Bedeutung und Nuancen oft besser.
+              </div>
+            </div>
+          )}
+
+          {lookup && (
+            <div className="rounded-xl border border-border p-4 space-y-3 bg-card animate-pop">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
+                  <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+                  </div>
+                  <div className="flex items-baseline flex-wrap gap-3">
+                    <div className="font-display text-xl">{lookup.german}</div>
+                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                    <div className="font-display text-xl text-primary">{lookup.english}</div>
+                  </div>
+                  {(lookup.part_of_speech || lookup.note) && (
+                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                      {lookup.part_of_speech && (
+                        <Badge variant="outline" className="text-sm uppercase">{lookup.part_of_speech}</Badge>
+                      )}
+                      {lookup.note && <span className="text-sm text-muted-foreground italic">{lookup.note}</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <EllieButton
+                    prefill={ellieAskWordPrompt(lookup.german, lookup.english, level)}
+                    title={lookup.english}
+                  />
+                </div>
+              </div>
+              {(() => {
+                const examplesDe = lookup.examples_de?.length
+                  ? lookup.examples_de
+                  : lookup.example_de ? [lookup.example_de] : [];
+                const examplesEn = lookup.examples_en?.length
+                  ? lookup.examples_en
+                  : lookup.example_en ? [lookup.example_en] : [];
+                if (!examplesDe.length && !examplesEn.length) return null;
+                return (
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
+                      {examplesDe.slice(0, 4).map((ex, i) => (
+                        <div key={i} className="leading-snug">• {ex}</div>
+                      ))}
+                    </div>
+                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
+                      {examplesEn.slice(0, 4).map((ex, i) => (
+                        <div key={i} className="leading-snug">• {ex}</div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      {/* ============ 2) Aktueller Fokus ============ */}
       <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
@@ -132,8 +313,14 @@ export default function Lernen() {
                 <p className="text-sm mt-1">Noch nichts gewählt – leg unten dein Niveau und Thema fest.</p>
               )}
               {hasSelection && vocabCount !== null && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {vocabCount} Vokabel{vocabCount === 1 ? "" : "n"} insgesamt gespeichert
+                </p>
+              )}
+              {dueCount !== null && dueCount > 0 && (
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                  {dueCount} {dueCount === 1 ? "Vokabel" : "Vokabeln"} heute fällig
                 </p>
               )}
             </div>
@@ -146,7 +333,7 @@ export default function Lernen() {
             aria-expanded={editFocus}
           >
             <Pencil className="h-4 w-4" />
-            <span className="hidden sm:inline">{editFocus ? "Schließen" : "Ändern"}</span>
+            <span className="hidden sm:inline">{editFocus ? "Schließen" : "Anpassen"}</span>
             <ChevronDown className={`h-4 w-4 transition-transform ${editFocus ? "rotate-180" : ""}`} />
           </Button>
         </div>
@@ -218,67 +405,35 @@ export default function Lernen() {
         )}
       </Card>
 
-      {/* 2. Heute fällig */}
-      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <div className="rounded-2xl bg-primary/10 p-2.5 sm:p-3 shrink-0">
-            <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-baseline gap-x-2">
-              <h2 className="text-base sm:text-lg font-bold">Heute fällig</h2>
-              {dueCount !== null && dueCount > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {dueCount} {dueCount === 1 ? "Vokabel" : "Vokabeln"} bereit
-                </span>
-              )}
-            </div>
-            {dueCount === null ? (
-              <p className="text-sm text-muted-foreground">Lade Wiederholungen…</p>
-            ) : dueCount > 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Kurze Wiederholung jetzt – so bleibt dein Wortschatz lebendig. 💪
-              </p>
-            ) : vocabCount && vocabCount > 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Alles wiederholt für heute! 🎉 Lust auf neue Vokabeln?
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Noch keine Vokabeln gespeichert. Starte unten dein erstes Set!
-              </p>
-            )}
-            {dueCount !== null && dueCount > 0 && (
-              <div className="pt-2">
-                <Button variant="hero" size="sm" onClick={() => navigate("/quiz")} className="whitespace-normal text-center leading-tight">
-                  <RefreshCw className="h-4 w-4 shrink-0" />
-                  <span>Jetzt wiederholen</span>
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* 3. Weiterlernen */}
+      {/* ============ 3) Bereit für die nächste Runde? ============ */}
       <Card className="p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
-        <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <h2 className="text-base sm:text-lg font-bold">Weiterlernen</h2>
-          <span className="text-xs text-muted-foreground">Wähle deinen nächsten Schritt</span>
+        <div className="space-y-0.5">
+          <h2 className="text-base sm:text-lg font-bold">Bereit für die nächste Runde?</h2>
+          <p className="text-sm text-muted-foreground">
+            {dueCount !== null && dueCount > 0
+              ? `${dueCount} ${dueCount === 1 ? "Vokabel ist" : "Vokabeln sind"} bereit für eine kurze Wiederholung.`
+              : vocabCount && vocabCount > 0
+                ? "Alles wiederholt für heute. Lust auf etwas Neues?"
+                : "Wähle deinen nächsten Schritt."}
+          </p>
         </div>
 
-        <Button
-          variant="hero"
-          size="xl"
-          disabled={busy || !hasSelection}
-          onClick={generateAndStartQuiz}
-          className="w-full whitespace-normal text-center leading-tight px-3"
-        >
-          {busy ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <Sparkles className="h-5 w-5 shrink-0" />}
-          <span className="min-w-0">Neue Vokabeln lernen</span>
-        </Button>
+        {dueCount !== null && dueCount > 0 && (
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={() => navigate("/quiz")}
+            className="w-full whitespace-normal text-center leading-tight px-3"
+          >
+            <RefreshCw className="h-4 w-4 shrink-0" />
+            <span className="min-w-0">Jetzt wiederholen</span>
+          </Button>
+        )}
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <Button variant="soft" size="lg" onClick={() => navigate("/vokabeln")} className="w-full whitespace-normal text-center leading-tight px-3">
+            <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0">Vokabeln</span>
+          </Button>
           <Button variant="soft" size="lg" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
             <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0">Grammatik</span>
           </Button>
@@ -288,7 +443,12 @@ export default function Lernen() {
           <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/chat")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button
+            variant="soft"
+            size="lg"
+            onClick={() => navigate("/chat")}
+            className="col-span-2 w-full whitespace-normal text-center leading-tight px-3"
+          >
             <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Coach Ellie</span>
           </Button>
         </div>
