@@ -49,8 +49,8 @@ Deno.serve(async (req) => {
     }
 
     const { word, level } = await req.json();
-    if (!word || typeof word !== "string" || word.trim().length === 0 || word.length > 80) {
-      return new Response(JSON.stringify({ error: "Bitte ein Wort oder eine kurze Phrase angeben" }), {
+    if (!word || typeof word !== "string" || word.trim().length === 0 || word.length > 200) {
+      return new Response(JSON.stringify({ error: "Bitte ein Wort, eine Phrase oder einen kurzen Satz angeben" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
           {
             role: "system",
             content:
-              `You translate single words or short phrases between German and English for a learner app. Detect the source language automatically. Provide 2-3 natural, varied example sentences in EACH language (not repetitive, different contexts).${levelHint} Always return concise output via the provided tool.`,
+              `You translate single words, short phrases or short sentences between German and English for a learner app. Detect the source language automatically. Provide 3-4 natural, varied example sentences in EACH language (not repetitive, different contexts).${levelHint} Always return concise output via the provided tool.`,
           },
           { role: "user", content: `Übersetze: "${word.trim()}"` },
         ],
@@ -92,12 +92,12 @@ Deno.serve(async (req) => {
                 examples_de: {
                   type: "array",
                   items: { type: "string" },
-                  description: "2-3 natürliche, abwechslungsreiche deutsche Beispielsätze.",
+                  description: "3-4 natürliche, abwechslungsreiche deutsche Beispielsätze.",
                 },
                 examples_en: {
                   type: "array",
                   items: { type: "string" },
-                  description: "2-3 natural, varied English example sentences.",
+                  description: "3-4 natural, varied English example sentences.",
                 },
                 note: { type: "string", description: "Optional brief grammar/usage hint, e.g. 'der/die/das' or irregular form. Empty if not needed." },
               },
