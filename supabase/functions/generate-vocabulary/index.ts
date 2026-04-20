@@ -83,50 +83,74 @@ Die Grammatiknotiz ist optional, kurz (max. 1 Satz, Deutsch). Nutze gängiges br
 
     const userPrompt = `Erstelle GENAU 20 deutsch-englische Lernpaare für CEFR-Niveau ${level} zum Thema "${topic}".${avoidBlock}\n\nMische Einzelvokabeln (ca. 8) und Beispielsätze (ca. 12). Sätze MÜSSEN dem Niveau ${level} entsprechen. Keine Duplikate. Nutze die Funktion vocabulary_pairs.`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "vocabulary_pairs",
-              description: "Liefert genau 20 Vokabelpaare zurück",
-              parameters: {
-                type: "object",
-                properties: {
-                  pairs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        german: { type: "string" },
-                        english: { type: "string" },
-                        grammar_note: { type: "string" },
-                      },
-                      required: ["german", "english"],
-                      additionalProperties: false,
+    const aiBody = JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "vocabulary_pairs",
+            description: "Liefert genau 20 Vokabelpaare zurück",
+            parameters: {
+              type: "object",
+              properties: {
+                pairs: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      german: { type: "string" },
+                      english: { type: "string" },
+                      grammar_note: { type: "string" },
                     },
+                    required: ["german", "english"],
+                    additionalProperties: false,
                   },
                 },
-                required: ["pairs"],
-                additionalProperties: false,
               },
+              required: ["pairs"],
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "vocabulary_pairs" } },
-      }),
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "vocabulary_pairs" } },
     });
+
+    // Retry transient upstream failures (502/503/504 + network errors).
+    let aiResp: Response | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: aiBody,
+        });
+        if (aiResp.ok) break;
+        if (![502, 503, 504].includes(aiResp.status)) break;
+        console.warn(`AI gateway ${aiResp.status}, retry ${attempt + 1}/3`);
+      } catch (err) {
+        lastErr = err;
+        console.warn(`AI fetch failed, retry ${attempt + 1}/3`, err);
+      }
+      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+    }
+
+    if (!aiResp) {
+      console.error("AI gateway unreachable", lastErr);
+      return new Response(
+        JSON.stringify({ error: "AI-Dienst gerade nicht erreichbar. Bitte gleich nochmal versuchen." }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     if (!aiResp.ok) {
       if (aiResp.status === 429) {
@@ -140,10 +164,16 @@ Die Grammatiknotiz ist optional, kurz (max. 1 Satz, Deutsch). Nutze gängiges br
         });
       }
       const t = await aiResp.text();
-      console.error("AI error", aiResp.status, t);
-      return new Response(JSON.stringify({ error: "AI-Aufruf fehlgeschlagen" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("AI error", aiResp.status, t.slice(0, 500));
+      const transient = [502, 503, 504].includes(aiResp.status);
+      return new Response(
+        JSON.stringify({
+          error: transient
+            ? "AI-Dienst gerade überlastet. Bitte gleich nochmal versuchen."
+            : "AI-Aufruf fehlgeschlagen",
+        }),
+        { status: transient ? 503 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const data = await aiResp.json();
