@@ -23,7 +23,6 @@ import {
   MessageCircle,
   PenLine,
   Pencil,
-  RefreshCw,
   Search,
   Sparkles,
   Target,
