@@ -556,15 +556,15 @@ export default function Vokabeln() {
                   const saved = savedKeys.has(key);
                   const saving = savingKey === key;
                   return (
-                    <Card key={key} className="p-3 flex items-center justify-between gap-3 bg-gradient-card">
+                    <Card key={key} className="p-3 flex items-center justify-between gap-2 bg-gradient-card overflow-hidden">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <div className="font-semibold truncate">{s.german}</div>
+                        <div className="flex items-baseline gap-x-2 gap-y-0.5 flex-wrap min-w-0">
+                          <div className="font-semibold break-words min-w-0">{s.german}</div>
                           <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
-                          <div className="text-primary font-semibold truncate">{s.english}</div>
+                          <div className="text-primary font-semibold break-words min-w-0">{s.english}</div>
                         </div>
                         {s.grammar_note && (
-                          <div className="text-sm text-muted-foreground italic mt-0.5 line-clamp-1">
+                          <div className="text-sm text-muted-foreground italic mt-0.5 break-words">
                             {s.grammar_note}
                           </div>
                         )}
