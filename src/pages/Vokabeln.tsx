@@ -114,7 +114,19 @@ export default function Vokabeln() {
   const { level: activeLevel, topic: activeTopic, hasSelection, setSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
 
-  const persisted = useMemo(loadPersisted, []);
+  // Honor "?fresh=…" query param: when entering from "Bereit für die nächste Runde?",
+  // reset persisted UI state so the user truly starts fresh.
+  const persisted = useMemo(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("fresh")) {
+      try { sessionStorage.removeItem(STATE_KEY); } catch { /* ignore */ }
+      // Strip the param so reloads don't keep wiping state.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("fresh");
+      window.history.replaceState({}, "", url.toString());
+      return {} as Partial<PersistedState>;
+    }
+    return loadPersisted();
+  }, []);
 
   // ---- Block 1: Frag mich! ----
   const [askInput, setAskInput] = useState(persisted.askInput ?? "");
