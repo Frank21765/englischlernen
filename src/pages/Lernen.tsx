@@ -415,16 +415,16 @@ export default function Lernen() {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <Button variant="soft" size="lg" onClick={() => navigate("/vokabeln")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0">Vokabeln</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/grammatik?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0">Grammatik</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/quiz?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lueckentext?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
           </Button>
           <Button
