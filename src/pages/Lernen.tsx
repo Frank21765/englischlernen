@@ -23,7 +23,6 @@ import {
   MessageCircle,
   PenLine,
   Pencil,
-  RefreshCw,
   Search,
   Sparkles,
   Target,
@@ -320,7 +319,7 @@ export default function Lernen() {
               {dueCount !== null && dueCount > 0 && (
                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                   <CalendarClock className="h-3.5 w-3.5 text-primary" />
-                  {dueCount} {dueCount === 1 ? "Vokabel" : "Vokabeln"} heute fällig
+                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
                 </p>
               )}
             </div>
@@ -410,37 +409,21 @@ export default function Lernen() {
         <div className="space-y-0.5">
           <h2 className="text-base sm:text-lg font-bold">Bereit für die nächste Runde?</h2>
           <p className="text-sm text-muted-foreground">
-            {dueCount !== null && dueCount > 0
-              ? `${dueCount} ${dueCount === 1 ? "Vokabel ist" : "Vokabeln sind"} bereit für eine kurze Wiederholung.`
-              : vocabCount && vocabCount > 0
-                ? "Alles wiederholt für heute. Lust auf etwas Neues?"
-                : "Wähle deinen nächsten Schritt."}
+            Wähle, womit du jetzt weitermachen möchtest.
           </p>
         </div>
 
-        {dueCount !== null && dueCount > 0 && (
-          <Button
-            variant="hero"
-            size="lg"
-            onClick={() => navigate("/quiz")}
-            className="w-full whitespace-normal text-center leading-tight px-3"
-          >
-            <RefreshCw className="h-4 w-4 shrink-0" />
-            <span className="min-w-0">Jetzt wiederholen</span>
-          </Button>
-        )}
-
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <Button variant="soft" size="lg" onClick={() => navigate("/vokabeln")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0">Vokabeln</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/grammatik")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/grammatik?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0">Grammatik</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/quiz")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/quiz?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate("/lueckentext")} className="w-full whitespace-normal text-center leading-tight px-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lueckentext?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
             <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
           </Button>
           <Button
