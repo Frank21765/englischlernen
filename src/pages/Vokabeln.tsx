@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { LEVELS, QUICK_TOPICS } from "@/lib/learning";
+import { QUICK_TOPICS } from "@/lib/learning";
 import {
   ArrowRightLeft,
   Check,
@@ -61,35 +61,109 @@ const statusClasses: Record<string, string> = {
   mastered: "bg-success text-success-foreground",
 };
 
-// Heuristic: count words to decide if input is "long" → hint toward Ellie.
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const LONG_INPUT_WORDS = 12;
+
+// Persist UI state across navigation (e.g. side-trip to Coach Ellie).
+const STATE_KEY = "vokabeln.uiState.v1";
+interface PersistedState {
+  askInput: string;
+  lookup: LookupResult | null;
+  lookupQuery: string;
+  suggestions: Suggestion[];
+  suggestKey: string;
+  savedKeys: string[];
+  showTopicPicker: boolean;
+  suggestionsOpen: boolean;
+  collectionOpen: boolean;
+  collectionTopic: string;
+  collectionStatus: string;
+  collectionSearch: string;
+}
+function loadPersisted(): Partial<PersistedState> {
+  try {
+    const raw = sessionStorage.getItem(STATE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Partial<PersistedState>;
+  } catch {
+    return {};
+  }
+}
+
+// Consistent Ellie button used everywhere on this page.
+function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
+  return (
+    <Button asChild variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10" title="Mit Coach Ellie besprechen">
+      <Link
+        to={buildEllieUrl({
+          prefill,
+          auto: true,
+          title,
+          returnTo: "/vokabeln",
+          returnLabel: "Zurück zu Vokabeln",
+        })}
+      >
+        <MessageCircle className="h-4 w-4" />
+      </Link>
+    </Button>
+  );
+}
 
 export default function Vokabeln() {
   const { user } = useAuth();
   const { level: activeLevel, topic: activeTopic, hasSelection, setSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
 
+  const persisted = useMemo(loadPersisted, []);
+
   // ---- Block 1: Frag mich! ----
-  const [askInput, setAskInput] = useState("");
-  const [lookup, setLookup] = useState<LookupResult | null>(null);
+  const [askInput, setAskInput] = useState(persisted.askInput ?? "");
+  const [lookup, setLookup] = useState<LookupResult | null>(persisted.lookup ?? null);
   const [lookingUp, setLookingUp] = useState(false);
-  const [lookupQuery, setLookupQuery] = useState<string>("");
+  const [lookupQuery, setLookupQuery] = useState<string>(persisted.lookupQuery ?? "");
   const [savingLookup, setSavingLookup] = useState(false);
 
   // ---- Block 2: Neue Vokabeln für dich ----
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(persisted.suggestions ?? []);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set(persisted.savedKeys ?? []));
   const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [suggestKey, setSuggestKey] = useState<string>("");
-  const [showTopicPicker, setShowTopicPicker] = useState(false);
+  const [suggestKey, setSuggestKey] = useState<string>(persisted.suggestKey ?? "");
+  const [showTopicPicker, setShowTopicPicker] = useState(persisted.showTopicPicker ?? false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState<boolean>(
+    persisted.suggestionsOpen ?? (persisted.suggestions ? persisted.suggestions.length > 0 : true),
+  );
 
   // ---- Block 3: Deine Sammlung ----
-  const [collectionOpen, setCollectionOpen] = useState(false);
-  const [collectionTopic, setCollectionTopic] = useState<string>("alle");
-  const [collectionStatus, setCollectionStatus] = useState<string>("alle");
-  const [collectionSearch, setCollectionSearch] = useState("");
+  const [collectionOpen, setCollectionOpen] = useState(persisted.collectionOpen ?? false);
+  const [collectionTopic, setCollectionTopic] = useState<string>(persisted.collectionTopic ?? "alle");
+  const [collectionStatus, setCollectionStatus] = useState<string>(persisted.collectionStatus ?? "alle");
+  const [collectionSearch, setCollectionSearch] = useState(persisted.collectionSearch ?? "");
+
+  // Persist on every relevant change.
+  useEffect(() => {
+    const snapshot: PersistedState = {
+      askInput,
+      lookup,
+      lookupQuery,
+      suggestions,
+      suggestKey,
+      savedKeys: Array.from(savedKeys),
+      showTopicPicker,
+      suggestionsOpen,
+      collectionOpen,
+      collectionTopic,
+      collectionStatus,
+      collectionSearch,
+    };
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
+    } catch { /* ignore quota */ }
+  }, [
+    askInput, lookup, lookupQuery, suggestions, suggestKey, savedKeys,
+    showTopicPicker, suggestionsOpen, collectionOpen, collectionTopic,
+    collectionStatus, collectionSearch,
+  ]);
 
   const loadItems = async () => {
     if (!user) return;
@@ -114,13 +188,13 @@ export default function Vokabeln() {
     return s;
   }, [items]);
 
-  // ---------- Suggestions ----------
-  const loadSuggestions = async (force = false) => {
+  // ---------- Suggestions (manual trigger only) ----------
+  const loadSuggestions = async () => {
     if (!user || !hasSelection) return;
     const key = `${activeLevel}__${activeTopic}`;
-    if (!force && key === suggestKey && suggestions.length > 0) return;
     setLoadingSuggestions(true);
     setSuggestKey(key);
+    setSuggestionsOpen(true);
     try {
       const existing = items
         .filter((i) => i.level === activeLevel && i.topic === activeTopic)
@@ -135,8 +209,8 @@ export default function Vokabeln() {
       const filtered = pairs.filter(
         (p) => !knownKeys.has(`${p.german.toLowerCase()}|${p.english.toLowerCase()}`),
       );
-      // Cap at 10 — focused, not overwhelming.
       setSuggestions(filtered.slice(0, 10));
+      setSavedKeys(new Set());
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Vorschläge konnten nicht geladen werden");
     } finally {
@@ -144,12 +218,7 @@ export default function Vokabeln() {
     }
   };
 
-  useEffect(() => {
-    if (!hasSelection || !user) return;
-    const key = `${activeLevel}__${activeTopic}`;
-    if (key !== suggestKey) loadSuggestions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLevel, activeTopic, hasSelection, user, items.length === 0]);
+  // NOTE: no auto-load on focus change. The user must click "10 neue Vokabeln laden".
 
   // ---------- Lookup ("Frag mich!") ----------
   const runLookup = async () => {
@@ -237,6 +306,9 @@ export default function Vokabeln() {
   const pickTopic = (t: string) => {
     setSelection(activeLevel, t);
     setShowTopicPicker(false);
+    // Topic changed → clear stale suggestions; user must explicitly load again.
+    setSuggestions([]);
+    setSuggestKey("");
     setSavedKeys(new Set());
   };
 
@@ -250,6 +322,9 @@ export default function Vokabeln() {
     }
     return true;
   });
+
+  const focusKey = `${activeLevel}__${activeTopic}`;
+  const suggestionsStale = suggestKey && suggestKey !== focusKey;
 
   return (
     <div className="space-y-8">
@@ -317,29 +392,23 @@ export default function Vokabeln() {
                     <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
                     <div className="font-display text-xl text-primary">{lookup.english}</div>
                   </div>
-                  {lookup.part_of_speech && (
-                    <Badge variant="outline" className="text-[10px] uppercase">{lookup.part_of_speech}</Badge>
+                  {(lookup.part_of_speech || lookup.note) && (
+                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                      {lookup.part_of_speech && (
+                        <Badge variant="outline" className="text-xs uppercase">{lookup.part_of_speech}</Badge>
+                      )}
+                      {lookup.note && <span className="text-sm text-muted-foreground italic">{lookup.note}</span>}
+                    </div>
                   )}
-                  {lookup.note && <div className="text-xs text-muted-foreground italic">{lookup.note}</div>}
                 </div>
-                <div className="flex flex-col gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
+                  <EllieButton
+                    prefill={ellieAskWordPrompt(lookup.german, lookup.english, activeLevel)}
+                    title={lookup.english}
+                  />
                   <Button size="sm" variant="soft" onClick={saveLookupToCollection} disabled={savingLookup}>
                     {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                     <span className="hidden sm:inline">Speichern</span>
-                  </Button>
-                  <Button asChild size="sm" variant="ghost" className="text-xs">
-                    <Link
-                      to={buildEllieUrl({
-                        prefill: ellieAskWordPrompt(lookup.german, lookup.english, activeLevel),
-                        auto: true,
-                        title: lookup.english,
-                        returnTo: "/vokabeln",
-                        returnLabel: "Zurück zu Vokabeln",
-                      })}
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Frag Ellie</span>
-                    </Link>
                   </Button>
                 </div>
               </div>
@@ -375,145 +444,149 @@ export default function Vokabeln() {
 
       {/* ============ 2) Neue Vokabeln für dich ============ */}
       <section className="space-y-3">
-        <div className="space-y-0.5">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Neue Vokabeln für dich
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Vorschläge passend zu deinem Fokus: <span className="font-semibold">{activeLevel}</span>
-            {" · "}
-            <span className="font-semibold">{activeTopic || "—"}</span>
-          </p>
-        </div>
+        <Collapsible open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/40 transition-smooth text-left"
+            >
+              <div className="space-y-0.5 min-w-0">
+                <div className="text-base font-semibold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Neue Vokabeln für dich
+                  {suggestions.length > 0 && (
+                    <span className="text-sm text-muted-foreground font-normal">· {suggestions.length}</span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground truncate">
+                  Fokus: <span className="font-semibold">{activeLevel}</span>
+                  {" · "}
+                  <span className="font-semibold">{activeTopic || "—"}</span>
+                </p>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${suggestionsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </CollapsibleTrigger>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="soft"
-            size="sm"
-            onClick={() => setShowTopicPicker((v) => !v)}
-            disabled={!hasSelection}
-            className="h-9"
-          >
-            Thema ändern
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showTopicPicker ? "rotate-180" : ""}`} />
-          </Button>
-          <Button
-            type="button"
-            variant="hero"
-            size="sm"
-            onClick={() => loadSuggestions(true)}
-            disabled={loadingSuggestions || !hasSelection}
-            className="h-9"
-          >
-            {loadingSuggestions ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5" />
-            )}
-            10 neue Vokabeln laden
-          </Button>
-        </div>
-
-        {showTopicPicker && (
-          <Card className="p-3">
-            <Label className="text-xs mb-2 block">Wähle ein Thema</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_TOPICS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => pickTopic(t)}
-                  className={chip(activeTopic === t)}
-                >
-                  {t}
-                </button>
-              ))}
+          <CollapsibleContent className="space-y-3 pt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="soft"
+                size="sm"
+                onClick={() => setShowTopicPicker((v) => !v)}
+                disabled={!hasSelection}
+                className="h-9"
+              >
+                Thema ändern
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showTopicPicker ? "rotate-180" : ""}`} />
+              </Button>
+              <Button
+                type="button"
+                variant="hero"
+                size="sm"
+                onClick={loadSuggestions}
+                disabled={loadingSuggestions || !hasSelection}
+                className="h-9"
+              >
+                {loadingSuggestions ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                10 neue Vokabeln laden
+              </Button>
+              {suggestionsStale && suggestions.length > 0 && (
+                <span className="text-xs text-muted-foreground italic">
+                  Vorschläge stammen noch vom vorherigen Fokus.
+                </span>
+              )}
             </div>
-          </Card>
-        )}
 
-        {!hasSelection && (
-          <Card className="p-4 text-sm text-muted-foreground">
-            Wähle zuerst ein Niveau und Thema, damit wir passende Vokabeln vorschlagen können.
-          </Card>
-        )}
+            {showTopicPicker && (
+              <Card className="p-3">
+                <Label className="text-xs mb-2 block">Wähle ein Thema</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_TOPICS.map((t) => (
+                    <button key={t} onClick={() => pickTopic(t)} className={chip(activeTopic === t)}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            )}
 
-        {hasSelection && loadingSuggestions && suggestions.length === 0 && (
-          <Card className="p-6 flex items-center justify-center text-sm text-muted-foreground gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" /> Vorschläge werden geladen…
-          </Card>
-        )}
+            {!hasSelection && (
+              <Card className="p-4 text-sm text-muted-foreground">
+                Wähle zuerst ein Niveau und Thema, damit wir passende Vokabeln vorschlagen können.
+              </Card>
+            )}
 
-        {hasSelection && !loadingSuggestions && suggestions.length === 0 && (
-          <Card className="p-4 text-sm text-muted-foreground">
-            Keine neuen Vorschläge – probiere ein anderes Thema oder lade neu.
-          </Card>
-        )}
+            {hasSelection && loadingSuggestions && suggestions.length === 0 && (
+              <Card className="p-6 flex items-center justify-center text-sm text-muted-foreground gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Vorschläge werden geladen…
+              </Card>
+            )}
 
-        {suggestions.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {suggestions.map((s) => {
-              const key = `${s.german}|${s.english}`;
-              const saved = savedKeys.has(key);
-              const saving = savingKey === key;
-              return (
-                <Card key={key} className="p-3 flex items-center justify-between gap-3 bg-gradient-card">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <div className="font-semibold truncate">{s.german}</div>
-                      <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <div className="text-primary font-semibold truncate">{s.english}</div>
-                    </div>
-                    {s.grammar_note && (
-                      <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">
-                        {s.grammar_note}
+            {hasSelection && !loadingSuggestions && suggestions.length === 0 && (
+              <Card className="p-4 text-sm text-muted-foreground">
+                Klicke auf <span className="font-semibold">„10 neue Vokabeln laden"</span>, um passende Vorschläge für{" "}
+                <span className="font-semibold">{activeLevel} · {activeTopic || "—"}</span> zu erhalten.
+              </Card>
+            )}
+
+            {suggestions.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {suggestions.map((s) => {
+                  const key = `${s.german}|${s.english}`;
+                  const saved = savedKeys.has(key);
+                  const saving = savingKey === key;
+                  return (
+                    <Card key={key} className="p-3 flex items-center justify-between gap-3 bg-gradient-card">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <div className="font-semibold truncate">{s.german}</div>
+                          <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <div className="text-primary font-semibold truncate">{s.english}</div>
+                        </div>
+                        {s.grammar_note && (
+                          <div className="text-sm text-muted-foreground italic mt-0.5 line-clamp-1">
+                            {s.grammar_note}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      title="Mit Ellie erklären"
-                    >
-                      <Link
-                        to={buildEllieUrl({
-                          prefill: ellieAskWordPrompt(s.german, s.english, activeLevel),
-                          auto: true,
-                          title: s.english,
-                          returnTo: "/vokabeln",
-                          returnLabel: "Zurück zu Vokabeln",
-                        })}
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={saved ? "soft" : "hero"}
-                      size="sm"
-                      className="h-8"
-                      onClick={() => !saved && saveSuggestion(s)}
-                      disabled={saved || saving}
-                      title="Zur Sammlung hinzufügen"
-                    >
-                      {saving ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : saved ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Plus className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <EllieButton
+                          prefill={ellieAskWordPrompt(s.german, s.english, activeLevel)}
+                          title={s.english}
+                        />
+                        <Button
+                          type="button"
+                          variant={saved ? "soft" : "hero"}
+                          size="sm"
+                          className="h-9"
+                          onClick={() => !saved && saveSuggestion(s)}
+                          disabled={saved || saving}
+                          title="Zur Sammlung hinzufügen"
+                        >
+                          {saving ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : saved ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </section>
 
       {/* ============ 3) Deine Sammlung ============ */}
@@ -526,7 +599,7 @@ export default function Vokabeln() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-base font-semibold">Deine Sammlung</span>
-                <span className="text-xs text-muted-foreground">· {items.length}</span>
+                <span className="text-sm text-muted-foreground font-medium">· {items.length}</span>
               </div>
               <ChevronDown
                 className={`h-4 w-4 text-muted-foreground transition-transform ${collectionOpen ? "rotate-180" : ""}`}
@@ -568,7 +641,7 @@ export default function Vokabeln() {
               </select>
             </div>
 
-            <div className="text-xs text-muted-foreground">
+            <div className="text-sm text-muted-foreground">
               {filtered.length} von {items.length} angezeigt
             </div>
 
@@ -582,7 +655,7 @@ export default function Vokabeln() {
                       <div className="text-primary font-semibold truncate">{v.english}</div>
                     </div>
                     {v.grammar_note && (
-                      <div className="text-[11px] text-muted-foreground italic mt-0.5 line-clamp-1">
+                      <div className="text-sm text-muted-foreground italic mt-0.5 line-clamp-1">
                         {v.grammar_note}
                       </div>
                     )}
@@ -594,25 +667,10 @@ export default function Vokabeln() {
                     >
                       {statusLabels[v.status] ?? "Neu"}
                     </span>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      title="Frag Ellie zu diesem Wort"
-                    >
-                      <Link
-                        to={buildEllieUrl({
-                          prefill: ellieAskWordPrompt(v.german, v.english, v.level),
-                          auto: true,
-                          title: v.english,
-                          returnTo: "/vokabeln",
-                          returnLabel: "Zurück zu Vokabeln",
-                        })}
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
+                    <EllieButton
+                      prefill={ellieAskWordPrompt(v.german, v.english, v.level)}
+                      title={v.english}
+                    />
                   </div>
                 </Card>
               ))}
