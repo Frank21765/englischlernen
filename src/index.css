@@ -91,6 +91,16 @@
   .transition-bounce { transition: all 0.4s var(--transition-bounce); }
   .transition-smooth { transition: all 0.25s var(--transition-smooth); }
 
+  /* Einheitlicher Hover-Effekt für alle interaktiven Boxen/Karten:
+     leichtes Anheben + warmer Coral-Glow am Rand. */
+  .hover-lift {
+    transition: all 0.4s var(--transition-bounce);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+  }
+
   .flip-card { perspective: 1200px; }
   .flip-inner {
     position: relative;
