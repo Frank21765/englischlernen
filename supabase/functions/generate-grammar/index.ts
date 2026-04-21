@@ -131,10 +131,57 @@ Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort. Eine kurze Erklärung au
       });
     }
 
-    // Lesson mode
+    // Lesson mode — pick a varied grammar focus per level so users don't always get the same topic.
+    const topicsByLevel: Record<string, string[]> = {
+      A1: [
+        "to be (am/is/are)", "to have (have/has)", "Personalpronomen", "Possessivpronomen (my/your/his/her)",
+        "Artikel a/an/the", "Plural von Nomen", "Simple Present (Aussage)", "Simple Present (Frage & Verneinung)",
+        "this/that/these/those", "there is / there are", "can (Fähigkeit)", "Präpositionen (in/on/at)",
+        "Imperativ", "Uhrzeit & Zahlen",
+      ],
+      A2: [
+        "Simple Past (regelmäßige Verben)", "Simple Past (unregelmäßige Verben)", "Past von to be (was/were)",
+        "Present Continuous", "Simple Present vs Present Continuous", "going to – Future",
+        "will – Future (Spontanentscheidung)", "Komparativ & Superlativ", "much/many/a lot of",
+        "some/any", "Adverbien der Häufigkeit", "must / have to", "should (Ratschlag)",
+        "Possessiv-'s", "Object pronouns (me/him/her/us/them)",
+      ],
+      B1: [
+        "Present Perfect (Erfahrung)", "Present Perfect vs Simple Past", "for / since",
+        "Past Continuous", "Past Continuous vs Simple Past", "1st Conditional",
+        "will vs going to", "Modalverben (could/might/should/must)", "Relativsätze (who/which/that)",
+        "Passiv (Present & Past Simple)", "used to", "Reported Speech (Aussagen)",
+        "Gerund vs Infinitiv (Basics)", "too / enough",
+      ],
+      B2: [
+        "Present Perfect Continuous", "Past Perfect", "Past Perfect Continuous",
+        "2nd Conditional", "3rd Conditional", "Mixed Conditionals (Einstieg)",
+        "Reported Speech (Fragen & Befehle)", "Passiv (alle Zeiten)", "Gerund vs Infinitiv (vertieft)",
+        "Modalverben der Vergangenheit (must have / could have / should have)",
+        "Linking words (although/however/despite)", "Relativsätze (defining vs non-defining)",
+        "wish / if only", "have something done (Causative)",
+      ],
+      C1: [
+        "Inversion nach negativen Adverbien", "Mixed Conditionals", "Cleft sentences (It is … that …)",
+        "Advanced linking (notwithstanding, hence, thereby)", "Subjunctive (formelle Strukturen)",
+        "Modalverben für nuancierte Wahrscheinlichkeit", "Participle clauses",
+        "Emphatic structures (do/does/did + Infinitiv)", "Ellipsis & Substitution",
+        "Hedging language", "Discourse markers", "Advanced passives (be said to / be reported to)",
+      ],
+      C2: [
+        "Stilistische Inversion", "Fronting & Cleft (vertieft)", "Idiomatische Konditionalstrukturen",
+        "Advanced collocations & Kollokationsdichte", "Register-Wechsel (formell ↔ informell)",
+        "Subjunctive in formellen Kontexten", "Komplexe Nominalisierung",
+        "Diskursorganisation (cohesion devices)", "Hedging & Stance markers (akademisch)",
+        "Advanced Modalität (would / might well / may very well)",
+      ],
+    };
+    const pool = topicsByLevel[level] ?? topicsByLevel.A2;
+    const focus = pool[Math.floor(Math.random() * pool.length)];
+
     const systemPrompt = `Du bist ein freundlicher Englischlehrer für deutschsprachige Lernende.
 ${cefrGuide}
-Wähle EIN passendes Grammatikthema für Niveau ${level}.${topicHint}
+WICHTIG: Behandle in dieser Lektion GENAU dieses Grammatikthema: "${focus}" (Niveau ${level}). Wähle KEIN anderes Thema.${topicHint}
 Liefere eine kurze, klare Lektion: knappe Erklärung (auf Deutsch), 3 Beispielsätze (Englisch + deutsche Übersetzung), 1 typischer Fehler mit Korrektur, 3 kleine Übungssätze (Englisch mit einer Lücke __, plus richtiger Antwort und kurzer Hinweis).
 Halte die Erklärung freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
