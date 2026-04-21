@@ -93,6 +93,12 @@ export default function Lernen() {
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(persisted.customMode ?? isCustomTopic);
   const [editFocus, setEditFocus] = useState<boolean>(persisted.editFocus ?? !hasSelection);
+  const [askOpen, setAskOpen] = useState<boolean>(() => {
+    try { return sessionStorage.getItem(ASK_OPEN_KEY) !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(ASK_OPEN_KEY, askOpen ? "1" : "0"); } catch { /* ignore */ }
+  }, [askOpen]);
 
   // ---- Box 1: Frag mich! ----
   const [askInput, setAskInput] = useState(persisted.askInput ?? "");
