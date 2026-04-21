@@ -125,6 +125,20 @@ export default function Lueckentext() {
   const next = () => {
     if (idx + 1 >= items.length) {
       toast.success(`Runde fertig! ${stats.correct}/${stats.total} richtig`);
+      // Record session at the end of a finished round
+      if (user && stats.total > 0) {
+        supabase
+          .from("learning_sessions")
+          .insert({
+            user_id: user.id,
+            mode: "cloze",
+            level,
+            topic,
+            total_answers: stats.total,
+            correct_answers: stats.correct,
+          })
+          .then(() => undefined);
+      }
       setItems([]);
       return;
     }

@@ -209,12 +209,7 @@ export default function Quiz() {
       });
       setQueue(items);
       setIdx(0); setPicked(null); setStats({ correct: 0, total: 0 }); setCombo(0);
-
-      const { data: ses } = await supabase
-        .from("learning_sessions")
-        .insert({ user_id: user.id, mode: "quiz", level: ctxLevel, topic: ctxTopic, total_answers: 0, correct_answers: 0 })
-        .select("id").single();
-      setSessionId(ses?.id ?? null);
+      setSessionId(null);
       setStarted(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
@@ -242,11 +237,7 @@ export default function Quiz() {
       if (!qs.length) throw new Error("Keine Fragen erhalten");
       setQueue(qs);
       setIdx(0); setPicked(null); setStats({ correct: 0, total: 0 }); setCombo(0);
-      const { data: ses } = await supabase
-        .from("learning_sessions")
-        .insert({ user_id: user.id, mode: "grammar_quiz", level: ctxLevel, topic: ctxTopic, total_answers: 0, correct_answers: 0 })
-        .select("id").single();
-      setSessionId(ses?.id ?? null);
+      setSessionId(null);
       setStarted(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
@@ -404,11 +395,17 @@ export default function Quiz() {
     : "die richtige Form";
 
   const finish = async (finalStats: { correct: number; total: number }) => {
-    if (sessionId) {
-      await supabase.from("learning_sessions").update({
+    // Only record sessions with actual answers (no 0/0 ghosts)
+    if (user && finalStats.total > 0) {
+      const sessionMode = mode === "grammar" ? "grammar_quiz" : "quiz";
+      await supabase.from("learning_sessions").insert({
+        user_id: user.id,
+        mode: sessionMode,
+        level: ctxLevel,
+        topic: ctxTopic,
         total_answers: finalStats.total,
         correct_answers: finalStats.correct,
-      }).eq("id", sessionId);
+      });
     }
     const perfect = finalStats.total > 0 && finalStats.correct === finalStats.total;
     if (user) {
