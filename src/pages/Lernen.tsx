@@ -13,6 +13,7 @@ import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { getProfileUsername } from "@/lib/profile";
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { EllieButton } from "@/components/EllieButton";
+import { EllieIcon } from "@/components/EllieIcon";
 import { toast } from "sonner";
 import {
   ArrowRightLeft,
