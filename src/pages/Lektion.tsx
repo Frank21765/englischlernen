@@ -177,33 +177,33 @@ export default function Lektion() {
     };
 
     return (
-      <div className="max-w-2xl mx-auto space-y-5">
-        <Card className="p-8 sm:p-10 text-center space-y-5 bg-gradient-card shadow-glow border border-success/40 animate-pop">
-          <div className="mx-auto h-20 w-20 rounded-full bg-success/15 border border-success/40 flex items-center justify-center">
-            <Trophy className="h-10 w-10 text-success" />
+      <div className="max-w-2xl mx-auto space-y-4">
+        <Card className="p-6 sm:p-7 text-center space-y-3 bg-gradient-card shadow-glow border border-success/40 animate-pop">
+          <div className="mx-auto h-14 w-14 rounded-full bg-success/15 border border-success/40 flex items-center justify-center">
+            <Trophy className="h-7 w-7 text-success" />
           </div>
           <div className="space-y-1">
-            <div className="text-xs font-bold uppercase tracking-widest text-success">Lektion abgeschlossen</div>
-            <h1 className="text-2xl sm:text-3xl font-display">{lesson.title} {lesson.emoji}</h1>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-success">Lektion abgeschlossen</div>
+            <h1 className="text-xl sm:text-2xl font-display">{lesson.title} {lesson.emoji}</h1>
           </div>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Stark! Du hast alle {total} Aufgaben dieser Lektion gemeistert.
+          <p className="text-sm text-muted-foreground">
+            Stark! Du hast alle {total} Aufgaben gemeistert.
             {mistakeTasks.length === 0
-              ? " Und das ohne einen Fehler — beeindruckend!"
+              ? " Und das fehlerfrei — beeindruckend!"
               : " Schau dir unten kurz an, was beim ersten Versuch schwer war."}
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-            <Button variant="hero" size="lg" asChild>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
+            <Button variant="hero" size="default" asChild>
               <Link to="/uben/lektionen">
                 <Trophy className="h-4 w-4" /> Zur Übersicht
               </Link>
             </Button>
             {mistakeTasks.length > 0 && (
-              <Button variant="soft" size="lg" onClick={startMistakeReplay}>
+              <Button variant="soft" size="default" onClick={startMistakeReplay}>
                 <Target className="h-4 w-4" /> Schwierige nochmal ({mistakeTasks.length})
               </Button>
             )}
-            <Button variant="ghost" size="lg" onClick={startFullReplay}>
+            <Button variant="ghost" size="default" onClick={startFullReplay}>
               <RotateCcw className="h-4 w-4" /> Komplett wiederholen
             </Button>
           </div>
