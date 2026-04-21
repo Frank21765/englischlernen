@@ -65,7 +65,11 @@ const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const LONG_INPUT_WORDS = 12;
 
 // Persist UI state across navigation (e.g. side-trip to Coach Ellie).
+// Only restored when the user is explicitly returning from an Ellie side-trip
+// (flag set by EllieButton just before navigating). Fresh page entries / fresh
+// logins always start with a clean default state.
 const STATE_KEY = "vokabeln.uiState.v1";
+const RETURN_FLAG_KEY = "vokabeln.returningFromEllie";
 interface PersistedState {
   askInput: string;
   lookup: LookupResult | null;
@@ -80,8 +84,14 @@ interface PersistedState {
   collectionStatus: string;
   collectionSearch: string;
 }
-function loadPersisted(): Partial<PersistedState> {
+function consumePersisted(): Partial<PersistedState> {
   try {
+    const isReturning = sessionStorage.getItem(RETURN_FLAG_KEY) === "1";
+    if (!isReturning) {
+      sessionStorage.removeItem(STATE_KEY);
+      return {};
+    }
+    sessionStorage.removeItem(RETURN_FLAG_KEY);
     const raw = sessionStorage.getItem(STATE_KEY);
     if (!raw) return {};
     return JSON.parse(raw) as Partial<PersistedState>;
@@ -92,9 +102,13 @@ function loadPersisted(): Partial<PersistedState> {
 
 // Consistent Ellie button used everywhere on this page.
 function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
+  const markReturning = () => {
+    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
+  };
   return (
     <Button asChild variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10" title="Mit Coach Ellie besprechen">
       <Link
+        onClick={markReturning}
         to={buildEllieUrl({
           prefill,
           auto: true,
@@ -114,18 +128,17 @@ export default function Vokabeln() {
   const { level: activeLevel, topic: activeTopic, hasSelection, setSelection } = useLearning();
   const [items, setItems] = useState<Vocab[]>([]);
 
-  // Honor "?fresh=…" query param: when entering from "Bereit für die nächste Runde?",
-  // reset persisted UI state so the user truly starts fresh.
+  // Only restore persisted UI state when the user is explicitly returning from
+  // a Coach Ellie side-trip. Fresh entries (nav clicks, "Bereit für die nächste
+  // Runde?", reloads, fresh logins) always start with a clean default state.
+  // Also strip a legacy "?fresh=" query param if present so URLs stay clean.
   const persisted = useMemo(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("fresh")) {
-      try { sessionStorage.removeItem(STATE_KEY); } catch { /* ignore */ }
-      // Strip the param so reloads don't keep wiping state.
       const url = new URL(window.location.href);
       url.searchParams.delete("fresh");
       window.history.replaceState({}, "", url.toString());
-      return {} as Partial<PersistedState>;
     }
-    return loadPersisted();
+    return consumePersisted();
   }, []);
 
   // ---- Block 1: Frag mich! ----
