@@ -48,7 +48,7 @@ export function EllieButton({
       >
         <Link onClick={markReturning} to={to}>
           <Sparkles className="h-4 w-4" />
-          <span>Ellie fragen</span>
+          <span>Frag Ellie</span>
         </Link>
       </Button>
     );
