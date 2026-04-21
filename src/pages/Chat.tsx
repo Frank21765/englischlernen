@@ -497,20 +497,24 @@ export default function Chat() {
             </Button>
           </div>
         )}
-        <header className="space-y-2">
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <span className="inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 border border-primary/20 shrink-0">
-              <EllieIcon size={28} alt="" />
+        <header className="space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 border border-primary/20 shrink-0">
+              <EllieIcon size={24} className="sm:w-7 sm:h-7" alt="" />
             </span>
-            <h1 className="text-2xl sm:text-3xl leading-tight">Coach Ellie</h1>
-            {hasSelection && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent-foreground/90">
-                <Sparkles className="h-3 w-3 text-accent" />
-                <span className="font-mono">{level}</span>
-                <span className="text-muted-foreground/60">·</span>
-                <span className="truncate max-w-[10rem]">{topic}</span>
-              </span>
-            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl leading-tight">Coach Ellie</h1>
+                {hasSelection && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent-foreground/90">
+                    <Sparkles className="h-3 w-3 text-accent" />
+                    <span className="font-mono">{level}</span>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className="truncate max-w-[6rem] sm:max-w-[10rem]">{topic}</span>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
             Dein KI-Tutor. Schreib auf Deutsch oder Englisch – stell Fragen, übe Dialoge, lass dich korrigieren.
