@@ -22,6 +22,7 @@ import Lektionen from "./pages/Lektionen";
 import Lektion from "./pages/Lektion";
 import Wortpuzzle from "./pages/Wortpuzzle";
 import Profil from "./pages/Profil";
+import Unterstuetzen from "./pages/Unterstuetzen";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Onboarding from "./pages/Onboarding";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/profil" element={<Profil />}>
                 <Route path="erfolge" element={<Erfolge />} />
                 <Route path="statistik" element={<Statistik />} />
+                <Route path="unterstuetzen" element={<Unterstuetzen />} />
                 <Route path="einstellungen" element={<Einstellungen />} />
               </Route>
               {/* Legacy redirects */}
