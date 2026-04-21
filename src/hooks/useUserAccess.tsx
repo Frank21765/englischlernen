@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-export type AccessStatus = "active" | "blocked" | "expired" | "loading";
+export type AccessStatus = "active" | "blocked" | "expired" | "pending" | "loading";
 
 export interface UserAccess {
   status: AccessStatus;
@@ -35,6 +35,7 @@ export function useUserAccess(): UserAccess {
       let s: AccessStatus = "active";
       if (admin) s = "active";
       else if (profile?.access_status === "blocked") s = "blocked";
+      else if (profile?.access_status === "pending") s = "pending";
       else if (profile?.valid_until && new Date(profile.valid_until) < new Date()) s = "expired";
       else s = (profile?.access_status as AccessStatus) ?? "active";
 
