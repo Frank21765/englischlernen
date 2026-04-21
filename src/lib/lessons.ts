@@ -1500,48 +1500,76 @@ const wordShape = (word: string): string => {
 };
 
 interface TaskOverride {
-  kind?: string;
+  /** Part of speech / form, e.g. "Adjektiv (Partizip)", "Phrasal Verb". */
+  pos?: string;
+  /** Concrete German meaning of the missing word, e.g. "verspätet, verzögert". */
+  meansDe?: string;
+  /** Sense-tip: what kind of meaning the learner should look for in this sentence. */
   meaning?: string;
+  /** Mini-grammar / word-knowledge explanation. */
   grammar?: string;
+  /** Second example sentence with German translation. */
   example?: ExtraExample;
+  /** Legacy: short "kind" label used as fallback if pos is missing. */
+  kind?: string;
 }
 
 const TASK_OVERRIDES: Record<string, TaskOverride> = {
   "Free ___ on orders over 50 euros.": {
-    kind: "Nomen aus dem Online-Handel",
-    meaning: "Gemeint ist der Vorgang, wie die Ware vom Shop zu dir nach Hause kommt — also nicht die Ware selbst, sondern der Versand.",
+    pos: "Nomen (-ing-Form von „to ship“)",
+    meansDe: "Versand, Lieferung",
+    meaning: "Gesucht ist ein Wort, das beschreibt, wie die Ware vom Shop zu dir nach Hause kommt — nicht die Ware selbst, sondern der Vorgang des Versendens.",
     grammar: "„shipping“ ist die -ing-Form von „to ship“ und wird im Englischen als Nomen für den Versand benutzt. Viele Tätigkeiten werden so zu Nomen: cooking, parking, shopping.",
     example: { en: "We offer free shipping worldwide.", de: "Wir bieten weltweit kostenlosen Versand." },
   },
   "I have to ___ my parents tonight.": {
-    kind: "Verb in der Grundform",
+    pos: "Verb in der Grundform",
+    meansDe: "anrufen",
     meaning: "Gesucht ist das übliche Alltagsverb dafür, jemanden über das Telefon zu erreichen.",
     grammar: "Nach „have to“ steht im Englischen immer die Grundform (call, work, leave). „call“ ist die häufigste Standardvariante; „phone“ wird ebenfalls akzeptiert.",
     example: { en: "I have to call the doctor in the morning.", de: "Ich muss morgens den Arzt anrufen." },
   },
   "My phone isn't ___.": {
-    kind: "-ing-Form (Zustand)",
+    pos: "-ing-Form (Verlaufsform)",
+    meansDe: "funktionierend / am Funktionieren",
     meaning: "Es geht nicht darum, dass das Handy „arbeitet“ wie ein Mensch, sondern dass es gerade nicht funktioniert.",
     grammar: "„work“ heißt bei Geräten „funktionieren“. Mit „be + not + working“ sagst du, dass etwas im Moment nicht läuft.",
     example: { en: "The printer isn't working again.", de: "Der Drucker funktioniert schon wieder nicht." },
   },
   "This soup has too much salt — it's too ___.": {
-    kind: "Adjektiv für Geschmack",
+    pos: "Adjektiv (Geschmack)",
+    meansDe: "salzig",
     meaning: "Der Satz nennt schon den Grund: zu viel Salz. Gesucht ist also genau das Geschmackswort dazu — nicht süß, nicht scharf, nicht heiß.",
     grammar: "Aus dem Nomen „salt“ wird mit -y das Adjektiv „salty“. Dieses Muster gilt für viele Geschmäcker und Wetterwörter: rain → rainy, sun → sunny, spice → spicy.",
     example: { en: "These chips are way too salty for me.", de: "Diese Chips sind mir viel zu salzig." },
   },
   "Could you ___ down the recipe for me?": {
-    kind: "Verb + Partikel („… down“)",
+    pos: "Verb (Teil eines Phrasal Verbs)",
+    meansDe: "schreiben (zusammen mit „down“ = aufschreiben)",
     meaning: "Zusammen mit „down“ ist ein Verb gemeint, das bedeutet, etwas auf Papier oder ins Handy zu notieren, damit man es später nachlesen kann.",
     grammar: "„write down“ ist ein typisches Phrasal Verb: das kleine „down“ verändert die Bedeutung. „write“ allein heißt nur „schreiben“, „write down“ heißt „aufschreiben/notieren“.",
     example: { en: "Let me write down your phone number.", de: "Ich schreibe mir deine Telefonnummer auf." },
   },
   "We need to keep the client ___ on the progress.": {
-    kind: "Adjektiv-Form auf -ed",
+    pos: "Adjektiv (Partizip auf -ed)",
+    meansDe: "auf dem Laufenden, informiert",
     meaning: "Es geht darum, in welchem Zustand der Kunde bleiben soll — nämlich auf dem neuesten Stand zu allen Neuigkeiten.",
     grammar: "Nach „keep someone …“ folgt ein Wort, das einen Zustand beschreibt (happy, safe, informed, updated). „keep someone updated“ heißt „jemanden auf dem Laufenden halten“.",
     example: { en: "I'll keep you updated on any changes.", de: "Ich halte dich über Änderungen auf dem Laufenden." },
+  },
+  "My flight has been ___ by two hours.": {
+    pos: "Adjektiv / Partizip (Past Participle von „to delay“)",
+    meansDe: "verspätet, verzögert",
+    meaning: "Gesucht ist ein Wort, das ausdrückt, dass der Flug nicht pünktlich ist, sondern zwei Stunden später kommt.",
+    grammar: "Im Passiv Perfekt steht „has/have been + Partizip“. „delayed“ ist das Partizip von „to delay“ (verzögern) und beschreibt hier den Zustand des Flugs: er wurde verspätet.",
+    example: { en: "The meeting was delayed because of traffic.", de: "Das Meeting wurde wegen des Verkehrs verschoben." },
+  },
+  "Breakfast is ___ from 7 to 10.": {
+    pos: "Adjektiv / Partizip (Past Participle von „to serve“)",
+    meansDe: "serviert, angeboten",
+    meaning: "Gesucht ist ein Wort, das sagt, dass das Frühstück in dieser Zeit für die Gäste bereitsteht — also wann es ausgegeben wird.",
+    grammar: "„be + Partizip“ ist das englische Passiv: „is served“ = „wird serviert“. So beschreibst du im Englischen oft Öffnungs- oder Servicezeiten in Hotels und Restaurants.",
+    example: { en: "Dinner is served from 6 p.m.", de: "Abendessen wird ab 18 Uhr serviert." },
   },
 };
 
@@ -1562,40 +1590,51 @@ export function isTaskAnswerCorrect(task: LessonTask, value: string): boolean {
   return taskAnswers(task).some((answer) => normalizeLessonText(answer) === normalized);
 }
 
+/** Short part-of-speech / form label, shown as second hint line ("Wortart"). */
 const buildKindHint = (task: LessonTask): string => {
   const override = overrideForTask(task);
+  if (override?.pos) return override.pos;
   if (override?.kind) return override.kind;
   if (task.type === "mc") return "Wähle die Option, die als ganzer englischer Satz wirklich natürlich klingt.";
   if (task.type === "order") return "Bau das Satzgerüst auf: erst Subjekt + Verb, dann Ergänzungen wie Zeit oder Ort.";
 
   const ans = task.answer.toLowerCase();
   const small = ["to","at","on","in","for","of","as","than","out","down","up","off","by","with","from","into","about","the","a","an","and","or","but"];
-  if (small.includes(ans)) return "Kurzes Strukturwort";
-  if (ans.endsWith("ing")) return "-ing-Form (Verb als Vorgang oder Nomen)";
-  if (ans.endsWith("ed") || ans.endsWith("en")) return "Verb-Form auf -ed/-en (Zustand oder Vergangenheit)";
+  if (small.includes(ans)) return "Kurzes Strukturwort (Präposition oder Verbindungswort)";
+  if (ans.endsWith("ing")) return "-ing-Form (Verlaufsform oder Nomen aus einem Verb)";
+  if (ans.endsWith("ed") || ans.endsWith("en")) return "Partizip / Past Participle (Form auf -ed/-en)";
   if (ans.endsWith("ly")) return "Adverb (beschreibt, wie etwas geschieht)";
   if (ans.endsWith("er") || ans.endsWith("est")) return "Steigerungsform eines Adjektivs";
-  if (ans.endsWith("y") && ans.length > 3) return "Adjektiv (oft aus einem Nomen + -y gebildet)";
-  if (ans.length <= 4) return "Kurzes Verbindungswort";
-  return "Genau passendes Wort für diese Situation";
+  if (ans.endsWith("y") && ans.length > 3) return "Adjektiv (oft aus Nomen + -y gebildet)";
+  if (ans.length <= 4) return "Kurzes Verbindungs- oder Hilfswort";
+  return "Inhaltswort, das genau in diese Situation passt";
 };
 
+/** Sense-tip: leads with meaning ("Gesucht ist ein Wort, das …"), then letter shape. */
 const buildMeaningHint = (task: LessonTask): string | undefined => {
+  // Build the meaning sentence first.
+  let meaning: string | undefined;
   if (task.meaningHint) {
-    if (task.type === "cloze") return `${task.meaningHint} Englisches Wort ${wordShape(task.answer)}.`;
-    return task.meaningHint;
+    meaning = task.meaningHint.trim();
+  } else {
+    const override = overrideForTask(task);
+    if (override?.meaning) meaning = override.meaning.trim();
   }
-  const override = overrideForTask(task);
-  if (override?.meaning) {
-    if (task.type === "cloze") return `${override.meaning} Englisches Wort ${wordShape(task.answer)}.`;
-    return override.meaning;
+  if (!meaning && task.type === "cloze") {
+    const fromHint = task.hint?.trim();
+    if (fromHint && fromHint.length > 0) {
+      meaning = `Gesucht ist ein Wort, das ${fromHint.replace(/^Hier (fehlt|passt|kommt)\s*/i, "").replace(/[.!?]$/,"")}.`;
+    } else {
+      meaning = "Gesucht ist das Wort, das den Satz inhaltlich am natürlichsten vervollständigt.";
+    }
   }
-  if (task.type !== "cloze") return undefined;
-  const fromHint = task.hint?.trim();
-  const meaning = fromHint && fromHint.length > 0
-    ? `Tipp zur Bedeutung: ${fromHint.replace(/^Hier (fehlt|passt|kommt)\s*/i, "")}`
-    : `Überleg, welches Wort den Satz inhaltlich am natürlichsten vervollständigt.`;
-  return `${meaning} Englisches Wort ${wordShape(task.answer)}.`;
+  if (!meaning) return undefined;
+  if (!/[.!?…]$/.test(meaning)) meaning = `${meaning}.`;
+
+  if (task.type === "cloze") {
+    return `${meaning} Englisches Wort: ${wordShape(task.answer)}.`;
+  }
+  return meaning;
 };
 
 export function getTaskHint(task: LessonTask): string | undefined {
@@ -1607,6 +1646,29 @@ export function getTaskMeaningHint(task: LessonTask): string | undefined {
   return buildMeaningHint(task);
 }
 
+/** German translation / meaning of the answer. Used as the first explanation line. */
+const buildAnswerMeaning = (task: LessonTask): string | undefined => {
+  const override = overrideForTask(task);
+  if (override?.meansDe) {
+    return `Bedeutung: „${task.answer}“ heißt auf Deutsch ${override.meansDe}.`;
+  }
+  return undefined;
+};
+
+/** "Wortart / Herkunft"-Zeile, fällt zurück auf den Kind-Hint. */
+const buildWordType = (task: LessonTask): string | undefined => {
+  const override = overrideForTask(task);
+  const pos = override?.pos ?? override?.kind;
+  if (pos) return `Wortart: ${pos}.`;
+  if (task.type !== "cloze") return undefined;
+  const ans = task.answer.toLowerCase();
+  if (ans.endsWith("ing")) return "Wortart: -ing-Form — kann Verlaufsform oder Nomen sein.";
+  if (ans.endsWith("ed") || ans.endsWith("en")) return "Wortart: Partizip (Past Participle), oft im Passiv oder als Adjektiv.";
+  if (ans.endsWith("ly")) return "Wortart: Adverb.";
+  if (ans.endsWith("y") && ans.length > 3) return "Wortart: Adjektiv.";
+  return undefined;
+};
+
 const buildMiniGrammar = (task: LessonTask): string | undefined => {
   const override = overrideForTask(task);
   if (override?.grammar) return override.grammar;
@@ -1616,6 +1678,9 @@ const buildMiniGrammar = (task: LessonTask): string | undefined => {
     const ans = task.answer.toLowerCase();
     if (ans.endsWith("ing")) {
       return "Die -ing-Form steht im Englischen entweder für einen laufenden Vorgang („is working“) oder als Nomen für eine Tätigkeit („shopping“, „cooking“).";
+    }
+    if (ans.endsWith("ed") || ans.endsWith("en")) {
+      return "Mit „be / has been + Partizip“ baust du im Englischen das Passiv: der Satz beschreibt nicht, was jemand tut, sondern was mit dem Subjekt geschieht.";
     }
     if (ans.endsWith("y") && ans.length > 3) {
       return "Viele englische Adjektive entstehen aus einem Nomen + -y: salt → salty, rain → rainy, sun → sunny.";
@@ -1661,22 +1726,34 @@ const buildMismatchExplanation = (task: LessonTask, userAnswer?: string): string
 export function getTaskExplanation(task: LessonTask, opts: { isCorrect: boolean; userAnswer?: string }): string {
   const parts: string[] = [];
 
+  // 1. Lösung im Satz
   if (task.type === "cloze") {
-    parts.push(`„${task.answer}“ passt hier, weil der Satz dann natürlich klingt: „${filledClozeSentence(task)}“.`);
+    parts.push(`„${task.answer}“ passt hier, weil der Satz dann klar und natürlich klingt: „${filledClozeSentence(task)}“.`);
   } else if (task.type === "mc") {
     parts.push(`„${task.answer}“ ist die richtige Wahl, weil nur diese Option den Sinn der deutschen Vorlage als natürlicher englischer Satz wiedergibt.`);
   } else {
     parts.push(`Die richtige Reihenfolge ist „${task.answer}“ — so steht das englische Satzgerüst sauber: erst Subjekt/Frage, dann Verb, dann Ergänzung.`);
   }
 
+  // 2. Bei Fehler: warum die eigene Antwort nicht passt
   if (!opts.isCorrect) {
     const mismatch = buildMismatchExplanation(task, opts.userAnswer);
     if (mismatch) parts.push(mismatch);
   }
 
+  // 3. Bedeutung (DE) des gesuchten Wortes
+  const meaning = buildAnswerMeaning(task);
+  if (meaning) parts.push(meaning);
+
+  // 4. Wortart / Herkunft
+  const wordType = buildWordType(task);
+  if (wordType) parts.push(wordType);
+
+  // 5. Mini-Grammatik / Wortwissen
   const grammar = buildMiniGrammar(task);
   if (grammar) parts.push(grammar);
 
+  // 6. Zweiter Beispielsatz mit Übersetzung
   const example = buildExtraExample(task);
   if (example) parts.push(`Beispiel: „${example.en}“ — ${example.de}`);
 
