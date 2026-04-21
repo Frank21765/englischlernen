@@ -31,6 +31,21 @@ export async function ensureProfileForUser(user: User) {
 
   if (insertError && insertError.code !== "23505") throw insertError;
 
+  const { data: roles, error: roleError } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", user.id)
+    .limit(1);
+
+  if (roleError) throw roleError;
+  if (!roles?.length) {
+    const { error: insertRoleError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: user.id, role: "user" });
+
+    if (insertRoleError && insertRoleError.code !== "23505") throw insertRoleError;
+  }
+
   return true;
 }
 
