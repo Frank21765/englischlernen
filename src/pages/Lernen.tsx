@@ -44,7 +44,11 @@ const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const LONG_INPUT_WORDS = 12;
 
 // Persist UI state across navigation (e.g. side-trip to Coach Ellie).
+// Only restored when the user is explicitly returning from an Ellie side-trip
+// (flag set by EllieButton just before navigating). Fresh page entries / fresh
+// logins always start with a clean default state.
 const STATE_KEY = "lernen.uiState.v1";
+const RETURN_FLAG_KEY = "lernen.returningFromEllie";
 interface PersistedState {
   askInput: string;
   lookup: LookupResult | null;
@@ -52,8 +56,15 @@ interface PersistedState {
   editFocus: boolean;
   customMode: boolean;
 }
-function loadPersisted(): Partial<PersistedState> {
+function consumePersisted(): Partial<PersistedState> {
   try {
+    const isReturning = sessionStorage.getItem(RETURN_FLAG_KEY) === "1";
+    if (!isReturning) {
+      // Fresh entry — wipe any leftover state so we truly start clean.
+      sessionStorage.removeItem(STATE_KEY);
+      return {};
+    }
+    sessionStorage.removeItem(RETURN_FLAG_KEY);
     const raw = sessionStorage.getItem(STATE_KEY);
     if (!raw) return {};
     return JSON.parse(raw) as Partial<PersistedState>;
@@ -64,6 +75,9 @@ function loadPersisted(): Partial<PersistedState> {
 
 // Consistent Ellie button used everywhere on this page.
 function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
+  const markReturning = () => {
+    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
+  };
   return (
     <Button
       asChild
@@ -73,6 +87,7 @@ function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
       title="Mit Coach Ellie besprechen"
     >
       <Link
+        onClick={markReturning}
         to={buildEllieUrl({
           prefill,
           auto: true,
@@ -93,7 +108,7 @@ export default function Lernen() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const persisted = useMemo(loadPersisted, []);
+  const persisted = useMemo(consumePersisted, []);
 
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
@@ -429,7 +444,7 @@ export default function Lernen() {
           <Button
             variant="soft"
             size="lg"
-            onClick={() => navigate("/chat")}
+            onClick={() => navigate(`/chat?new=1&t=${Date.now()}`)}
             className="col-span-2 w-full whitespace-normal text-center leading-tight px-3"
           >
             <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Coach Ellie</span>
