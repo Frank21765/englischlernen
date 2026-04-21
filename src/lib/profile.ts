@@ -19,17 +19,20 @@ export async function ensureProfileForUser(user: User) {
     .limit(1);
 
   if (error) throw error;
-  if (data?.length) return false;
+  let created = false;
 
-  const { error: insertError } = await supabase
-    .from("profiles")
-    .insert({
-      user_id: user.id,
-      display_name: fallbackUsername(user),
-      access_status: "pending",
-    });
+  if (!data?.length) {
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: user.id,
+        display_name: fallbackUsername(user),
+        access_status: "pending",
+      });
 
-  if (insertError && insertError.code !== "23505") throw insertError;
+    if (insertError && insertError.code !== "23505") throw insertError;
+    created = true;
+  }
 
   const { data: roles, error: roleError } = await supabase
     .from("user_roles")
@@ -46,7 +49,7 @@ export async function ensureProfileForUser(user: User) {
     if (insertRoleError && insertRoleError.code !== "23505") throw insertRoleError;
   }
 
-  return true;
+  return created;
 }
 
 export async function getProfileUsername(user: User) {
