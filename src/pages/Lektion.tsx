@@ -349,18 +349,6 @@ export default function Lektion() {
               <Target className="h-3 w-3" /> Schwierige Aufgaben
             </span>
           )}
-          <div className="ml-auto">
-            {task && (
-              <EllieButton
-                variant="sm"
-                prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
-                title={`Lektion: ${lesson.title}`}
-                returnTo={`/uben/lektionen/${lesson.id}`}
-                returnLabel="Zurück zur Lektion"
-                returnFlagKey={`hello.lesson.return.${lesson.id}`}
-              />
-            )}
-          </div>
         </div>
         <Progress value={pct} className="h-2" />
         <div className="text-xs text-muted-foreground">{doneCount} / {total} der ganzen Lektion abgeschlossen</div>
@@ -519,17 +507,35 @@ export default function Lektion() {
           </div>
         )}
 
-        {/* Ellie's gentle explanation appears after a wrong answer (or always
-            after answering, if an explanation is available — keeps the guide
-            presence visible without becoming noisy). */}
-        {revealed !== null && task.explain && (
-          <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
-              <EllieIcon size={18} />
-            </span>
-            <div className="min-w-0">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
-              <div className="text-xs sm:text-sm text-foreground/90 leading-snug">{task.explain}</div>
+        {/* Coach Ellie's coaching moment — appears after every answer (correct
+            or wrong). Includes a contextual deep-dive button so learners can
+            jump straight into a chat about this exact task on any device. */}
+        {revealed !== null && (
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2.5">
+            <div className="flex items-start gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                <EllieIcon size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+                <div className="text-xs sm:text-sm text-foreground/90 leading-snug">
+                  {task.explain
+                    ? task.explain
+                    : revealed
+                      ? `Stark — „${correctOf(task)}“ ist hier genau richtig. Merk dir die Wendung gleich für ähnliche Sätze.`
+                      : `Kein Problem. Die richtige Lösung ist „${correctOf(task)}“ — schau sie dir kurz an und sag sie dir einmal laut vor.`}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <EllieButton
+                variant="sm"
+                prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
+                title={`Lektion: ${lesson.title}`}
+                returnTo={`/uben/lektionen/${lesson.id}`}
+                returnLabel="Zurück zur Lektion"
+                returnFlagKey={`hello.lesson.return.${lesson.id}`}
+              />
             </div>
           </div>
         )}
