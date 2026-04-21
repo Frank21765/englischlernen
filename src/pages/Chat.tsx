@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { ArrowLeft, ChevronDown, Loader2, MessageSquare, Plus, Send, Sparkles } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 import ReactMarkdown from "react-markdown";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
@@ -518,7 +519,7 @@ export default function Chat() {
             {messages.length === 0 && !(activeId && contextSessions[activeId]) && (
               <div className="space-y-4 py-6">
                 <div className="text-center space-y-2">
-                  <div className="text-4xl">👩‍🏫</div>
+                  <EllieIcon size={64} alt="Coach Ellie" className="mx-auto" />
                   <p className="font-display text-xl">Hello! I'm Coach Ellie.</p>
                   <p className="text-sm text-muted-foreground">Was möchtest du heute lernen?</p>
                 </div>
@@ -527,10 +528,10 @@ export default function Chat() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="text-left rounded-xl bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth"
+                      className="text-left rounded-xl bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth flex items-start gap-2"
                     >
-                      <Sparkles className="inline h-3.5 w-3.5 mr-1.5 text-primary" />
-                      {s}
+                      <EllieIcon size={18} alt="" className="mt-0.5" />
+                      <span>{s}</span>
                     </button>
                   ))}
                 </div>

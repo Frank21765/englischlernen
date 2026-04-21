@@ -11,6 +11,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
@@ -193,7 +194,7 @@ export default function Grammar() {
                 className="h-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm"
                 onClick={askEllieAboutLesson}
               >
-                <Sparkles className="h-4 w-4" /> Frag Ellie
+                <EllieIcon size={18} alt="" /> Frag Ellie
               </Button>
             </div>
           </Card>
@@ -269,7 +270,7 @@ export default function Grammar() {
                           className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm text-xs"
                           onClick={() => askEllieAboutPractice(i)}
                         >
-                          <Sparkles className="h-3.5 w-3.5" /> Frag Ellie
+                          <EllieIcon size={14} alt="" /> Frag Ellie
                         </Button>
                       </div>
                     )}

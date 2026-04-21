@@ -9,6 +9,7 @@ import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 import { FocusChip } from "@/components/FocusChip";
 import { computeNextReview } from "@/lib/srs";
 import { buildEllieUrl, ellieExplainGrammarPrompt, ellieExplainQuizMistakePrompt } from "@/lib/ellie";
@@ -579,7 +580,7 @@ export default function Quiz() {
               className="h-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm"
               onClick={handleAskEllie}
             >
-              <Sparkles className="h-4 w-4" />
+              <EllieIcon size={18} alt="" />
               Frag Ellie
             </Button>
           </div>
