@@ -7,6 +7,9 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import {
   getLesson,
+  getTaskExplanation,
+  getTaskHint,
+  isTaskAnswerCorrect,
   LessonTask,
   markLessonComplete,
   markTaskComplete,
@@ -70,6 +73,12 @@ const correctOf = (t: LessonTask): string =>
 
 const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
+
+const explanationParagraphs = (text: string) =>
+  text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
 
 export default function Lektion() {
   
@@ -250,8 +259,8 @@ export default function Lektion() {
   const isCorrect = (): boolean => {
     if (!task) return false;
     if (task.type === "mc") return textInput === task.answer; // textInput stores picked option
-    if (task.type === "cloze") return textInput.trim().toLowerCase() === task.answer.trim().toLowerCase();
-    if (task.type === "order") return orderPicked.join(" ").trim().toLowerCase() === task.answer.trim().toLowerCase();
+    if (task.type === "cloze") return isTaskAnswerCorrect(task, textInput);
+    if (task.type === "order") return isTaskAnswerCorrect(task, orderPicked.join(" "));
     return false;
   };
 
@@ -330,6 +339,11 @@ export default function Lektion() {
       ? orderPicked.join(" ").trim()
       : textInput.trim();
 
+  const taskHint = task ? getTaskHint(task) : undefined;
+  const feedbackExplanation = task && revealed !== null
+    ? getTaskExplanation(task, { isCorrect: revealed, userAnswer: userAttempt })
+    : "";
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-2">
@@ -397,12 +411,12 @@ export default function Lektion() {
           {taskTypeLabel(task)}
         </div>
         <div className="text-base sm:text-lg font-medium leading-snug">{task.prompt}</div>
-        {task.hint && revealed === null && (
+        {taskHint && revealed === null && (
           <div className="flex items-start gap-2 rounded-xl bg-accent/10 border border-accent/30 p-2.5">
             <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
             <div className="min-w-0">
               <div className="text-[10px] font-bold uppercase tracking-widest text-accent">Hinweis</div>
-              <div className="text-sm text-foreground/90 leading-snug">{task.hint}</div>
+              <div className="text-sm text-foreground/90 leading-snug">{taskHint}</div>
             </div>
           </div>
         )}
@@ -558,38 +572,11 @@ export default function Lektion() {
               </span>
               <div className="min-w-0 flex-1 space-y-2 text-xs sm:text-sm leading-relaxed">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
-                {revealed ? (
-                  <>
-                    <div className="text-foreground/90">
-                      <span className="font-semibold text-success">Richtig!</span>{" "}
-                      „<span className="font-semibold">{correctOf(task)}</span>“ passt hier genau.
-                    </div>
-                    {task.explain && (
-                      <div className="text-foreground/90">{task.explain}</div>
-                    )}
-                    {!task.explain && (
-                      <div className="text-foreground/90">
-                        Diese Lösung ist die natürliche Wahl in diesem Satz. Achte beim nächsten Mal auf die gleiche Struktur — du kannst sie 1:1 auf ähnliche Sätze übertragen.
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="text-foreground/90">
-                      Die richtige Lösung ist <span className="font-semibold text-success">„{correctOf(task)}“</span>.
-                      {userAttempt && userAttempt.toLowerCase() !== correctOf(task).toLowerCase() && (
-                        <> Deine Antwort <span className="font-semibold text-destructive">„{userAttempt}“</span> ergibt im Satz keine passende Bedeutung.</>
-                      )}
-                    </div>
-                    {task.explain ? (
-                      <div className="text-foreground/90">{task.explain}</div>
-                    ) : (
-                      <div className="text-foreground/90">
-                        Schau dir den Satz mit der richtigen Lösung an: die Bedeutung wird sofort schlüssig. Wenn du noch mehr Beispiele oder die Regel dahinter willst, frag Coach Ellie unten.
-                      </div>
-                    )}
-                  </>
-                )}
+                <div className="text-foreground/90 space-y-1.5">
+                  {explanationParagraphs(feedbackExplanation).map((paragraph, index) => (
+                    <p key={`${task.id}-exp-${index}`}>{paragraph}</p>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="flex justify-end">
