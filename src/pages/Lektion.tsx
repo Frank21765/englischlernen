@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,13 @@ import {
   markLessonComplete,
   markTaskComplete,
   readLessonProgress,
+  recordTaskMistake,
+  resetLessonRun,
 } from "@/lib/lessons";
-import { ArrowLeft, Check, CheckCircle2, Loader2, Trophy, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, Target, Trophy, X } from "lucide-react";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
+import { EllieIcon } from "@/components/EllieIcon";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -25,14 +28,27 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+const correctOf = (t: LessonTask): string =>
+  t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : t.answer;
+
+const taskTypeLabel = (t: LessonTask) =>
+  t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
+
 export default function Lektion() {
   const { lessonId = "" } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const lesson = useMemo(() => getLesson(lessonId), [lessonId]);
 
-  // completed task ids hydrated from localStorage
+  // The active task list. Normally = lesson.tasks, but in "review difficult
+  // tasks only" mode we replace it with a curated subset and keep the original
+  // around for the global progress indicator.
+  const [taskList, setTaskList] = useState<LessonTask[]>(lesson?.tasks ?? []);
+  const [reviewMode, setReviewMode] = useState(false);
+
+  // completed task ids (against full lesson) hydrated from localStorage
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [mistakeIds, setMistakeIds] = useState<Set<string>>(new Set());
   const [activeIdx, setActiveIdx] = useState(0);
   const [done, setDone] = useState(false);
 
@@ -43,12 +59,17 @@ export default function Lektion() {
   const [revealed, setRevealed] = useState<null | boolean>(null);
   const [awarding, setAwarding] = useState(false);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Hydrate progress + jump to first incomplete task on mount / lesson change.
   useEffect(() => {
     if (!lesson) return;
+    setTaskList(lesson.tasks);
+    setReviewMode(false);
     const p = readLessonProgress(user?.id ?? null, lesson.id);
     const set = new Set(p.completedIds);
     setCompleted(set);
+    setMistakeIds(new Set(p.mistakeIds ?? []));
     if (p.completedAt && set.size >= lesson.tasks.length) {
       setDone(true);
       setActiveIdx(lesson.tasks.length - 1);
@@ -58,10 +79,9 @@ export default function Lektion() {
     setActiveIdx(firstIncomplete === -1 ? 0 : firstIncomplete);
   }, [lesson, user?.id]);
 
-  // Reset per-task UI whenever active task changes.
+  // Reset per-task UI whenever active task changes; auto-focus cloze input.
   useEffect(() => {
-    if (!lesson) return;
-    const t = lesson.tasks[activeIdx];
+    const t = taskList[activeIdx];
     if (!t) return;
     setRevealed(null);
     setTextInput("");
@@ -69,7 +89,12 @@ export default function Lektion() {
       setOrderTokens(shuffle(t.words));
       setOrderPicked([]);
     }
-  }, [activeIdx, lesson]);
+    // Auto-focus the cloze input so users can start typing immediately.
+    if (t.type === "cloze") {
+      // Defer to next tick so the input is mounted.
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [activeIdx, taskList]);
 
   if (!lesson) {
     return (
@@ -85,12 +110,31 @@ export default function Lektion() {
   const total = lesson.tasks.length;
   const doneCount = Math.min(completed.size, total);
   const pct = Math.round((doneCount / total) * 100);
-  const task = lesson.tasks[activeIdx];
+  const task = taskList[activeIdx];
+  const runTotal = taskList.length;
 
-  // ---- Lesson finished celebration ----
+  // ---- Lesson finished celebration + review ----
   if (done) {
+    const mistakeTasks = lesson.tasks.filter((t) => mistakeIds.has(t.id));
+    const startFullReplay = () => {
+      resetLessonRun(user?.id ?? null, lesson.id);
+      setCompleted(new Set());
+      setMistakeIds(new Set());
+      setTaskList(lesson.tasks);
+      setReviewMode(false);
+      setDone(false);
+      setActiveIdx(0);
+    };
+    const startMistakeReplay = () => {
+      if (mistakeTasks.length === 0) return;
+      setTaskList(mistakeTasks);
+      setReviewMode(true);
+      setDone(false);
+      setActiveIdx(0);
+    };
+
     return (
-      <div className="max-w-xl mx-auto space-y-5">
+      <div className="max-w-2xl mx-auto space-y-5">
         <Card className="p-8 sm:p-10 text-center space-y-5 bg-gradient-card shadow-glow border border-success/40 animate-pop">
           <div className="mx-auto h-20 w-20 rounded-full bg-success/15 border border-success/40 flex items-center justify-center">
             <Trophy className="h-10 w-10 text-success" />
@@ -101,32 +145,65 @@ export default function Lektion() {
           </div>
           <p className="text-sm sm:text-base text-muted-foreground">
             Stark! Du hast alle {total} Aufgaben dieser Lektion gemeistert.
-            Mach weiter so — jeder Tag bringt dich näher an dein Ziel.
+            {mistakeTasks.length === 0
+              ? " Und das ohne einen Fehler — beeindruckend!"
+              : " Schau dir unten kurz an, was beim ersten Versuch schwer war."}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
             <Button variant="hero" size="lg" asChild>
               <Link to="/uben/lektionen">
-                <Trophy className="h-4 w-4" /> Zur Lektionsübersicht
+                <Trophy className="h-4 w-4" /> Zur Übersicht
               </Link>
             </Button>
-            <Button variant="soft" size="lg" onClick={() => {
-              // Allow replay without losing the "completed" badge.
-              setCompleted(new Set());
-              setDone(false);
-              setActiveIdx(0);
-            }}>
-              Nochmal üben
+            {mistakeTasks.length > 0 && (
+              <Button variant="soft" size="lg" onClick={startMistakeReplay}>
+                <Target className="h-4 w-4" /> Schwierige nochmal ({mistakeTasks.length})
+              </Button>
+            )}
+            <Button variant="ghost" size="lg" onClick={startFullReplay}>
+              <RotateCcw className="h-4 w-4" /> Komplett wiederholen
             </Button>
           </div>
         </Card>
+
+        {mistakeTasks.length > 0 && (
+          <Card className="p-5 sm:p-6 space-y-4 bg-gradient-card shadow-card">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                <EllieIcon size={22} />
+              </span>
+              <div className="min-w-0">
+                <div className="text-xs font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+                <h2 className="text-base sm:text-lg font-display">Kurzer Rückblick</h2>
+              </div>
+            </div>
+            <ul className="space-y-3">
+              {mistakeTasks.map((t) => (
+                <li key={t.id} className="rounded-xl border border-border bg-muted/30 p-3 space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {taskTypeLabel(t)}
+                  </div>
+                  <div className="text-sm font-medium">{t.prompt}</div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Lösung: </span>
+                    <span className="font-semibold text-success">{correctOf(t)}</span>
+                  </div>
+                  {t.explain && (
+                    <div className="text-xs text-muted-foreground italic flex items-start gap-1.5 pt-1">
+                      <EllieIcon size={14} className="mt-0.5" />
+                      <span>{t.explain}</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
       </div>
     );
   }
 
   // ---- Submit / advance handlers ----
-  const correctOf = (t: LessonTask): string =>
-    t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : t.answer;
-
   const isCorrect = (): boolean => {
     if (!task) return false;
     if (task.type === "mc") return textInput === task.answer; // textInput stores picked option
@@ -141,9 +218,17 @@ export default function Lektion() {
     setRevealed(ok);
     if (ok) {
       toast.success(randomPraise());
-      const nextSet = new Set(completed).add(task.id);
-      setCompleted(nextSet);
-      markTaskComplete(user?.id ?? null, lesson.id, task.id);
+      // In review mode we don't re-mark already-completed tasks but we do
+      // remove them from the mistake set on a successful retry.
+      if (!reviewMode) {
+        const nextSet = new Set(completed).add(task.id);
+        setCompleted(nextSet);
+        markTaskComplete(user?.id ?? null, lesson.id, task.id);
+      } else if (mistakeIds.has(task.id)) {
+        const next = new Set(mistakeIds);
+        next.delete(task.id);
+        setMistakeIds(next);
+      }
       if (user) {
         setAwarding(true);
         try {
@@ -155,14 +240,22 @@ export default function Lektion() {
       }
     } else {
       toast.error("Nicht ganz — schau dir die richtige Lösung an.");
+      if (!reviewMode) {
+        recordTaskMistake(user?.id ?? null, lesson.id, task.id);
+        setMistakeIds((prev) => new Set(prev).add(task.id));
+      }
     }
   };
 
   const handleNext = async () => {
     if (!task) return;
-    // If wrong, allow user to try again instead of being forced forward; here we move on.
     const nextIdx = activeIdx + 1;
-    if (nextIdx >= total) {
+    if (nextIdx >= runTotal) {
+      if (reviewMode) {
+        // Finished the targeted review run — bounce back to the celebration.
+        setDone(true);
+        return;
+      }
       // Lesson complete!
       markLessonComplete(user?.id ?? null, lesson.id);
       setDone(true);
@@ -197,7 +290,7 @@ export default function Lektion() {
           </Link>
         </Button>
         <div className="text-sm text-muted-foreground">
-          Aufgabe {activeIdx + 1} / {total}
+          {reviewMode ? "Wiederholung" : "Aufgabe"} {activeIdx + 1} / {runTotal}
         </div>
       </div>
 
@@ -208,38 +301,53 @@ export default function Lektion() {
           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-primary/15 text-primary border-primary/30">
             {lesson.level}
           </span>
+          {reviewMode && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-accent/15 text-accent border-accent/30 inline-flex items-center gap-1">
+              <Target className="h-3 w-3" /> Schwierige Aufgaben
+            </span>
+          )}
         </div>
         <Progress value={pct} className="h-2" />
-        <div className="text-xs text-muted-foreground">{doneCount} / {total} abgeschlossen</div>
+        <div className="text-xs text-muted-foreground">{doneCount} / {total} der ganzen Lektion abgeschlossen</div>
       </header>
 
       {/* Task list overview pill row — lets users see/jump to completed tasks */}
-      <div className="flex flex-wrap gap-1.5">
-        {lesson.tasks.map((t, i) => {
-          const isDone = completed.has(t.id);
-          const isActive = i === activeIdx;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setActiveIdx(i)}
-              className={`h-7 min-w-7 px-2 rounded-full text-xs font-bold inline-flex items-center justify-center gap-1 border transition-smooth ${
-                isActive
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : isDone
-                    ? "bg-success/15 text-success border-success/30"
-                    : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
-              }`}
-              title={isDone ? "Erledigt" : "Aufgabe"}
-            >
-              {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
-            </button>
-          );
-        })}
-      </div>
+      {!reviewMode && (
+        <div className="flex flex-wrap gap-1.5">
+          {lesson.tasks.map((t, i) => {
+            const isDone = completed.has(t.id);
+            const isActive = i === activeIdx;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveIdx(i)}
+                className={`h-7 min-w-7 px-2 rounded-full text-xs font-bold inline-flex items-center justify-center gap-1 border transition-smooth ${
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : isDone
+                      ? "bg-success/15 text-success border-success/30"
+                      : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
+                }`}
+                title={isDone ? "Erledigt" : "Aufgabe"}
+              >
+                {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <Card className="p-5 sm:p-6 space-y-4 bg-gradient-card shadow-card animate-pop">
-        <div className="text-xs font-bold uppercase tracking-widest text-primary">
-          {task.type === "mc" ? "Multiple Choice" : task.type === "cloze" ? "Lückentext" : "Satzbau"}
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-xs font-bold uppercase tracking-widest text-primary">
+            {taskTypeLabel(task)}
+          </div>
+          {task.hint && revealed === null && (
+            <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-muted/50 border border-border rounded-full px-2 py-0.5">
+              <Lightbulb className="h-3 w-3 text-accent" />
+              {task.hint}
+            </div>
+          )}
         </div>
         <div className="text-base sm:text-lg font-medium leading-snug">{task.prompt}</div>
 
@@ -290,6 +398,7 @@ export default function Lektion() {
               <div className="text-xs text-muted-foreground italic">{task.translation}</div>
             )}
             <Input
+              ref={inputRef}
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               onKeyDown={(e) => {
@@ -343,10 +452,6 @@ export default function Lektion() {
           </div>
         )}
 
-        {task.hint && revealed === null && (
-          <div className="text-xs text-muted-foreground">💡 {task.hint}</div>
-        )}
-
         {revealed !== null && (
           <div
             className={`flex items-center gap-2 text-sm font-semibold ${
@@ -355,6 +460,21 @@ export default function Lektion() {
           >
             {revealed ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
             {revealed ? "Richtig!" : `Lösung: ${correctOf(task)}`}
+          </div>
+        )}
+
+        {/* Ellie's gentle explanation appears after a wrong answer (or always
+            after answering, if an explanation is available — keeps the guide
+            presence visible without becoming noisy). */}
+        {revealed !== null && task.explain && (
+          <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+              <EllieIcon size={18} />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+              <div className="text-xs sm:text-sm text-foreground/90 leading-snug">{task.explain}</div>
+            </div>
           </div>
         )}
 
@@ -377,7 +497,9 @@ export default function Lektion() {
             </Button>
           ) : (
             <Button variant="success" size="lg" className="flex-1" onClick={handleNext}>
-              {activeIdx + 1 >= total ? "Lektion abschließen" : "Weiter"}
+              {activeIdx + 1 >= runTotal
+                ? (reviewMode ? "Wiederholung beenden" : "Lektion abschließen")
+                : "Weiter"}
             </Button>
           )}
         </div>
