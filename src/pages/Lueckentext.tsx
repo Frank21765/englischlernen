@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, MessageCircle, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
 
 interface ClozeItem {
   full_sentence: string;
