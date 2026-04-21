@@ -1,11 +1,13 @@
 import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
-import { GraduationCap, Library, PenLine, Sparkles } from "lucide-react";
+import { BookOpen, GraduationCap, Library, PenLine, Puzzle, Sparkles } from "lucide-react";
 
 const subNav = [
   { to: "/uben/lektionen", label: "Lektionen", icon: Sparkles, match: "/uben/lektionen" },
+  { to: "/uben/wortpuzzle", label: "Wortpuzzle", icon: Puzzle, match: "/uben/wortpuzzle" },
   { to: "/uben/quiz", label: "Quiz", icon: GraduationCap, match: "/uben/quiz" },
-  { to: "/uben/grammatik", label: "Grammatik", icon: Library, match: "/uben/grammatik" },
   { to: "/uben/lueckentext", label: "Lückentext", icon: PenLine, match: "/uben/lueckentext" },
+  { to: "/uben/grammatik", label: "Grammatik", icon: Library, match: "/uben/grammatik" },
+  { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: "/vokabeln" },
 ];
 
 export default function Uben() {
