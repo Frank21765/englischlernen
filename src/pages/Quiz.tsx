@@ -499,7 +499,7 @@ export default function Quiz() {
         </div>
       </div>
 
-      <Card className="p-5 sm:p-6 md:p-8 text-center bg-gradient-card shadow-card animate-pop">
+      <Card className="hover-lift p-5 sm:p-6 md:p-8 text-center bg-gradient-card shadow-card animate-pop">
         <div className="text-xs font-bold uppercase tracking-widest text-primary mb-2">{promptLang}</div>
         <div className="font-display text-xl sm:text-2xl md:text-3xl leading-tight break-words">{promptText}</div>
         <div className="text-xs text-muted-foreground mt-3">Wähle {answerLang}</div>
@@ -520,7 +520,7 @@ export default function Quiz() {
               key={opt}
               onClick={() => handlePick(opt)}
               disabled={!!picked}
-              className={`rounded-2xl border-2 p-3 sm:p-4 text-left text-sm sm:text-base font-semibold transition-bounce ${cls}`}
+              className={`${picked ? "" : "hover-lift"} rounded-2xl border-2 p-3 sm:p-4 text-left text-sm sm:text-base font-semibold transition-bounce ${cls}`}
             >
               <div className="flex items-center gap-2 sm:gap-3">
                 {picked && isCorrect && <Check className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />}
