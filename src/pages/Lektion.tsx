@@ -72,6 +72,7 @@ const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
 
 export default function Lektion() {
+  const { level: ctxLevel } = useLearning();
   const { lessonId = "" } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -127,9 +128,14 @@ export default function Lektion() {
       setOrderPicked([]);
     }
     // Auto-focus the cloze input so users can start typing immediately.
+    // Use a slightly delayed retry so the focus survives layout shifts on
+    // task transitions (e.g. when a previous task type was different).
     if (t.type === "cloze") {
-      // Defer to next tick so the input is mounted.
-      requestAnimationFrame(() => inputRef.current?.focus());
+      const tryFocus = () => inputRef.current?.focus();
+      requestAnimationFrame(tryFocus);
+      const t1 = window.setTimeout(tryFocus, 60);
+      const t2 = window.setTimeout(tryFocus, 200);
+      return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
     }
   }, [activeIdx, taskList]);
 
