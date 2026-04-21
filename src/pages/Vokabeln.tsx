@@ -24,6 +24,7 @@ import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { EllieButton } from "@/components/EllieButton";
+import { EllieIcon } from "@/components/EllieIcon";
 import { Link } from "react-router-dom";
 
 interface Vocab {
@@ -354,7 +355,7 @@ export default function Vokabeln() {
       <section className="space-y-3">
         <div className="space-y-0.5">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <EllieIcon size={20} alt="" />
             Frag mich!
           </h2>
           <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
@@ -402,7 +403,7 @@ export default function Vokabeln() {
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <div className="text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+                    <EllieIcon size={14} alt="" /> Übersetzung für „{lookupQuery}"
                   </div>
                   <div className="flex items-baseline flex-wrap gap-3">
                     <div className="font-display text-xl">{lookup.german}</div>
@@ -470,7 +471,7 @@ export default function Vokabeln() {
             >
               <div className="space-y-0.5 min-w-0">
                 <div className="text-base font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <EllieIcon size={18} alt="" />
                   Neue Vokabeln für dich
                   {suggestions.length > 0 && (
                     <span className="text-sm text-muted-foreground font-normal">· {suggestions.length}</span>

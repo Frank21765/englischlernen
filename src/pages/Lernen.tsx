@@ -195,8 +195,8 @@ export default function Lernen() {
               aria-expanded={askOpen}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="rounded-xl bg-primary/15 p-2 shrink-0">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                <div className="rounded-xl bg-primary/15 p-1.5 shrink-0">
+                  <EllieIcon size={28} alt="" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-lg sm:text-xl font-bold text-foreground">Frag mich!</h2>
@@ -250,7 +250,7 @@ export default function Lernen() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
-                        <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+                        <EllieIcon size={14} alt="" /> Übersetzung für „{lookupQuery}"
                       </div>
                       <div className="flex items-baseline flex-wrap gap-3">
                         <div className="font-display text-xl">{lookup.german}</div>
@@ -448,7 +448,7 @@ export default function Lernen() {
             onClick={() => navigate(`/chat?new=1&t=${Date.now()}`)}
             className="col-span-2 w-full whitespace-normal text-center leading-tight px-3"
           >
-            <MessageCircle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Coach Ellie</span>
+            <EllieIcon size={20} alt="" /> <span className="min-w-0">Coach Ellie</span>
           </Button>
         </div>
       </Card>
