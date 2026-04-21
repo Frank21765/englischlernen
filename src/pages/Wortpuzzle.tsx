@@ -71,6 +71,8 @@ export default function Wortpuzzle() {
   const [picked, setPicked] = useState<{ word: string; key: number }[]>([]);
   const [checked, setChecked] = useState<null | "right" | "wrong">(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [sessionRecorded, setSessionRecorded] = useState(false);
   const [combo, setCombo] = useState(0);
   const [done, setDone] = useState(false);
   const keyCounter = useRef(0);
@@ -81,6 +83,8 @@ export default function Wortpuzzle() {
     setDone(false);
     setIndex(0);
     setCorrectCount(0);
+    setAnsweredCount(0);
+    setSessionRecorded(false);
     setItems([]);
     setTask(null);
     try {
@@ -154,6 +158,7 @@ export default function Wortpuzzle() {
     const guess = picked.map((p) => p.word).join(" ");
     const ok = normalize(guess) === normalize(task.target);
     setChecked(ok ? "right" : "wrong");
+    setAnsweredCount((c) => c + 1);
     if (ok) {
       const newCombo = combo + 1;
       setCombo(newCombo);
@@ -168,6 +173,23 @@ export default function Wortpuzzle() {
   };
 
   const next = () => setIndex((i) => i + 1);
+
+  // Record a single session at end of round (only if at least one answer given)
+  useEffect(() => {
+    if (!done || sessionRecorded || !user || !hasSelection || answeredCount === 0) return;
+    setSessionRecorded(true);
+    supabase
+      .from("learning_sessions")
+      .insert({
+        user_id: user.id,
+        mode: "wortpuzzle",
+        level,
+        topic,
+        total_answers: answeredCount,
+        correct_answers: correctCount,
+      })
+      .then(() => undefined);
+  }, [done, sessionRecorded, user, hasSelection, level, topic, answeredCount, correctCount]);
 
   const total = items.length;
   const progress = total ? Math.round(((index + (checked ? 1 : 0)) / total) * 100) : 0;

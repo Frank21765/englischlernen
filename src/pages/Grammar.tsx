@@ -140,6 +140,20 @@ export default function Grammar() {
     } else {
       toast.error(`Richtig wäre: ${lesson.practice[i].answer}`);
     }
+    // Record a session entry per practice answer
+    if (user) {
+      supabase
+        .from("learning_sessions")
+        .insert({
+          user_id: user.id,
+          mode: "grammar",
+          level,
+          topic: hasSelection ? topic : "Grammatik",
+          total_answers: 1,
+          correct_answers: ok ? 1 : 0,
+        })
+        .then(() => undefined);
+    }
   };
 
   if (!hasSelection) {
