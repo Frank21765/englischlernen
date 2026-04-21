@@ -10,6 +10,7 @@ import { EllieButton } from "@/components/EllieButton";
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, Sparkles, X } from "lucide-react";
+import { awardActivity, celebrate } from "@/lib/gamification";
 
 interface PuzzleItem {
   english: string;
