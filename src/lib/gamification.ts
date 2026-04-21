@@ -106,6 +106,17 @@ export const BADGE_CATEGORY_LABEL: Record<BadgeCategory, string> = {
   level: "Level",
 };
 
+/** Tailwind color classes per category for unlocked badges (text + soft bg + ring). */
+export const BADGE_CATEGORY_STYLE: Record<
+  BadgeCategory,
+  { ring: string; iconBg: string; border: string; glow: string }
+> = {
+  streak:   { ring: "ring-orange-500/40",  iconBg: "bg-orange-500/15",  border: "border-orange-500/40",  glow: "hover:shadow-[0_0_24px_-4px_hsl(20_95%_55%/0.6)]" },
+  vocab:    { ring: "ring-sky-500/40",     iconBg: "bg-sky-500/15",     border: "border-sky-500/40",     glow: "hover:shadow-[0_0_24px_-4px_hsl(200_95%_55%/0.6)]" },
+  exercise: { ring: "ring-emerald-500/40", iconBg: "bg-emerald-500/15", border: "border-emerald-500/40", glow: "hover:shadow-[0_0_24px_-4px_hsl(150_75%_45%/0.6)]" },
+  level:    { ring: "ring-violet-500/40",  iconBg: "bg-violet-500/15",  border: "border-violet-500/40",  glow: "hover:shadow-[0_0_24px_-4px_hsl(265_85%_60%/0.6)]" },
+};
+
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }

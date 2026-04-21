@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import {
   BADGES,
   BADGE_CATEGORY_LABEL,
+  BADGE_CATEGORY_STYLE,
   BadgeCategory,
   BadgeDef,
   levelFromXp,
@@ -190,14 +191,23 @@ export default function Erfolge() {
                   const got = unlocked.has(b.key);
                   const cur = progressFor(b, progress);
                   const pctBar = Math.min(100, Math.round((cur / b.target) * 100));
+                  const style = BADGE_CATEGORY_STYLE[b.category];
                   return (
                     <Card
                       key={b.key}
-                      className={`p-4 text-center space-y-1 ${
-                        got ? "bg-gradient-card shadow-card" : "opacity-70"
+                      className={`p-4 text-center space-y-2 transition-bounce hover:-translate-y-0.5 cursor-default border ${
+                        got
+                          ? `bg-gradient-card shadow-card ${style.border} ${style.glow}`
+                          : "opacity-80 hover:opacity-100 hover:shadow-soft"
                       }`}
                     >
-                      <div className={`text-3xl ${got ? "" : "grayscale"}`}>{b.icon}</div>
+                      <div
+                        className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
+                          got ? style.iconBg : "bg-muted grayscale"
+                        }`}
+                      >
+                        {b.icon}
+                      </div>
                       <div className="font-bold text-sm">{b.name}</div>
                       <div className="text-xs text-muted-foreground">{b.description}</div>
                       {!got && (
