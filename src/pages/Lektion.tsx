@@ -528,15 +528,32 @@ export default function Lektion() {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
                 <EllieIcon size={18} />
               </span>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
-                <div className="text-xs sm:text-sm text-foreground/90 leading-snug">
-                  {task.explain
-                    ? task.explain
-                    : revealed
-                      ? `Stark — „${correctOf(task)}“ ist hier genau richtig. Merk dir die Wendung gleich für ähnliche Sätze.`
-                      : `Kein Problem. Die richtige Lösung ist „${correctOf(task)}“ — schau sie dir kurz an und sag sie dir einmal laut vor.`}
-                </div>
+                {revealed ? (
+                  <div className="text-xs sm:text-sm text-foreground/90 leading-snug">
+                    {task.explain
+                      ? task.explain
+                      : `Stark — „${correctOf(task)}“ ist hier genau richtig. Merk dir die Wendung gleich für ähnliche Sätze.`}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 text-xs sm:text-sm leading-snug">
+                    <div className="text-foreground/90">
+                      <span className="font-semibold text-success">„{correctOf(task)}“</span> ist hier richtig.
+                      {userAttempt && userAttempt.toLowerCase() !== correctOf(task).toLowerCase() && (
+                        <> Deine Antwort <span className="font-semibold text-destructive">„{userAttempt}“</span> passt im Satz nicht ganz.</>
+                      )}
+                    </div>
+                    {task.explain && (
+                      <div className="text-foreground/90">{task.explain}</div>
+                    )}
+                    {!task.explain && (
+                      <div className="text-muted-foreground italic">
+                        Lies den Satz mit der richtigen Lösung noch einmal langsam — oft erkennst du dann sofort, warum sie hier passt. Frag Coach Ellie, wenn du eine ausführlichere Erklärung möchtest.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-end">
