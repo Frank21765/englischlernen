@@ -391,7 +391,9 @@ const A2_LESSONS: Lesson[] = [
       mc("t8", "„Nachtisch“ heißt …", ["dessert", "after eat", "sweet end", "post dish"], "dessert"),
       cz("t9", "Lücke füllen", "I'll have the same ___ him.", "as",
         { hint: "Vergleich", explain: "„the same as …“ = das gleiche wie …" }),
-      cz("t10", "Lücke füllen", "This soup is too ___.", "salty", { hint: "Hier passt ein Beschreibungswort (Geschmack)" }),
+      cz("t10", "Lücke füllen", "This soup has too much salt — it's too ___.", "salty",
+        { hint: "Beschreibungswort vom Wort „salt“ abgeleitet (salt → ___y).",
+          explain: "Aus dem Substantiv „salt“ wird das Adjektiv „salty“ (mit -y). Andere Geschmackswörter wie „sweet“ oder „spicy“ passen vom Satz her nicht, weil hier ausdrücklich von Salz die Rede ist." }),
       ord("t11", "Sätze richtig anordnen", ["could", "we", "have", "some", "more", "water"], "could we have some more water"),
       mc("t12", "Welche Antwort passt zu „How would you like your steak?“", [
         "Medium, please.", "Yes please.", "On Monday.", "By card.",
