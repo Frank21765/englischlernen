@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { EllieIcon } from "@/components/EllieIcon";
 import { Heart, ExternalLink } from "lucide-react";
 
+
 const PAYPAL_HANDLE = "Englischlernen";
 
 const tiers = [
@@ -43,17 +44,12 @@ export default function DonationCards({ compact = false }: { compact?: boolean }
           rel="noopener noreferrer"
           className="group block"
         >
-          <Card className="relative p-4 h-full bg-gradient-card shadow-card hover:shadow-glow hover:-translate-y-1 transition-bounce border-2 border-dashed border-primary/30 hover:border-primary/60 cursor-pointer">
-            <div className="absolute -top-2 -right-2 rounded-full bg-destructive p-1.5 shadow-soft group-hover:scale-110 transition-bounce">
+          <Card className="relative p-4 h-full bg-gradient-warm/10 shadow-card hover:shadow-glow hover:-translate-y-1 transition-bounce border-2 border-dashed border-primary/40 hover:border-primary/70 cursor-pointer flex flex-col items-center justify-center text-center min-h-[180px]">
+            <div className="absolute -top-2 -right-2 rounded-full bg-destructive p-1.5 shadow-soft group-hover:scale-110 transition-bounce z-10">
               <Heart className="h-3.5 w-3.5 text-destructive-foreground fill-current" />
             </div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="rounded-full bg-primary/10 p-1.5">
-                <EllieIcon size={20} />
-              </div>
-            </div>
-            <div className="font-display text-2xl text-primary">★</div>
-            <div className="font-semibold text-sm mt-1">Freier Betrag</div>
+            <EllieIcon size={64} className="mb-2 drop-shadow-md group-hover:scale-110 transition-bounce" />
+            <div className="font-semibold text-sm">Freier Betrag</div>
             <div className="text-xs text-muted-foreground">Du entscheidest</div>
           </Card>
         </a>
