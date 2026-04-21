@@ -30,23 +30,23 @@ const KIND_META: Record<Exclude<DeleteKind, null>, {
   buttonLabel: string;
 }> = {
   stats: {
-    title: "Lernstatistiken zurücksetzen?",
-    description: "Diese Aktion löscht alle deine Sessions, die Trefferquote-Historie und die Streak-Zählung.",
+    title: "Bist du dir sicher?",
+    description: "Diese Aktion löscht alle deine Sessions, die Trefferquote-Historie und die Streak-Zählung. Sie kann nicht rückgängig gemacht werden.",
     bullets: ["Alle Lernsessions", "Trefferquote-Verlauf", "Streak-Historie"],
     confirmWord: "LÖSCHEN",
-    buttonLabel: "Statistiken löschen",
+    buttonLabel: "Ja, Statistiken löschen",
   },
   vocab: {
-    title: "Vokabelsammlung löschen?",
-    description: "Diese Aktion löscht deine gesamte Vokabelsammlung inklusive Lernfortschritt pro Wort.",
+    title: "Bist du dir sicher?",
+    description: "Diese Aktion löscht deine gesamte Vokabelsammlung inklusive Lernfortschritt pro Wort. Sie kann nicht rückgängig gemacht werden.",
     bullets: ["Alle gespeicherten Vokabeln", "Lernfortschritt (SRS-Status)", "Status „gemeistert"],
     confirmWord: "LÖSCHEN",
-    buttonLabel: "Vokabeln löschen",
+    buttonLabel: "Ja, Vokabeln löschen",
   },
   account: {
-    title: "Konto endgültig löschen?",
+    title: "Bist du dir wirklich sicher?",
     description:
-      "Diese Aktion ist unwiderruflich. Dein gesamtes Konto sowie alle damit verbundenen Daten werden vollständig entfernt.",
+      "Diese Aktion ist unwiderruflich. Dein gesamtes Konto sowie alle damit verbundenen Daten werden vollständig und dauerhaft entfernt.",
     bullets: [
       "Vokabeln & Lernfortschritt",
       "Alle Sessions & Statistiken",
