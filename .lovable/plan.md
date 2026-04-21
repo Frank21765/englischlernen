@@ -1,44 +1,41 @@
 
 
-## Plan: PayPal-Spenden + Pending-Flow + Feedback
+## Plan: Spenden-Bereich verbessern (final)
 
-### 1) Spenden-Bereich auf der Profil-Seite
+### 1) Beträge & Beschriftungen korrigieren
 
-Drei schicke Spenden-Karten direkt im Profil-Tab (oder als eigener Unterpunkt „Unterstützen"). Jede Karte:
+| Betrag | Titel | Untertitel |
+|---|---|---|
+| 5,40 € | 3 Monate Hello! | Ein Quartal lernen |
+| 10,20 € | 6 Monate Hello! | Ein halbes Jahr dabei |
+| 19,20 € | 1 Jahr Hello! | Das ganze Jahr 💛 |
 
-- Betrag groß (5,40 € · 10,20 € · 19,20 €)
-- Kurzer Untertitel („Kaffee für Ellie", „Monat Hosting", „Ein Quartal Hello!")
-- Kleines Ellie-Icon
-- Klick öffnet `https://paypal.me/Englischlernen/5.40` (bzw. 10.20 / 19.20) in neuem Tab
-- Hover-Animation (sanft anheben, Glow)
+### 2) Vierte Karte „Freier Betrag"
 
-Darunter:
-- Klartext-Hinweis: „Kein Abo, keine Verpflichtung. Einmalspende per PayPal."
-- Kleiner Link „Eigenen Betrag wählen" → `paypal.me/Englischlernen`
+- Ellie-Icon mit kleinem **roten Herz oben rechts in der Ecke** (absolut positioniert, leicht überlappend)
+- Titel: „Freier Betrag"
+- Untertitel: „Du entscheidest"
+- Klick → `https://paypal.me/Englischlernen` (ohne Betrag)
 
-### 2) Pending-Flow (neue Nutzer)
+Layout: 4 Karten, Desktop nebeneinander, Mobile 2×2.
 
-Aktuell hat jeder neue Nutzer sofort vollen Zugriff. Neu:
+Hinweis: Das kleine rote Herz in der Ecke kommt **nur auf die „Freier Betrag"-Karte**, damit sie sich liebevoll von den drei Festbeträgen abhebt.
 
-- Neues Feld `access_status` in `profiles` (`pending` / `active` / `blocked`), Default `pending`
-- Nach Anmeldung + Onboarding → wenn `pending` → Sperrbildschirm mit Text:
-  „Danke fürs Anmelden! Hello! ist ein privates Hobby-Projekt. Sobald ich dich freischalte, geht's los. Du bekommst eine Mail."
-- Mit kleiner „Unterstützen"-Sektion direkt darunter (gleiche Spenden-Karten)
-- Admin-Seite bekommt Liste „Wartende Nutzer" mit Button „Freischalten"
+### 3) Erklärtext „Warum Spenden?"
 
-### 3) Feedback-Box
+Direkt unter der Überschrift „Hello! unterstützen", über den Karten, in einer weichen Box (`bg-muted/30`, abgerundet):
 
-Im Profil ein neuer Bereich „Feedback & Wünsche":
-- Textarea + Senden-Button
-- Speichert in neuer Tabelle `feedback` (user_id, message, created_at)
-- Admin sieht alle Feedbacks in der Admin-Seite
-- Bestätigung „Danke, ist angekommen!"
+> „Hello! ist mein privates Hobby-Projekt — kein Startup, keine Werbung, keine Datenverkäufe. Mit Spenden geht es **nicht um Gewinn**, sondern darum, die laufenden Kosten zu decken (Server, KI-Modelle, Domain). Jeder Euro hilft, dass Hello! online bleibt und weiterwächst. Danke! 💛"
 
-### Technische Notizen
+### 4) Hinweis vor PayPal-Weiterleitung
 
-- DB-Migration: `profiles.access_status` (enum), neue Tabelle `feedback` mit RLS (User darf nur eigenes Insert, Admin sieht alles)
-- AccessGate erweitern: prüft `access_status`, blockt wenn `pending`
-- Admin.tsx: Tab „Nutzer" + Tab „Feedback"
-- Spenden-Karten als wiederverwendbare Komponente `<DonationCards />` (1× Profil, 1× Pending-Screen)
-- Geänderte/neue Dateien: `src/components/DonationCards.tsx` (neu), `src/components/AccessGate.tsx`, `src/pages/Profil.tsx`, `src/pages/Admin.tsx`, neue Migration
+Unter den Karten, dezent:
+
+> „Einmalspende per PayPal · Kein Abo · Du wirst auf paypal.me weitergeleitet, wo du den Betrag bestätigen oder anpassen kannst."
+
+### Geänderte Dateien
+
+- `src/components/DonationCards.tsx` — neue Beträge/Titel, 4. Karte mit Herz-Badge, neuer Hinweistext
+- `src/pages/Profil.tsx` — Erklärbox oberhalb der Karten
+- `src/components/AccessGate.tsx` — gleiche Erklärbox auch im Pending-Screen
 
