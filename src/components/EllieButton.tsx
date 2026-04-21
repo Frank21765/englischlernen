@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { buildEllieUrl } from "@/lib/ellie";
-import { Sparkles } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 import { cn } from "@/lib/utils";
 
 interface EllieButtonProps {
@@ -47,7 +47,7 @@ export function EllieButton({
         title="Mit Coach Ellie besprechen"
       >
         <Link onClick={markReturning} to={to}>
-          <Sparkles className="h-4 w-4" />
+          <EllieIcon size={18} alt="" />
           <span>Frag Ellie</span>
         </Link>
       </Button>
@@ -65,7 +65,7 @@ export function EllieButton({
       title="Mit Coach Ellie besprechen"
     >
       <Link onClick={markReturning} to={to} aria-label="Mit Coach Ellie besprechen">
-        <Sparkles className="h-[18px] w-[18px]" />
+        <EllieIcon size={22} alt="" />
       </Link>
     </Button>
   );
