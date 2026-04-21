@@ -1500,48 +1500,76 @@ const wordShape = (word: string): string => {
 };
 
 interface TaskOverride {
-  kind?: string;
+  /** Part of speech / form, e.g. "Adjektiv (Partizip)", "Phrasal Verb". */
+  pos?: string;
+  /** Concrete German meaning of the missing word, e.g. "verspätet, verzögert". */
+  meansDe?: string;
+  /** Sense-tip: what kind of meaning the learner should look for in this sentence. */
   meaning?: string;
+  /** Mini-grammar / word-knowledge explanation. */
   grammar?: string;
+  /** Second example sentence with German translation. */
   example?: ExtraExample;
+  /** Legacy: short "kind" label used as fallback if pos is missing. */
+  kind?: string;
 }
 
 const TASK_OVERRIDES: Record<string, TaskOverride> = {
   "Free ___ on orders over 50 euros.": {
-    kind: "Nomen aus dem Online-Handel",
-    meaning: "Gemeint ist der Vorgang, wie die Ware vom Shop zu dir nach Hause kommt — also nicht die Ware selbst, sondern der Versand.",
+    pos: "Nomen (-ing-Form von „to ship“)",
+    meansDe: "Versand, Lieferung",
+    meaning: "Gesucht ist ein Wort, das beschreibt, wie die Ware vom Shop zu dir nach Hause kommt — nicht die Ware selbst, sondern der Vorgang des Versendens.",
     grammar: "„shipping“ ist die -ing-Form von „to ship“ und wird im Englischen als Nomen für den Versand benutzt. Viele Tätigkeiten werden so zu Nomen: cooking, parking, shopping.",
     example: { en: "We offer free shipping worldwide.", de: "Wir bieten weltweit kostenlosen Versand." },
   },
   "I have to ___ my parents tonight.": {
-    kind: "Verb in der Grundform",
+    pos: "Verb in der Grundform",
+    meansDe: "anrufen",
     meaning: "Gesucht ist das übliche Alltagsverb dafür, jemanden über das Telefon zu erreichen.",
     grammar: "Nach „have to“ steht im Englischen immer die Grundform (call, work, leave). „call“ ist die häufigste Standardvariante; „phone“ wird ebenfalls akzeptiert.",
     example: { en: "I have to call the doctor in the morning.", de: "Ich muss morgens den Arzt anrufen." },
   },
   "My phone isn't ___.": {
-    kind: "-ing-Form (Zustand)",
+    pos: "-ing-Form (Verlaufsform)",
+    meansDe: "funktionierend / am Funktionieren",
     meaning: "Es geht nicht darum, dass das Handy „arbeitet“ wie ein Mensch, sondern dass es gerade nicht funktioniert.",
     grammar: "„work“ heißt bei Geräten „funktionieren“. Mit „be + not + working“ sagst du, dass etwas im Moment nicht läuft.",
     example: { en: "The printer isn't working again.", de: "Der Drucker funktioniert schon wieder nicht." },
   },
   "This soup has too much salt — it's too ___.": {
-    kind: "Adjektiv für Geschmack",
+    pos: "Adjektiv (Geschmack)",
+    meansDe: "salzig",
     meaning: "Der Satz nennt schon den Grund: zu viel Salz. Gesucht ist also genau das Geschmackswort dazu — nicht süß, nicht scharf, nicht heiß.",
     grammar: "Aus dem Nomen „salt“ wird mit -y das Adjektiv „salty“. Dieses Muster gilt für viele Geschmäcker und Wetterwörter: rain → rainy, sun → sunny, spice → spicy.",
     example: { en: "These chips are way too salty for me.", de: "Diese Chips sind mir viel zu salzig." },
   },
   "Could you ___ down the recipe for me?": {
-    kind: "Verb + Partikel („… down“)",
+    pos: "Verb (Teil eines Phrasal Verbs)",
+    meansDe: "schreiben (zusammen mit „down“ = aufschreiben)",
     meaning: "Zusammen mit „down“ ist ein Verb gemeint, das bedeutet, etwas auf Papier oder ins Handy zu notieren, damit man es später nachlesen kann.",
     grammar: "„write down“ ist ein typisches Phrasal Verb: das kleine „down“ verändert die Bedeutung. „write“ allein heißt nur „schreiben“, „write down“ heißt „aufschreiben/notieren“.",
     example: { en: "Let me write down your phone number.", de: "Ich schreibe mir deine Telefonnummer auf." },
   },
   "We need to keep the client ___ on the progress.": {
-    kind: "Adjektiv-Form auf -ed",
+    pos: "Adjektiv (Partizip auf -ed)",
+    meansDe: "auf dem Laufenden, informiert",
     meaning: "Es geht darum, in welchem Zustand der Kunde bleiben soll — nämlich auf dem neuesten Stand zu allen Neuigkeiten.",
     grammar: "Nach „keep someone …“ folgt ein Wort, das einen Zustand beschreibt (happy, safe, informed, updated). „keep someone updated“ heißt „jemanden auf dem Laufenden halten“.",
     example: { en: "I'll keep you updated on any changes.", de: "Ich halte dich über Änderungen auf dem Laufenden." },
+  },
+  "My flight has been ___ by two hours.": {
+    pos: "Adjektiv / Partizip (Past Participle von „to delay“)",
+    meansDe: "verspätet, verzögert",
+    meaning: "Gesucht ist ein Wort, das ausdrückt, dass der Flug nicht pünktlich ist, sondern zwei Stunden später kommt.",
+    grammar: "Im Passiv Perfekt steht „has/have been + Partizip“. „delayed“ ist das Partizip von „to delay“ (verzögern) und beschreibt hier den Zustand des Flugs: er wurde verspätet.",
+    example: { en: "The meeting was delayed because of traffic.", de: "Das Meeting wurde wegen des Verkehrs verschoben." },
+  },
+  "Breakfast is ___ from 7 to 10.": {
+    pos: "Adjektiv / Partizip (Past Participle von „to serve“)",
+    meansDe: "serviert, angeboten",
+    meaning: "Gesucht ist ein Wort, das sagt, dass das Frühstück in dieser Zeit für die Gäste bereitsteht — also wann es ausgegeben wird.",
+    grammar: "„be + Partizip“ ist das englische Passiv: „is served“ = „wird serviert“. So beschreibst du im Englischen oft Öffnungs- oder Servicezeiten in Hotels und Restaurants.",
+    example: { en: "Dinner is served from 6 p.m.", de: "Abendessen wird ab 18 Uhr serviert." },
   },
 };
 
