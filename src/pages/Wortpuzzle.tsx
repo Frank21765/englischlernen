@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EllieButton } from "@/components/EllieButton";
-import { EllieIcon } from "@/components/EllieIcon";
+
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, Sparkles, X } from "lucide-react";
