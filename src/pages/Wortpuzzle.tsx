@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EllieButton } from "@/components/EllieButton";
-import { EllieIcon } from "@/components/EllieIcon";
+
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, Sparkles, X } from "lucide-react";
@@ -265,32 +265,31 @@ export default function Wortpuzzle() {
             <p className="text-lg sm:text-xl font-display leading-snug">{task.source}</p>
           </div>
 
-          {/* Construction area */}
-          <div
-            className={`min-h-[64px] rounded-xl border-2 border-dashed p-3 flex flex-wrap gap-2 transition-colors ${
-              checked === "right"
-                ? "border-success/60 bg-success/10"
-                : checked === "wrong"
-                ? "border-destructive/60 bg-destructive/5"
-                : "border-border bg-muted/30"
-            }`}
-          >
+          {/* Construction area — neutral container, color lives on the chips */}
+          <div className="min-h-[64px] rounded-xl border-2 border-dashed border-border bg-muted/30 p-3 flex flex-wrap gap-2 transition-colors">
             {picked.length === 0 && (
               <span className="text-sm text-muted-foreground self-center">
                 Tippe unten auf die Wörter…
               </span>
             )}
-            {picked.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => unpick(p.key)}
-                disabled={checked === "right"}
-                className="rounded-lg bg-primary/15 hover:bg-primary/25 px-3 py-1.5 text-sm font-semibold text-foreground transition-smooth disabled:opacity-70 disabled:cursor-default"
-              >
-                {p.word}
-              </button>
-            ))}
+            {picked.map((p) => {
+              const chipClass = checked === "right"
+                ? "bg-success/15 border border-success/40 text-success"
+                : checked === "wrong"
+                ? "bg-destructive/10 border border-destructive/40 text-destructive"
+                : "bg-primary/15 hover:bg-primary/25 border border-transparent text-foreground";
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => unpick(p.key)}
+                  disabled={checked === "right"}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-smooth disabled:cursor-default ${chipClass}`}
+                >
+                  {p.word}
+                </button>
+              );
+            })}
           </div>
 
           {/* Word bank */}
@@ -313,7 +312,7 @@ export default function Wortpuzzle() {
             <div
               className={`rounded-xl p-3 sm:p-4 text-sm space-y-2 ${
                 checked === "right"
-                  ? "bg-success/10 border border-success/30 text-success-foreground"
+                  ? "bg-success/10 border border-success/30"
                   : "bg-destructive/5 border border-destructive/30"
               }`}
             >
@@ -341,14 +340,6 @@ export default function Wortpuzzle() {
                 <Button variant="hero" size="sm" onClick={next}>
                   Weiter <ArrowRight className="h-4 w-4" />
                 </Button>
-                <EllieButton
-                  prefill={elliePrompt}
-                  title={task.targetLang === "en" ? task.target : task.source}
-                  returnTo="/uben/wortpuzzle"
-                  returnLabel="Zurück zum Wortpuzzle"
-                  returnFlagKey={RETURN_FLAG_KEY}
-                  variant="sm"
-                />
               </div>
             </div>
           )}
@@ -365,10 +356,16 @@ export default function Wortpuzzle() {
             </div>
           )}
 
-          {/* Coach Ellie icon shortcut */}
-          <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground pt-1">
-            <EllieIcon size={14} alt="" />
-            <span>Tipp: Frag Ellie für eine Erklärung.</span>
+          {/* Unified "Frag Ellie" — always visible, same style as other pages */}
+          <div className="flex justify-end pt-1">
+            <EllieButton
+              prefill={elliePrompt}
+              title={task.targetLang === "en" ? task.target : task.source}
+              returnTo="/uben/wortpuzzle"
+              returnLabel="Zurück zum Wortpuzzle"
+              returnFlagKey={RETURN_FLAG_KEY}
+              variant="sm"
+            />
           </div>
         </Card>
       )}
