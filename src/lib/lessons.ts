@@ -1818,7 +1818,19 @@ const buildMismatchExplanation = (task: LessonTask, userAnswer?: string): string
   if (task.type === "order") {
     return `Deine Reihenfolge „${attempt}“ klingt im Englischen nicht ganz natürlich — meistens verrutscht dabei die Stellung von Subjekt, Verb oder einer kleinen Zeit-/Ortsangabe.`;
   }
-  return `„${attempt}“ passt hier nicht, weil die Lücke genau die Bedeutung oder die feste Form braucht, die mit „${task.answer}“ entsteht.`;
+  // Cloze: try to be more specific about WHY the user's word doesn't fit.
+  const ans = task.answer.toLowerCase();
+  const ua = attempt.toLowerCase();
+  if ((ans.endsWith("ed") || ans.endsWith("en")) && ua.endsWith("ing")) {
+    return `„${attempt}“ passt hier nicht: die -ing-Form beschreibt eine laufende Handlung, aber der Satz braucht das Partizip („${task.answer}“), weil etwas mit dem Subjekt geschieht (Passivform).`;
+  }
+  if (ans.endsWith("ing") && (ua.endsWith("ed") || ua === ans.slice(0, -3))) {
+    return `„${attempt}“ passt hier nicht: hier wird die -ing-Form gebraucht („${task.answer}“) — entweder als laufende Handlung oder als Nomen für die Tätigkeit.`;
+  }
+  if (ua.length <= 3 && ans.length <= 3) {
+    return `„${attempt}“ ist zwar auch ein kleines Strukturwort, gehört aber nicht zu dieser festen englischen Verbindung — hier ist „${task.answer}“ der feste Partner.`;
+  }
+  return `„${attempt}“ passt inhaltlich nicht in diese Lücke — gesucht ist „${task.answer}“, weil genau dieses Wort zur Bedeutung des Satzes und zur festen englischen Form gehört.`;
 };
 
 export function getTaskExplanation(task: LessonTask, opts: { isCorrect: boolean; userAnswer?: string }): string {
