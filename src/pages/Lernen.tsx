@@ -432,29 +432,29 @@ export default function Lernen() {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lektionen?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lektionen</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lektionen?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Sparkles className="h-4 w-4 shrink-0 text-amber-400" /> <span className="min-w-0">Lektionen</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/wortpuzzle?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <Puzzle className="h-4 w-4 shrink-0" /> <span className="min-w-0">Wortpuzzle</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/wortpuzzle?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Puzzle className="h-4 w-4 shrink-0 text-emerald-400" /> <span className="min-w-0">Wortpuzzle</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/quiz?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <GraduationCap className="h-4 w-4 shrink-0" /> <span className="min-w-0">Quiz</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/quiz?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <GraduationCap className="h-4 w-4 shrink-0 text-sky-400" /> <span className="min-w-0">Quiz</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lueckentext?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0">Lückentext</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/lueckentext?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <PenLine className="h-4 w-4 shrink-0 text-violet-400" /> <span className="min-w-0">Lückentext</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/grammatik?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0">Grammatik</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/uben/grammatik?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Library className="h-4 w-4 shrink-0 text-rose-400" /> <span className="min-w-0">Grammatik</span>
           </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="w-full whitespace-normal text-center leading-tight px-3">
-            <BookOpen className="h-4 w-4 shrink-0" /> <span className="min-w-0">Vokabeln</span>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <BookOpen className="h-4 w-4 shrink-0 text-cyan-400" /> <span className="min-w-0">Vokabeln</span>
           </Button>
           <Button
             variant="soft"
             size="lg"
             onClick={() => navigate(`/chat?new=1&t=${Date.now()}`)}
-            className="col-span-2 w-full whitespace-normal text-center leading-tight px-3"
+            className="hover-lift col-span-2 w-full whitespace-normal text-center leading-tight px-3"
           >
             <EllieIcon size={20} alt="" /> <span className="min-w-0">Frag Ellie</span>
           </Button>
