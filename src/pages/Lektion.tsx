@@ -18,6 +18,43 @@ import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, Target, 
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
+import { EllieButton } from "@/components/EllieButton";
+import { useLearning } from "@/hooks/useLearningContext";
+
+/** Build a lesson-aware prompt so Coach Ellie has the current task in context. */
+function buildEllieLessonPrompt(opts: {
+  lessonTitle: string;
+  level: string;
+  task: LessonTask;
+}): string {
+  const { lessonTitle, level, task } = opts;
+  const ctx = `Kontext: Lektion *${lessonTitle}* (Niveau ${level}).`;
+  if (task.type === "mc") {
+    return `${ctx}
+Ich übe gerade diese Multiple-Choice-Aufgabe und möchte sie besser verstehen:
+Frage: *${task.prompt}*
+Optionen: ${task.options.map((o) => `„${o}“`).join(", ")}
+Richtige Antwort: *${task.answer}*
+
+Bitte erklär mir freundlich, warum *${task.answer}* hier richtig ist, was die anderen Optionen bedeuten würden, und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+  }
+  if (task.type === "cloze") {
+    return `${ctx}
+Ich arbeite gerade an dieser Lückentext-Aufgabe:
+Satz: *${task.sentence.replace("___", "_____")}*
+Richtiges Wort: *${task.answer}*${task.translation ? `\nÜbersetzung: ${task.translation}` : ""}${task.hint ? `\nHinweis war: ${task.hint}` : ""}
+
+Bitte erklär mir freundlich, warum *${task.answer}* hier passt (Bedeutung, Form, typische Verwendung) und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+  }
+  // order
+  return `${ctx}
+Ich übe gerade diese Satzbau-Aufgabe:
+Aufgabe: *${task.prompt}*
+Wörter: ${task.words.map((w) => `„${w}“`).join(", ")}
+Richtige Reihenfolge: *${task.answer}*
+
+Bitte erklär mir kurz die Satzstruktur, warum diese Reihenfolge richtig ist, und gib 1–2 weitere ähnliche Beispielsätze auf meinem Niveau.`;
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
