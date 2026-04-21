@@ -1489,14 +1489,14 @@ export const LESSONS: Lesson[] = [
 // AND a 4-5 sentence explanation with mini-grammar and a second example.
 // ============================================================
 
-/** Mask all but the first 1-2 letters and (optionally) the ending of a word. */
+/** Show only the first 1-2 letters of the (first) word — never the ending. */
 const wordShape = (word: string): string => {
-  const w = word.replace(/[^a-z']/gi, "");
-  if (w.length <= 3) return `beginnt mit **${w[0]}**`;
-  const start = w.slice(0, 2);
-  const endLen = w.length >= 6 ? 3 : 2;
-  const end = w.slice(-endLen);
-  return `beginnt mit **${start}** und endet auf **-${end}**`;
+  // Bei Mehrwort-Antworten ("write down") nur das erste Wort betrachten.
+  const first = word.trim().split(/\s+/)[0] ?? word;
+  const w = first.replace(/[^a-z']/gi, "");
+  if (!w) return "";
+  if (w.length <= 2) return `beginnt mit **${w[0]}**`;
+  return `beginnt mit **${w.slice(0, 2)}**`;
 };
 
 interface TaskOverride {
