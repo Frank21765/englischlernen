@@ -151,7 +151,7 @@ export default function Lueckentext() {
             </p>
           </Card>
         ) : (
-          <Card className="p-5 space-y-4 bg-gradient-card shadow-card">
+          <Card className="hover-lift p-5 space-y-4 bg-gradient-card shadow-card">
             <p className="text-sm text-muted-foreground">
               Wir generieren Lückensätze passend zu <span className="font-semibold text-foreground">{level}</span> · {topic}.
             </p>
@@ -178,7 +178,7 @@ export default function Lueckentext() {
         </div>
       </div>
 
-      <Card className="p-6 bg-gradient-card shadow-card animate-pop space-y-4">
+      <Card className="hover-lift p-6 bg-gradient-card shadow-card animate-pop space-y-4">
         <div className="text-xs font-bold uppercase tracking-widest text-primary">Lückentext</div>
         <div className="font-display text-xl md:text-2xl leading-relaxed">
           {masked.before}

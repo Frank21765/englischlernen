@@ -162,11 +162,11 @@ export default function Erfolge() {
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4">
+        <Card className="hover-lift p-4 border border-orange-500/40">
           <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Aktuelle Streak</div>
           <div className="font-display text-2xl mt-1">{streak} 🔥</div>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-lift p-4 border border-amber-500/40">
           <div className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Längste Streak</div>
           <div className="font-display text-2xl mt-1">{longest} 🏅</div>
         </Card>
@@ -195,16 +195,14 @@ export default function Erfolge() {
                   return (
                     <Card
                       key={b.key}
-                      className={`p-4 text-center space-y-2 transition-bounce hover:-translate-y-0.5 cursor-default border ${
+                      className={`hover-lift p-4 text-center space-y-2 cursor-default border ${
                         got
                           ? `bg-gradient-card shadow-card ${style.border} ${style.glow}`
-                          : "opacity-80 hover:opacity-100 hover:shadow-soft"
+                          : `bg-card/60 ${style.border} opacity-90`
                       }`}
                     >
                       <div
-                        className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
-                          got ? style.iconBg : "bg-muted grayscale"
-                        }`}
+                        className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center text-2xl ${style.iconBg}`}
                       >
                         {b.icon}
                       </div>

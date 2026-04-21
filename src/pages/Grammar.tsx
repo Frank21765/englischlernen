@@ -164,7 +164,7 @@ export default function Grammar() {
         <FocusChip />
       </header>
 
-      <Card className="p-4 sm:p-5 space-y-3 bg-gradient-card shadow-card">
+      <Card className="hover-lift p-4 sm:p-5 space-y-3 bg-gradient-card shadow-card">
         <p className="text-sm text-muted-foreground">
           Eine kurze Lektion passend zu deinem aktuellen Fokus – mit Beispielen, typischem Fehler und Übung.
         </p>
@@ -180,7 +180,7 @@ export default function Grammar() {
 
       {lesson && (
         <div className="space-y-4">
-          <Card className="p-4 sm:p-5 space-y-3">
+          <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className="font-display text-xl sm:text-2xl">{lesson.title}</h2>
               <Button size="sm" variant="ghost" onClick={generate} disabled={busy}>
@@ -199,7 +199,7 @@ export default function Grammar() {
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-5 space-y-3">
+          <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-primary">Beispiele</div>
             <div className="space-y-2">
               {lesson.examples.map((ex, i) => (
@@ -211,7 +211,7 @@ export default function Grammar() {
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-5 space-y-3 border-destructive/30">
+          <Card className="hover-lift p-4 sm:p-5 space-y-3 border-destructive/30">
             <div className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
               <Lightbulb className="h-3.5 w-3.5" /> Typischer Fehler
             </div>
@@ -228,7 +228,7 @@ export default function Grammar() {
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-5 space-y-3">
+          <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-primary">Übung – setz das passende Wort ein</div>
             <div className="space-y-3">
               {lesson.practice.map((p, i) => {
@@ -236,7 +236,7 @@ export default function Grammar() {
                 const isRevealed = !!revealed[i];
                 const ok = isRevealed && (answers[i] ?? "").trim().toLowerCase() === p.answer.trim().toLowerCase();
                 return (
-                  <div key={i} className="rounded-xl border border-border p-3 space-y-2">
+                  <div key={i} className="hover-lift rounded-xl border border-border p-3 space-y-2">
                     <div className="text-sm leading-relaxed flex flex-wrap items-center gap-1">
                       <span>{parts[0]}</span>
                       <Input
