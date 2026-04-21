@@ -324,14 +324,26 @@ export default function Lektion() {
     setOrderTokens((toks) => [...toks, tok]);
   };
 
+  // The user's current attempt — used to show "you wrote ___" in feedback.
+  const userAttempt =
+    task?.type === "order"
+      ? orderPicked.join(" ").trim()
+      : textInput.trim();
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/uben/lektionen">
-            <ArrowLeft className="h-4 w-4" /> Übersicht
-          </Link>
-        </Button>
+        {reviewMode ? (
+          <Button variant="ghost" size="sm" onClick={() => setDone(true)}>
+            <ArrowLeft className="h-4 w-4" /> Zurück zum Abschluss
+          </Button>
+        ) : (
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/uben/lektionen">
+              <ArrowLeft className="h-4 w-4" /> Übersicht
+            </Link>
+          </Button>
+        )}
         <div className="text-sm text-muted-foreground">
           {reviewMode ? "Wiederholung" : "Aufgabe"} {activeIdx + 1} / {runTotal}
         </div>
