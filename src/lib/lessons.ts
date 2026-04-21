@@ -523,7 +523,7 @@ const A2_LESSONS: Lesson[] = [
         "make an appointment", "do a date", "give a meet", "set a time talk",
       ], "make an appointment"),
       cz("t8", "Lücke füllen", "I forgot ___ buy bread.", "to",
-        { hint: "Hier passt die Grundform mit „to“", explain: "Nach „forget“ steht meist „to + Infinitiv“." }),
+        { hint: "Nach „forget“ folgt oft ein kleines Brückenwort vor dem nächsten Verb (forget ___ do …)", explain: "Nach „forget“ steht meist „to + Infinitiv“." }),
       cz("t9", "Lücke füllen", "Sorry, I'm ___ a hurry.", "in",
         { hint: "Hier fehlt ein kleines Verbindungswort (feste Wendung)", explain: "„in a hurry“ = in Eile." }),
       ord("t10", "Sätze richtig anordnen", ["I", "usually", "go", "to", "bed", "at", "eleven"], "I usually go to bed at eleven"),
