@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, MessageCircle, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
 
 interface ClozeItem {
   full_sentence: string;
@@ -233,9 +233,8 @@ export default function Lueckentext() {
       {revealed !== null && (
         <div className="flex justify-center">
           <Button
-            variant="soft"
             size="sm"
-            className="rounded-full"
+            className="h-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm"
             onClick={() => {
               const resumeId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
               const snap = { items, idx, answer, revealed, stats, combo };
@@ -259,8 +258,8 @@ export default function Lueckentext() {
               navigate(url);
             }}
           >
-            <MessageCircle className="h-4 w-4" />
-            {revealed ? "Lass es dir von Ellie vertiefen" : "Frag Ellie zu dieser Lücke"}
+            <Sparkles className="h-4 w-4" />
+            Frag Ellie
           </Button>
         </div>
       )}

@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, MessageCircle, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
@@ -188,8 +188,12 @@ export default function Grammar() {
             </div>
             <p className="text-sm leading-relaxed">{lesson.explanation}</p>
             <div className="flex justify-end">
-              <Button size="sm" variant="soft" className="rounded-full" onClick={askEllieAboutLesson}>
-                <MessageCircle className="h-4 w-4" /> Lass es dir von Ellie erklären
+              <Button
+                size="sm"
+                className="h-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm"
+                onClick={askEllieAboutLesson}
+              >
+                <Sparkles className="h-4 w-4" /> Frag Ellie
               </Button>
             </div>
           </Card>
@@ -260,9 +264,12 @@ export default function Grammar() {
                     </div>
                     {isRevealed && (
                       <div className="flex justify-end">
-                        <Button size="sm" variant="ghost" className="rounded-full text-xs h-7" onClick={() => askEllieAboutPractice(i)}>
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          {ok ? "Ellie vertieft die Regel" : "Frag Ellie zu dieser Übung"}
+                        <Button
+                          size="sm"
+                          className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm text-xs"
+                          onClick={() => askEllieAboutPractice(i)}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Frag Ellie
                         </Button>
                       </div>
                     )}
