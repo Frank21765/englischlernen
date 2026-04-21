@@ -78,7 +78,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md">
-        <div className="container max-w-6xl flex items-center justify-between gap-4 py-3">
+        <div className="container max-w-6xl flex items-center justify-between gap-4 py-3 min-h-[60px]">
           <div className="flex items-center gap-2 min-w-0">
             <NavLink to="/lernen" className="flex items-center gap-2 shrink-0">
               <img src={appIcon} alt="Hello!" className="h-9 w-9" />
@@ -99,17 +99,33 @@ export default function AppLayout() {
                 </>
               )}
             </NavLink>
-            {ctxReady && hasSelection && (
-              <NavLink
-                to="/lernen"
-                title="Aktuelles Niveau und Thema – tippen zum Ändern"
-                className="hidden xs:flex items-center gap-1 rounded-full bg-accent/15 hover:bg-accent/25 px-2.5 py-1 text-xs font-bold text-accent-foreground/90 transition-smooth max-w-[10rem] truncate"
-              >
-                <Sparkles className="h-3 w-3 text-accent" />
-                <span className="font-mono">{level}</span>
-                <span className="text-muted-foreground/60">·</span>
-                <span className="truncate">{topic}</span>
-              </NavLink>
+            {ctxReady ? (
+              hasSelection ? (
+                <NavLink
+                  to="/lernen"
+                  title="Aktuelles Niveau und Thema – tippen zum Ändern"
+                  className="hidden xs:flex items-center gap-1 rounded-full bg-accent/15 hover:bg-accent/25 px-2.5 py-1 text-xs font-bold text-accent-foreground/90 transition-smooth max-w-[10rem] truncate"
+                >
+                  <Sparkles className="h-3 w-3 text-accent" />
+                  <span className="font-mono">{level}</span>
+                  <span className="text-muted-foreground/60">·</span>
+                  <span className="truncate">{topic}</span>
+                </NavLink>
+              ) : (
+                <NavLink
+                  to="/lernen"
+                  title="Niveau und Thema wählen"
+                  className="hidden xs:flex items-center gap-1 rounded-full bg-muted/60 hover:bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground transition-smooth"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>Niveau wählen</span>
+                </NavLink>
+              )
+            ) : (
+              <span className="hidden xs:flex items-center gap-1 px-2.5 py-1 text-xs invisible" aria-hidden>
+                <Sparkles className="h-3 w-3" />
+                <span>placeholder</span>
+              </span>
             )}
           </div>
           <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/auth"); }}>
@@ -144,7 +160,7 @@ export default function AppLayout() {
           })}
         </nav>
       </header>
-      <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden">
+      <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden min-h-[calc(100vh-140px)]">
         <AccessGate>
           <Outlet />
         </AccessGate>

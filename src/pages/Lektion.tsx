@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getLesson,
   getTaskExplanation,
@@ -301,7 +302,7 @@ export default function Lektion() {
       if (user) {
         setAwarding(true);
         try {
-          const result = await awardActivity(user.id, 5);
+          const result = await awardActivity(user.id, 5, { mode: "lesson" });
           celebrate(result);
         } finally {
           setAwarding(false);
@@ -330,7 +331,17 @@ export default function Lektion() {
       setDone(true);
       fireConfetti(true);
       if (user) {
-        const result = await awardActivity(user.id, 25, { perfectQuiz: completed.size + 1 >= total });
+        const perfect = completed.size + 1 >= total;
+        // Persist a "lesson" session so perfect-lesson badges can aggregate.
+        await supabase.from("learning_sessions").insert({
+          user_id: user.id,
+          mode: "lesson",
+          level: lesson.level,
+          topic: lesson.title,
+          total_answers: total,
+          correct_answers: perfect ? total : completed.size,
+        });
+        const result = await awardActivity(user.id, 25, { mode: "lesson", perfectRun: perfect });
         celebrate(result);
       }
       return;

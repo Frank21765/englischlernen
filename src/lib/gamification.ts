@@ -53,37 +53,110 @@ export function rankName(level: number): string {
   return "Beginner";
 }
 
+export type BadgeCategory = "streak" | "vocab" | "exercise" | "level";
+
 export interface BadgeDef {
   key: string;
   name: string;
   description: string;
   icon: string;
+  category: BadgeCategory;
+  /** target value for progress display */
+  target: number;
 }
 
 export const BADGES: BadgeDef[] = [
-  { key: "first_steps", name: "First Steps", description: "Erste 10 Vokabeln richtig beantwortet", icon: "👶" },
-  { key: "vocab_50", name: "Collector", description: "50 Vokabeln in der Sammlung", icon: "📚" },
-  { key: "vocab_200", name: "Librarian", description: "200 Vokabeln in der Sammlung", icon: "🏛️" },
-  { key: "streak_3", name: "Consistent", description: "3 Tage in Folge gelernt", icon: "🔥" },
-  { key: "streak_7", name: "One Week", description: "7 Tage in Folge gelernt", icon: "🌟" },
-  { key: "streak_30", name: "Unstoppable", description: "30 Tage in Folge gelernt", icon: "💎" },
-  { key: "perfect_quiz", name: "Flawless", description: "Quiz mit 100% abgeschlossen", icon: "🎯" },
-  { key: "combo_10", name: "On Fire", description: "10 richtige Antworten in Folge", icon: "⚡" },
-  { key: "level_5", name: "Student", description: "Level 5 erreicht", icon: "🎓" },
-  { key: "level_10", name: "Traveller", description: "Level 10 erreicht", icon: "✈️" },
-  { key: "chat_first", name: "Hello, Coach!", description: "Erste Nachricht an Coach Ellie", icon: "💬" },
+  // Streak
+  { key: "streak_7",   name: "Dranbleiber",     description: "7 Tage in Folge gelernt",   icon: "🔥", category: "streak", target: 7 },
+  { key: "streak_14",  name: "Eisern",          description: "14 Tage in Folge gelernt",  icon: "⚡", category: "streak", target: 14 },
+  { key: "streak_30",  name: "Unaufhaltsam",    description: "30 Tage in Folge gelernt",  icon: "💎", category: "streak", target: 30 },
+  { key: "streak_100", name: "Legende",         description: "100 Tage in Folge gelernt", icon: "👑", category: "streak", target: 100 },
+  { key: "streak_365", name: "Marathonläufer",  description: "365 Tage in Folge gelernt", icon: "🏆", category: "streak", target: 365 },
+
+  // Vocab mastered
+  { key: "vocab_mastered_100",  name: "Wortsammler",     description: "100 Vokabeln gemeistert",   icon: "📘", category: "vocab", target: 100 },
+  { key: "vocab_mastered_500",  name: "Wortschatz-Profi", description: "500 Vokabeln gemeistert",  icon: "📚", category: "vocab", target: 500 },
+  { key: "vocab_mastered_1000", name: "Bibliothekar",    description: "1.000 Vokabeln gemeistert", icon: "🏛️", category: "vocab", target: 1000 },
+  { key: "vocab_mastered_2500", name: "Wortgenie",       description: "2.500 Vokabeln gemeistert", icon: "🧠", category: "vocab", target: 2500 },
+
+  // Exercises
+  { key: "perfect_lesson_1",  name: "Perfektionist",  description: "1 Lektion ohne Fehler",     icon: "🎯", category: "exercise", target: 1 },
+  { key: "perfect_lesson_10", name: "Doppelt sauber", description: "10 Lektionen ohne Fehler",  icon: "🥈", category: "exercise", target: 10 },
+  { key: "perfect_lesson_50", name: "Makellos",       description: "50 Lektionen ohne Fehler",  icon: "🥇", category: "exercise", target: 50 },
+  { key: "wortpuzzle_25",     name: "Puzzlemeister",  description: "25 Wortpuzzle gelöst",      icon: "🧩", category: "exercise", target: 25 },
+  { key: "grammar_25",        name: "Grammatikfuchs", description: "25 Grammatik-Übungen",      icon: "📝", category: "exercise", target: 25 },
+  { key: "cloze_25",          name: "Lückenfüller",   description: "25 Lückentexte",            icon: "🔤", category: "exercise", target: 25 },
+  { key: "combo_25",          name: "Combo-Held",     description: "25 richtige in Folge",      icon: "🚀", category: "exercise", target: 25 },
+  { key: "combo_50",          name: "Combo-King",     description: "50 richtige in Folge",      icon: "🌪️", category: "exercise", target: 50 },
+
+  // Level
+  { key: "level_5",  name: "Student",        description: "Level 5 erreicht",  icon: "🎓", category: "level", target: 5 },
+  { key: "level_10", name: "Traveller",      description: "Level 10 erreicht", icon: "✈️", category: "level", target: 10 },
+  { key: "level_15", name: "Advanced",       description: "Level 15 erreicht", icon: "🌍", category: "level", target: 15 },
+  { key: "level_20", name: "Fluent Speaker", description: "Level 20 erreicht", icon: "🗣️", category: "level", target: 20 },
+  { key: "level_25", name: "Master",         description: "Level 25 erreicht", icon: "👑", category: "level", target: 25 },
 ];
 
 export const BADGE_BY_KEY = Object.fromEntries(BADGES.map((b) => [b.key, b]));
+
+export const BADGE_CATEGORY_LABEL: Record<BadgeCategory, string> = {
+  streak: "Streak",
+  vocab: "Vokabeln",
+  exercise: "Übungen",
+  level: "Level",
+};
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export type ActivityMode = "lesson" | "wortpuzzle" | "grammar" | "cloze" | "quiz" | "chat" | "vocab";
+
+export interface ActivityCtx {
+  mode?: ActivityMode;
+  /** True when an entire lesson/quiz was completed without a single mistake. */
+  perfectRun?: boolean;
+  /** Highest combo reached in this activity. */
+  comboReached?: number;
+  /** Legacy aliases (still accepted) */
+  perfectQuiz?: boolean;
+  vocabCount?: number;
+  firstChat?: boolean;
+}
+
+async function countMasteredVocab(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from("vocabulary")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "mastered");
+  return count ?? 0;
+}
+
+async function countPerfectLessons(userId: string): Promise<number> {
+  // A "perfect lesson" = a learning_session row where mode='lesson' and total>0 and correct==total
+  const { data } = await supabase
+    .from("learning_sessions")
+    .select("total_answers,correct_answers")
+    .eq("user_id", userId)
+    .eq("mode", "lesson");
+  if (!data) return 0;
+  return data.filter((r) => r.total_answers > 0 && r.correct_answers === r.total_answers).length;
+}
+
+async function countSessionsByMode(userId: string, mode: string): Promise<number> {
+  const { count } = await supabase
+    .from("learning_sessions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("mode", mode);
+  return count ?? 0;
+}
+
 export async function awardActivity(
   userId: string,
   xpDelta: number,
-  ctx: { perfectQuiz?: boolean; comboReached?: number; vocabCount?: number; firstChat?: boolean } = {},
+  ctx: ActivityCtx = {},
 ): Promise<{ leveledUp: boolean; newLevel: number; newBadges: BadgeDef[] }> {
   const { data: profile } = await supabase
     .from("profiles")
@@ -123,17 +196,52 @@ export async function awardActivity(
     .eq("user_id", userId);
 
   const candidates: string[] = [];
-  if (newXp >= 50) candidates.push("first_steps");
-  if ((ctx.vocabCount ?? 0) >= 50) candidates.push("vocab_50");
-  if ((ctx.vocabCount ?? 0) >= 200) candidates.push("vocab_200");
-  if (currentStreak >= 3) candidates.push("streak_3");
+
+  // Streak
   if (currentStreak >= 7) candidates.push("streak_7");
+  if (currentStreak >= 14) candidates.push("streak_14");
   if (currentStreak >= 30) candidates.push("streak_30");
-  if (ctx.perfectQuiz) candidates.push("perfect_quiz");
-  if ((ctx.comboReached ?? 0) >= 10) candidates.push("combo_10");
+  if (currentStreak >= 100) candidates.push("streak_100");
+  if (currentStreak >= 365) candidates.push("streak_365");
+
+  // Level
   if (newLevel >= 5) candidates.push("level_5");
   if (newLevel >= 10) candidates.push("level_10");
-  if (ctx.firstChat) candidates.push("chat_first");
+  if (newLevel >= 15) candidates.push("level_15");
+  if (newLevel >= 20) candidates.push("level_20");
+  if (newLevel >= 25) candidates.push("level_25");
+
+  // Combo
+  const combo = ctx.comboReached ?? 0;
+  if (combo >= 25) candidates.push("combo_25");
+  if (combo >= 50) candidates.push("combo_50");
+
+  // Vocab mastered (live aggregate)
+  const masteredCount = await countMasteredVocab(userId);
+  if (masteredCount >= 100) candidates.push("vocab_mastered_100");
+  if (masteredCount >= 500) candidates.push("vocab_mastered_500");
+  if (masteredCount >= 1000) candidates.push("vocab_mastered_1000");
+  if (masteredCount >= 2500) candidates.push("vocab_mastered_2500");
+
+  // Mode-specific aggregates
+  if (ctx.mode === "lesson" && (ctx.perfectRun || ctx.perfectQuiz)) {
+    const perfect = await countPerfectLessons(userId);
+    if (perfect >= 1) candidates.push("perfect_lesson_1");
+    if (perfect >= 10) candidates.push("perfect_lesson_10");
+    if (perfect >= 50) candidates.push("perfect_lesson_50");
+  }
+  if (ctx.mode === "wortpuzzle") {
+    const c = await countSessionsByMode(userId, "wortpuzzle");
+    if (c >= 25) candidates.push("wortpuzzle_25");
+  }
+  if (ctx.mode === "grammar") {
+    const c = await countSessionsByMode(userId, "grammar");
+    if (c >= 25) candidates.push("grammar_25");
+  }
+  if (ctx.mode === "cloze") {
+    const c = await countSessionsByMode(userId, "cloze");
+    if (c >= 25) candidates.push("cloze_25");
+  }
 
   const newBadges: BadgeDef[] = [];
   if (candidates.length) {
@@ -145,7 +253,6 @@ export async function awardActivity(
     const have = new Set((existing ?? []).map((r) => r.badge_key));
     const toInsert = candidates.filter((k) => !have.has(k));
     for (const k of toInsert) {
-      // Server-side validated awarder (only allows known badge keys)
       const { data: awarded } = await supabase.rpc("award_badge", { _badge_key: k });
       if (awarded) {
         const def = BADGE_BY_KEY[k];
