@@ -11,9 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { levelFromXp } from "@/lib/gamification";
 
 const baseNav = [
-  { to: "/lernen", label: "Lernen", icon: Sparkles, match: ["/lernen"] },
-  { to: "/uben", label: "Üben", icon: Dumbbell, match: ["/uben", "/quiz", "/grammatik", "/lueckentext"] },
-  { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: ["/vokabeln"] },
+  { to: "/lernen", label: "Start", icon: Sparkles, match: ["/lernen"] },
+  { to: "/uben", label: "Training", icon: Dumbbell, match: ["/uben", "/quiz", "/grammatik", "/lueckentext", "/vokabeln"] },
   { to: "/chat?new=1", label: "Coach", icon: MessageCircle, match: ["/chat"] },
   { to: "/profil", label: "Profil", icon: User, match: ["/profil", "/erfolge", "/statistik", "/einstellungen"] },
 ];
