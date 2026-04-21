@@ -349,18 +349,6 @@ export default function Lektion() {
               <Target className="h-3 w-3" /> Schwierige Aufgaben
             </span>
           )}
-          <div className="ml-auto">
-            {task && (
-              <EllieButton
-                variant="sm"
-                prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
-                title={`Lektion: ${lesson.title}`}
-                returnTo={`/uben/lektionen/${lesson.id}`}
-                returnLabel="Zurück zur Lektion"
-                returnFlagKey={`hello.lesson.return.${lesson.id}`}
-              />
-            )}
-          </div>
         </div>
         <Progress value={pct} className="h-2" />
         <div className="text-xs text-muted-foreground">{doneCount} / {total} der ganzen Lektion abgeschlossen</div>
