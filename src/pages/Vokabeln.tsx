@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Info,
   Loader2,
-  MessageCircle,
   Plus,
   RefreshCw,
   Search,
@@ -23,7 +22,8 @@ import {
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
-import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { ellieAskWordPrompt } from "@/lib/ellie";
+import { EllieButton } from "@/components/EllieButton";
 import { Link } from "react-router-dom";
 
 interface Vocab {
@@ -100,28 +100,20 @@ function consumePersisted(): Partial<PersistedState> {
   }
 }
 
-// Consistent Ellie button used everywhere on this page.
-function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
-  const markReturning = () => {
-    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
-  };
+// Vokabeln-specific Ellie helper – delegates to the shared component with the right return context.
+function VokabelnEllieButton({ prefill, title, variant = "icon" }: { prefill: string; title?: string; variant?: "icon" | "sm" }) {
   return (
-    <Button asChild variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10" title="Mit Coach Ellie besprechen">
-      <Link
-        onClick={markReturning}
-        to={buildEllieUrl({
-          prefill,
-          auto: true,
-          title,
-          returnTo: "/vokabeln",
-          returnLabel: "Zurück zu Vokabeln",
-        })}
-      >
-        <MessageCircle className="h-4 w-4" />
-      </Link>
-    </Button>
+    <EllieButton
+      prefill={prefill}
+      title={title}
+      returnTo="/vokabeln"
+      returnLabel="Zurück zu Vokabeln"
+      returnFlagKey={RETURN_FLAG_KEY}
+      variant={variant}
+    />
   );
 }
+
 
 export default function Vokabeln() {
   const { user } = useAuth();
@@ -426,12 +418,13 @@ export default function Vokabeln() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <EllieButton
+                <div className="flex items-center gap-2 shrink-0">
+                  <VokabelnEllieButton
                     prefill={ellieAskWordPrompt(lookup.german, lookup.english, activeLevel)}
                     title={lookup.english}
+                    variant="sm"
                   />
-                  <Button size="sm" variant="soft" onClick={saveLookupToCollection} disabled={savingLookup}>
+                  <Button size="sm" variant="ghost" onClick={saveLookupToCollection} disabled={savingLookup} title="Zur Sammlung hinzufügen" className="h-9">
                     {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                     <span className="hidden sm:inline">Speichern</span>
                   </Button>
@@ -582,26 +575,28 @@ export default function Vokabeln() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <EllieButton
+                      <div className="flex items-center gap-2 shrink-0">
+                        <VokabelnEllieButton
                           prefill={ellieAskWordPrompt(s.german, s.english, activeLevel)}
                           title={s.english}
+                          variant="sm"
                         />
                         <Button
                           type="button"
-                          variant={saved ? "soft" : "hero"}
-                          size="sm"
-                          className="h-9"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
                           onClick={() => !saved && saveSuggestion(s)}
                           disabled={saved || saving}
-                          title="Zur Sammlung hinzufügen"
+                          title={saved ? "Bereits gespeichert" : "Zur Sammlung hinzufügen"}
+                          aria-label={saved ? "Bereits gespeichert" : "Zur Sammlung hinzufügen"}
                         >
                           {saving ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                           ) : saved ? (
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-4 w-4 text-primary" />
                           ) : (
-                            <Plus className="h-3.5 w-3.5" />
+                            <Plus className="h-4 w-4" />
                           )}
                         </Button>
                       </div>
@@ -692,7 +687,7 @@ export default function Vokabeln() {
                     >
                       {statusLabels[v.status] ?? "Neu"}
                     </span>
-                    <EllieButton
+                    <VokabelnEllieButton
                       prefill={ellieAskWordPrompt(v.german, v.english, v.level)}
                       title={v.english}
                     />

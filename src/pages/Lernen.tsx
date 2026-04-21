@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { getProfileUsername } from "@/lib/profile";
-import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { ellieAskWordPrompt } from "@/lib/ellie";
+import { EllieButton } from "@/components/EllieButton";
 import { toast } from "sonner";
 import {
   ArrowRightLeft,
@@ -73,34 +75,8 @@ function consumePersisted(): Partial<PersistedState> {
   }
 }
 
-// Consistent Ellie button used everywhere on this page.
-function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
-  const markReturning = () => {
-    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
-  };
-  return (
-    <Button
-      asChild
-      variant="ghost"
-      size="icon"
-      className="h-9 w-9 text-primary hover:bg-primary/10"
-      title="Mit Coach Ellie besprechen"
-    >
-      <Link
-        onClick={markReturning}
-        to={buildEllieUrl({
-          prefill,
-          auto: true,
-          title,
-          returnTo: "/lernen",
-          returnLabel: "Zurück zum Lernen",
-        })}
-      >
-        <MessageCircle className="h-4 w-4" />
-      </Link>
-    </Button>
-  );
-}
+// Persisted collapsed state for "Frag mich!"
+const ASK_OPEN_KEY = "lernen.askOpen.v1";
 
 export default function Lernen() {
   const { user } = useAuth();
@@ -117,6 +93,12 @@ export default function Lernen() {
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(persisted.customMode ?? isCustomTopic);
   const [editFocus, setEditFocus] = useState<boolean>(persisted.editFocus ?? !hasSelection);
+  const [askOpen, setAskOpen] = useState<boolean>(() => {
+    try { return sessionStorage.getItem(ASK_OPEN_KEY) !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(ASK_OPEN_KEY, askOpen ? "1" : "0"); } catch { /* ignore */ }
+  }, [askOpen]);
 
   // ---- Box 1: Frag mich! ----
   const [askInput, setAskInput] = useState(persisted.askInput ?? "");
@@ -204,109 +186,128 @@ export default function Lernen() {
       </header>
 
       {/* ============ 1) Frag mich! ============ */}
-      <section className="space-y-3">
-        <div className="space-y-0.5">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Frag mich!
-          </h2>
-          <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
-        </div>
-
-        <Card className="p-4 space-y-3 bg-gradient-card shadow-card">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder='z.B. „aufgeben" oder „I would like to…"'
-                value={askInput}
-                onChange={(e) => setAskInput(e.target.value)}
-                onKeyDown={onAskKeyDown}
-                className="pl-9 h-11 rounded-xl"
-              />
-            </div>
-            <Button
+      <Collapsible open={askOpen} onOpenChange={setAskOpen} asChild>
+        <section className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-accent/5 shadow-card overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button
               type="button"
-              onClick={runLookup}
-              disabled={lookingUp || !askInput.trim()}
-              className="h-11 rounded-xl shrink-0 px-5"
-              variant="hero"
+              className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left hover:bg-primary/5 transition-smooth"
+              aria-expanded={askOpen}
             >
-              {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
-              <span>Los!</span>
-            </Button>
-          </div>
-
-          {askIsLong && !lookup && (
-            <div className="flex items-start gap-2 rounded-lg bg-accent/40 px-3 py-2 text-xs text-muted-foreground">
-              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-              <div>
-                Das ist schon ein längerer Text. Für komplexere Übersetzungen erklärt dir{" "}
-                <Link to="/chat" className="font-semibold text-primary hover:underline">
-                  Coach Ellie
-                </Link>{" "}
-                Bedeutung und Nuancen oft besser.
-              </div>
-            </div>
-          )}
-
-          {lookup && (
-            <div className="rounded-xl border border-border p-4 space-y-3 bg-card animate-pop">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1 min-w-0">
-                  <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
-                  </div>
-                  <div className="flex items-baseline flex-wrap gap-3">
-                    <div className="font-display text-xl">{lookup.german}</div>
-                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-display text-xl text-primary">{lookup.english}</div>
-                  </div>
-                  {(lookup.part_of_speech || lookup.note) && (
-                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                      {lookup.part_of_speech && (
-                        <Badge variant="outline" className="text-sm uppercase">{lookup.part_of_speech}</Badge>
-                      )}
-                      {lookup.note && <span className="text-sm text-muted-foreground italic">{lookup.note}</span>}
-                    </div>
-                  )}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="rounded-xl bg-primary/15 p-2 shrink-0">
+                  <Sparkles className="h-5 w-5 text-primary" />
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <EllieButton
-                    prefill={ellieAskWordPrompt(lookup.german, lookup.english, level)}
-                    title={lookup.english}
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground">Frag mich!</h2>
+                  <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
+                </div>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${askOpen ? "rotate-180" : ""}`} />
+            </button>
+          </CollapsibleTrigger>
+
+          <CollapsibleContent>
+            <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-3">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder='z.B. „aufgeben" oder „I would like to…"'
+                    value={askInput}
+                    onChange={(e) => setAskInput(e.target.value)}
+                    onKeyDown={onAskKeyDown}
+                    className="pl-9 h-11 rounded-xl"
                   />
                 </div>
+                <Button
+                  type="button"
+                  onClick={runLookup}
+                  disabled={lookingUp || !askInput.trim()}
+                  className="h-11 rounded-xl shrink-0 px-5"
+                  variant="hero"
+                >
+                  {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4" />}
+                  <span>Los!</span>
+                </Button>
               </div>
-              {(() => {
-                const examplesDe = lookup.examples_de?.length
-                  ? lookup.examples_de
-                  : lookup.example_de ? [lookup.example_de] : [];
-                const examplesEn = lookup.examples_en?.length
-                  ? lookup.examples_en
-                  : lookup.example_en ? [lookup.example_en] : [];
-                if (!examplesDe.length && !examplesEn.length) return null;
-                return (
-                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
-                      {examplesDe.slice(0, 4).map((ex, i) => (
-                        <div key={i} className="leading-snug">• {ex}</div>
-                      ))}
+
+              {askIsLong && !lookup && (
+                <div className="flex items-start gap-2 rounded-lg bg-accent/40 px-3 py-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                  <div>
+                    Das ist schon ein längerer Text. Für komplexere Übersetzungen erklärt dir{" "}
+                    <Link to="/chat" className="font-semibold text-primary hover:underline">
+                      Coach Ellie
+                    </Link>{" "}
+                    Bedeutung und Nuancen oft besser.
+                  </div>
+                </div>
+              )}
+
+              {lookup && (
+                <div className="rounded-xl border border-border p-4 space-y-3 bg-card animate-pop">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                        <Sparkles className="h-3 w-3" /> Übersetzung für „{lookupQuery}"
+                      </div>
+                      <div className="flex items-baseline flex-wrap gap-3">
+                        <div className="font-display text-xl">{lookup.german}</div>
+                        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                        <div className="font-display text-xl text-primary">{lookup.english}</div>
+                      </div>
+                      {(lookup.part_of_speech || lookup.note) && (
+                        <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                          {lookup.part_of_speech && (
+                            <Badge variant="outline" className="text-sm uppercase">{lookup.part_of_speech}</Badge>
+                          )}
+                          {lookup.note && <span className="text-sm text-muted-foreground italic">{lookup.note}</span>}
+                        </div>
+                      )}
                     </div>
-                    <div className="rounded-lg bg-muted/60 p-3 space-y-1">
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
-                      {examplesEn.slice(0, 4).map((ex, i) => (
-                        <div key={i} className="leading-snug">• {ex}</div>
-                      ))}
+                    <div className="shrink-0">
+                      <EllieButton
+                        prefill={ellieAskWordPrompt(lookup.german, lookup.english, level)}
+                        title={lookup.english}
+                        returnTo="/lernen"
+                        returnLabel="Zurück zum Lernen"
+                        returnFlagKey={RETURN_FLAG_KEY}
+                        variant="sm"
+                      />
                     </div>
                   </div>
-                );
-              })()}
+                  {(() => {
+                    const examplesDe = lookup.examples_de?.length
+                      ? lookup.examples_de
+                      : lookup.example_de ? [lookup.example_de] : [];
+                    const examplesEn = lookup.examples_en?.length
+                      ? lookup.examples_en
+                      : lookup.example_en ? [lookup.example_en] : [];
+                    if (!examplesDe.length && !examplesEn.length) return null;
+                    return (
+                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                          <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (DE)</div>
+                          {examplesDe.slice(0, 4).map((ex, i) => (
+                            <div key={i} className="leading-snug">• {ex}</div>
+                          ))}
+                        </div>
+                        <div className="rounded-lg bg-muted/60 p-3 space-y-1">
+                          <div className="text-xs uppercase tracking-widest text-muted-foreground">Beispiele (EN)</div>
+                          {examplesEn.slice(0, 4).map((ex, i) => (
+                            <div key={i} className="leading-snug">• {ex}</div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
-          )}
-        </Card>
-      </section>
+          </CollapsibleContent>
+        </section>
+      </Collapsible>
 
       {/* ============ 2) Aktueller Fokus ============ */}
       <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
