@@ -52,19 +52,21 @@ export interface Lesson {
   tasks: LessonTask[];
 }
 
+type TaskExtras = { hint?: string; explain?: string; acceptedAnswers?: string[]; meaningHint?: string; extraExample?: ExtraExample };
+
 const mc = (
   id: string, prompt: string, options: string[], answer: string,
-  opts: { hint?: string; explain?: string; acceptedAnswers?: string[] } = {},
+  opts: TaskExtras = {},
 ): MCTask => ({ id, type: "mc", prompt, options, answer, ...opts });
 
 const cz = (
   id: string, prompt: string, sentence: string, answer: string,
-  opts: { hint?: string; explain?: string; translation?: string; acceptedAnswers?: string[] } = {},
+  opts: TaskExtras & { translation?: string } = {},
 ): ClozeTask => ({ id, type: "cloze", prompt, sentence, answer, ...opts });
 
 const ord = (
   id: string, prompt: string, words: string[], answer: string,
-  opts: { hint?: string; explain?: string; acceptedAnswers?: string[] } = {},
+  opts: TaskExtras = {},
 ): OrderTask => ({ id, type: "order", prompt, words, answer, ...opts });
 
 // ============================================================
