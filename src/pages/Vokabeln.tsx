@@ -101,28 +101,20 @@ function consumePersisted(): Partial<PersistedState> {
   }
 }
 
-// Consistent Ellie button used everywhere on this page.
-function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
-  const markReturning = () => {
-    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
-  };
+// Vokabeln-specific Ellie helper – delegates to the shared component with the right return context.
+function VokabelnEllieButton({ prefill, title, variant = "icon" }: { prefill: string; title?: string; variant?: "icon" | "sm" }) {
   return (
-    <Button asChild variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10" title="Mit Coach Ellie besprechen">
-      <Link
-        onClick={markReturning}
-        to={buildEllieUrl({
-          prefill,
-          auto: true,
-          title,
-          returnTo: "/vokabeln",
-          returnLabel: "Zurück zu Vokabeln",
-        })}
-      >
-        <MessageCircle className="h-4 w-4" />
-      </Link>
-    </Button>
+    <EllieButton
+      prefill={prefill}
+      title={title}
+      returnTo="/vokabeln"
+      returnLabel="Zurück zu Vokabeln"
+      returnFlagKey={RETURN_FLAG_KEY}
+      variant={variant}
+    />
   );
 }
+
 
 export default function Vokabeln() {
   const { user } = useAuth();
