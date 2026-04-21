@@ -11,6 +11,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 
 interface ClozeItem {
   full_sentence: string;
@@ -258,7 +259,7 @@ export default function Lueckentext() {
               navigate(url);
             }}
           >
-            <Sparkles className="h-4 w-4" />
+            <EllieIcon size={18} alt="" />
             Frag Ellie
           </Button>
         </div>
