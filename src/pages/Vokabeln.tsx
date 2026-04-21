@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Info,
   Loader2,
-  MessageCircle,
   Plus,
   RefreshCw,
   Search,
