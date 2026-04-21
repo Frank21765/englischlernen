@@ -1478,24 +1478,8 @@ export const LESSONS: Lesson[] = [
   ...B2_LESSONS,
 ];
 
-const normalizeLessonText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
 
-const filledClozeSentence = (task: ClozeTask, answer = task.answer) => task.sentence.replace("___", answer);
 
-const clozeWindow = (task: ClozeTask) => {
-  const [before = "", after = ""] = task.sentence.split("___");
-  const left = before.trim().split(/\s+/).filter(Boolean).slice(-3).join(" ");
-  const right = after.trim().split(/\s+/).filter(Boolean).slice(0, 3).join(" ");
-  return { before, after, left, right };
-};
-
-const taskAnswers = (task: LessonTask) => [task.answer, ...(task.acceptedAnswers ?? [])];
-
-export function isTaskAnswerCorrect(task: LessonTask, value: string): boolean {
-  const normalized = normalizeLessonText(value);
-  if (!normalized) return false;
-  return taskAnswers(task).some((answer) => normalizeLessonText(answer) === normalized);
-}
 
 // ============================================================
 // Hint + explanation helpers
