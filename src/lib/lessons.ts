@@ -1708,27 +1708,27 @@ const buildKindHint = (task: LessonTask): string => {
   return "Inhaltswort, das genau in diese Situation passt";
 };
 
-/** Sense-tip: leads with meaning ("Gesucht ist ein Wort, das …"), then letter shape. */
+/** Sense-tip: leads with meaning ("Gesucht ist ein Wort, das …"), then letter shape.
+ *  Only shown when we actually have a real meaning sentence — never a fragmentary
+ *  pseudo-sentence built from a short legacy `hint`. */
 const buildMeaningHint = (task: LessonTask): string | undefined => {
-  // Build the meaning sentence first.
   let meaning: string | undefined;
-  if (task.meaningHint) {
+  if (task.meaningHint && task.meaningHint.trim().length > 0) {
     meaning = task.meaningHint.trim();
   } else {
     const override = overrideForTask(task);
     if (override?.meaning) meaning = override.meaning.trim();
   }
-  if (!meaning && task.type === "cloze") {
-    const fromHint = task.hint?.trim();
-    if (fromHint && fromHint.length > 0) {
-      meaning = `Gesucht ist ein Wort, das ${fromHint.replace(/^Hier (fehlt|passt|kommt)\s*/i, "").replace(/[.!?]$/,"")}.`;
-    } else {
-      meaning = "Gesucht ist das Wort, das den Satz inhaltlich am natürlichsten vervollständigt.";
-    }
-  }
-  if (!meaning) return undefined;
-  if (!/[.!?…]$/.test(meaning)) meaning = `${meaning}.`;
 
+  // No real meaning available → for cloze, at least show the letter shape as a fallback.
+  if (!meaning) {
+    if (task.type === "cloze") {
+      return `Englisches Wort: ${wordShape(task.answer)}.`;
+    }
+    return undefined;
+  }
+
+  if (!/[.!?…]$/.test(meaning)) meaning = `${meaning}.`;
   if (task.type === "cloze") {
     return `${meaning} Englisches Wort: ${wordShape(task.answer)}.`;
   }
