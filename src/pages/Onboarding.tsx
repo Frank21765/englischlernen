@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureProfileForUser } from "@/lib/profile";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,11 @@ export default function Onboarding() {
     if (loading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     (async () => {
+      try {
+        await ensureProfileForUser(user);
+      } catch (error) {
+        console.error("Onboarding profile sync failed", error);
+      }
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
@@ -227,6 +233,17 @@ export default function Onboarding() {
             <p className="text-xs text-muted-foreground">
               Das ist nur ein Startpunkt – du kannst Niveau und Thema jederzeit ändern.
             </p>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate("/auth", { replace: true });
+              }}
+            >
+              Mit anderem Konto anmelden
+            </Button>
             <Button size="lg" className="w-full" onClick={() => setStage("check")}>
               Los geht's <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
