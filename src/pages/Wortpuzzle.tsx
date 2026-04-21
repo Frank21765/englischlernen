@@ -307,15 +307,9 @@ export default function Wortpuzzle() {
             ))}
           </div>
 
-          {/* Feedback */}
+          {/* Feedback — neutral container, color lives on chips */}
           {checked && (
-            <div
-              className={`rounded-xl p-3 sm:p-4 text-sm space-y-2 ${
-                checked === "right"
-                  ? "bg-success/10 border border-success/30"
-                  : "bg-destructive/5 border border-destructive/30"
-              }`}
-            >
+            <div className="rounded-xl p-3 sm:p-4 text-sm space-y-2 bg-muted/30 border border-border">
               <div className="flex items-center gap-2 font-bold">
                 {checked === "right" ? (
                   <>
@@ -331,42 +325,54 @@ export default function Wortpuzzle() {
                 <span className="text-muted-foreground">Richtige Lösung: </span>
                 <span className="font-semibold">{task.target}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                {checked === "wrong" && (
+              {checked === "wrong" && (
+                <div className="pt-1">
                   <Button variant="soft" size="sm" onClick={reset}>
                     <RotateCcw className="h-4 w-4" /> Nochmal versuchen
                   </Button>
-                )}
-                <Button variant="hero" size="sm" onClick={next}>
-                  Weiter <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Action row */}
           {!checked && (
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={reset} disabled={picked.length === 0}>
-                <RotateCcw className="h-4 w-4" /> Zurücksetzen
-              </Button>
-              <Button variant="hero" size="sm" onClick={check} disabled={picked.length === 0 || bank.length > 0}>
-                Prüfen <Check className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <EllieButton
+                prefill={elliePrompt}
+                title={task.targetLang === "en" ? task.target : task.source}
+                returnTo="/uben/wortpuzzle"
+                returnLabel="Zurück zum Wortpuzzle"
+                returnFlagKey={RETURN_FLAG_KEY}
+                variant="sm"
+              />
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={reset} disabled={picked.length === 0}>
+                  <RotateCcw className="h-4 w-4" /> Zurücksetzen
+                </Button>
+                <Button variant="hero" size="sm" onClick={check} disabled={picked.length === 0 || bank.length > 0}>
+                  Prüfen <Check className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Unified "Frag Ellie" — always visible, same style as other pages */}
-          <div className="flex justify-end pt-1">
-            <EllieButton
-              prefill={elliePrompt}
-              title={task.targetLang === "en" ? task.target : task.source}
-              returnTo="/uben/wortpuzzle"
-              returnLabel="Zurück zum Wortpuzzle"
-              returnFlagKey={RETURN_FLAG_KEY}
-              variant="sm"
-            />
-          </div>
+          {/* After check: Frag Ellie + Weiter side by side */}
+          {checked && (
+            <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+              <EllieButton
+                prefill={elliePrompt}
+                title={task.targetLang === "en" ? task.target : task.source}
+                returnTo="/uben/wortpuzzle"
+                returnLabel="Zurück zum Wortpuzzle"
+                returnFlagKey={RETURN_FLAG_KEY}
+                variant="sm"
+              />
+              <Button variant="hero" size="sm" onClick={next}>
+                Weiter <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </Card>
       )}
     </div>
