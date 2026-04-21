@@ -393,10 +393,13 @@ export function getLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);
 }
 
-/** Returns lessons matching the given level. Falls back to all if none. */
-export function lessonsForLevel(level: LessonLevel): Lesson[] {
-  const filtered = LESSONS.filter((l) => l.level === level);
-  return filtered.length > 0 ? filtered : LESSONS;
+/** Returns lessons matching the given level. Falls back to the closest available
+ *  lesson set (e.g. C1/C2 → B2) so we never show an empty grid. */
+export function lessonsForLevel(level: string): Lesson[] {
+  const exact = LESSONS.filter((l) => l.level === level);
+  if (exact.length > 0) return exact;
+  if (level === "C1" || level === "C2") return LESSONS.filter((l) => l.level === "B2");
+  return LESSONS;
 }
 
 // ----- Progress persistence -----
