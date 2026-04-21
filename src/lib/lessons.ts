@@ -12,6 +12,7 @@ interface BaseTask {
   prompt: string;
   hint?: string;
   explain?: string;
+  acceptedAnswers?: string[];
 }
 export interface MCTask extends BaseTask {
   type: "mc";
@@ -44,17 +45,17 @@ export interface Lesson {
 
 const mc = (
   id: string, prompt: string, options: string[], answer: string,
-  opts: { hint?: string; explain?: string } = {},
+  opts: { hint?: string; explain?: string; acceptedAnswers?: string[] } = {},
 ): MCTask => ({ id, type: "mc", prompt, options, answer, ...opts });
 
 const cz = (
   id: string, prompt: string, sentence: string, answer: string,
-  opts: { hint?: string; explain?: string; translation?: string } = {},
+  opts: { hint?: string; explain?: string; translation?: string; acceptedAnswers?: string[] } = {},
 ): ClozeTask => ({ id, type: "cloze", prompt, sentence, answer, ...opts });
 
 const ord = (
   id: string, prompt: string, words: string[], answer: string,
-  opts: { hint?: string; explain?: string } = {},
+  opts: { hint?: string; explain?: string; acceptedAnswers?: string[] } = {},
 ): OrderTask => ({ id, type: "order", prompt, words, answer, ...opts });
 
 // ============================================================
@@ -512,9 +513,9 @@ const A2_LESSONS: Lesson[] = [
         "I usually take the bus.", "I take usually bus.", "Bus I take normal.", "I am bus take.",
       ], "I usually take the bus."),
       cz("t2", "Lücke füllen", "My phone isn't ___.", "working",
-        { hint: "Hier fehlt ein Verb (Verlaufsform für Funktion)", explain: "„work“ heißt hier „funktionieren“ — Verlaufsform mit -ing." }),
+        { hint: "Hier fehlt eine -ing-Form, die sagt, dass das Handy gerade nicht funktioniert.", explain: "„working“ bedeutet hier nicht „arbeiten“, sondern „funktionieren“. Mit „My phone isn't working“ sagt man, dass das Handy im Moment nicht richtig läuft. Diese Form kannst du auch für andere Geräte benutzen, zum Beispiel: „The printer isn't working." }),
       cz("t3", "Lücke füllen", "I have to ___ my parents tonight.", "call",
-        { hint: "Hier fehlt ein Verb (Telefon)" }),
+        { hint: "Nach „have to“ kommt die Grundform eines Verbs. Gemeint ist das normale Alltagsverb dafür, die Eltern heute Abend anzurufen.", explain: "Nach „have to“ folgt die Grundform des Verbs. „call“ passt hier sehr gut, weil es die neutrale und häufige Form für „anrufen“ ist. „phone“ ist in diesem Satz ebenfalls möglich, aber in der Lektion verwenden wir „call“ als Standardvariante.", acceptedAnswers: ["phone"] }),
       cz("t4", "Lücke füllen", "I'm running ___ of milk.", "out",
         { hint: "Hier fehlt ein kleines Partikelwort (in/out/on/off/up/down/through …), das die Bedeutung des Verbs verändert", explain: "„run out of“ = nichts mehr haben von." }),
       ord("t5", "Sätze richtig anordnen", ["I", "always", "have", "coffee", "in", "the", "morning"], "I always have coffee in the morning"),
@@ -531,7 +532,7 @@ const A2_LESSONS: Lesson[] = [
         "Pretty good, thanks!", "It is Monday.", "I am 30.", "By bike.",
       ], "Pretty good, thanks!"),
       cz("t12", "Lücke füllen", "I need to ___ an appointment with the doctor.", "make",
-        { hint: "Hier fehlt ein Verb (Kollokation)" }),
+        { hint: "Gesucht ist das übliche Verb zu „appointment“. Im Englischen „macht“ man einen Termin, statt ihn sprachlich zu „nehmen“.", explain: "Mit „make an appointment“ benutzt man die normale feste Verbindung für einen Termin. Das Verb „make“ passt, weil man einen Termin vereinbart oder ausmacht. Dieses Muster kannst du genauso in Sätzen wie „I need to make an appointment for Friday“ wiederverwenden." }),
       cz("t13", "Lücke füllen", "Could you turn ___ the music?", "down",
         { hint: "Hier fehlt ein kleines Partikelwort (in/out/on/off/up/down/through …), das die Bedeutung des Verbs verändert", explain: "„turn down“ = leiser machen." }),
       ord("t14", "Sätze richtig anordnen", ["I'll", "be", "there", "in", "ten", "minutes"], "I'll be there in ten minutes"),
@@ -1465,6 +1466,223 @@ export const LESSONS: Lesson[] = [
   ...B1_LESSONS,
   ...B2_LESSONS,
 ];
+
+const normalizeLessonText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
+
+const filledClozeSentence = (task: ClozeTask, answer = task.answer) => task.sentence.replace("___", answer);
+
+const clozeWindow = (task: ClozeTask) => {
+  const [before = "", after = ""] = task.sentence.split("___");
+  const left = before.trim().split(/\s+/).filter(Boolean).slice(-3).join(" ");
+  const right = after.trim().split(/\s+/).filter(Boolean).slice(0, 3).join(" ");
+  return { before, after, left, right };
+};
+
+const taskAnswers = (task: LessonTask) => [task.answer, ...(task.acceptedAnswers ?? [])];
+
+export function isTaskAnswerCorrect(task: LessonTask, value: string): boolean {
+  const normalized = normalizeLessonText(value);
+  if (!normalized) return false;
+  return taskAnswers(task).some((answer) => normalizeLessonText(answer) === normalized);
+}
+
+export function getTaskHint(task: LessonTask): string | undefined {
+  if (!task.hint) return undefined;
+  if (task.type === "mc") return task.hint;
+  if (task.type === "order") {
+    return task.hint ?? "Achte auf das normale englische Satzgerüst: erst Fragewort oder Subjekt, dann das Verb, danach Ergänzungen wie Zeit oder Ort.";
+  }
+
+  const raw = task.hint.trim();
+  const lower = raw.toLowerCase();
+  const { left, right } = clozeWindow(task);
+
+  if (task.sentence === "I have to ___ my parents tonight.") {
+    return "Nach „have to“ kommt die Grundform eines Verbs. Gesucht ist das normale Alltagsverb dafür, die Eltern heute Abend anzurufen.";
+  }
+  if (task.sentence === "My phone isn't ___.") {
+    return "Hier fehlt eine -ing-Form, die ausdrückt, dass das Handy gerade nicht funktioniert. Gemeint ist also nicht Telefonieren, sondern Laufen oder Funktionieren.";
+  }
+  if (task.sentence === "This soup has too much salt — it's too ___.") {
+    return "Gesucht ist ein Geschmackswort. Der Satz sagt ausdrücklich, dass zu viel Salz in der Suppe ist — also nicht zu süß, zu heiß oder zu scharf.";
+  }
+  if (task.sentence === "Could you ___ down the recipe for me?") {
+    return "Zusammen mit „down“ wird ein Verb gesucht, das „aufschreiben“ bedeutet. Es geht darum, das Rezept so zu notieren, dass man es später nachlesen kann.";
+  }
+  if (task.sentence === "We need to keep the client ___ on the progress.") {
+    return "Hier fehlt ein Wort dafür, in welchem Zustand der Kunde bleiben soll. Gemeint ist, dass er die neuesten Infos zum Fortschritt bekommt.";
+  }
+  if (lower.includes("kleines verbindungswort") || lower.includes("kleines partikelwort")) {
+    return `Hier fehlt ein kurzes Wort, das die feste Verbindung „${left} ___ ${right}“ vollständig macht.`.replace(/\s+/g, " ");
+  }
+  if (lower.includes("verb") && task.sentence.includes("have to ___")) {
+    return "Nach „have to“ steht die Grundform eines Verbs. Überlege, welche Handlung in diesem Satz ganz natürlich gemeint ist.";
+  }
+  if (lower.includes("verb") && task.sentence.includes("forgot ___")) {
+    return "Nach „forget“ fehlt hier ein kurzes Wort vor dem nächsten Verb. So zeigt Englisch, dass die Handlung nicht passiert ist.";
+  }
+  if (lower.includes("verb") && task.answer.endsWith("ing")) {
+    return "Hier fehlt eine -ing-Form. Achte darauf, ob der Satz eine laufende Handlung oder einen aktuellen Zustand beschreibt.";
+  }
+  if (lower.includes("beschreibungswort")) {
+    return "Hier fehlt ein Adjektiv, das die Situation genauer beschreibt. Nutze den Sinn des ganzen Satzes, damit nur eine wirklich passende Bedeutung übrig bleibt.";
+  }
+  if (lower.includes("kollokation")) {
+    return "Gesucht ist die feste englische Wortverbindung, die Muttersprachler hier normalerweise benutzen. Lerne den Ausdruck am besten als ganze Einheit.";
+  }
+  if (lower.includes("zusammengesetztes verb")) {
+    return "Hier wird ein Verb gesucht, das zusammen mit dem nächsten Wort eine feste Bedeutung ergibt. Überlege, welcher ganze Ausdruck in diesem Satz üblich ist.";
+  }
+  if (lower.includes("passendes wort")) {
+    return "Hier fehlt genau das Wort, das in dieser Situation üblich und natürlich klingt. Die ganze Aussage grenzt schon recht klar ein, wonach gesucht wird.";
+  }
+
+  return raw;
+}
+
+const buildRuleExplanation = (task: LessonTask): string[] => {
+  if (task.type === "mc") {
+    return task.explain
+      ? [task.explain]
+      : ["Die richtige Option ist die einzige Antwort, die Bedeutung und englische Satzbau gleichzeitig sauber trifft."];
+  }
+
+  if (task.type === "order") {
+    return task.explain
+      ? [task.explain]
+      : ["Bei Satzbau-Aufgaben zählt vor allem das englische Grundmuster: erst das Satzgerüst, dann zusätzliche Angaben wie Zeit, Ort oder Art und Weise."];
+  }
+
+  if (task.sentence === "I have to ___ my parents tonight.") {
+    return [
+      "Nach „have to“ folgt die Grundform des Verbs.",
+      "„call“ ist hier die natürliche Standardwahl, weil es schlicht „anrufen“ bedeutet.",
+      "„phone“ kann ebenfalls richtig sein, deshalb akzeptiert die Lektion diese Variante jetzt auch.",
+    ];
+  }
+  if (task.sentence === "My phone isn't ___.") {
+    return [
+      "„working“ bedeutet hier „funktionierend“ und nicht „arbeitend“.",
+      "Mit „isn't working“ beschreibt man bei Geräten, dass etwas im Moment nicht richtig läuft.",
+      "Die gleiche Struktur kannst du auch bei anderen Geräten verwenden, etwa bei einem Drucker oder Laptop.",
+    ];
+  }
+  if (task.sentence === "This soup has too much salt — it's too ___.") {
+    return [
+      "Der Satz nennt ausdrücklich zu viel Salz, deshalb braucht man ein Wort für genau diesen Geschmack.",
+      "Aus „salt“ wird das Adjektiv „salty“, also „zu salzig“.",
+      "Andere Wörter wie „spicy“ oder „sweet“ wären andere Geschmacksrichtungen und passen deshalb nicht zur Aussage.",
+    ];
+  }
+  if (task.sentence === "Could you ___ down the recipe for me?") {
+    return [
+      "Mit „write down“ meint man, etwas aufzuschreiben, damit man es später nachlesen kann.",
+      "Das kleine Wort „down“ gehört fest zu diesem Ausdruck und verändert die Bedeutung des Verbs.",
+      "Du kannst das Muster auch in Sätzen wie „Please write the address down“ wiederverwenden.",
+    ];
+  }
+  if (task.sentence === "We need to keep the client ___ on the progress.") {
+    return [
+      "„updated“ beschreibt hier den Zustand des Kunden: Er soll auf dem neuesten Stand bleiben.",
+      "Nach „keep someone …“ folgt oft ein Wort, das sagt, wie jemand bleibt oder werden soll.",
+      "Der ganze Ausdruck „keep someone updated“ ist im Berufsalltag sehr gebräuchlich.",
+    ];
+  }
+  if (task.explain) {
+    return [task.explain];
+  }
+
+  if (task.type === "cloze") {
+    if (task.answer.endsWith("ing")) {
+      return [
+        "Die -ing-Form ist hier Teil der natürlichen englischen Struktur.",
+        "Sie beschreibt entweder einen laufenden Vorgang oder die Form, die nach bestimmten Wörtern fest gebraucht wird.",
+      ];
+    }
+    if (["to", "at", "on", "in", "for", "of", "as", "than", "out", "down"].includes(task.answer)) {
+      return [
+        "Hier wird ein kurzes Strukturwort gebraucht, kein langes Inhaltswort.",
+        "Solche kleinen Wörter tragen im Englischen oft die ganze feste Verbindung und ändern die Bedeutung stark.",
+      ];
+    }
+  }
+
+  return ["Die richtige Lösung passt hier, weil sie die Bedeutung des Satzes vollständig und natürlich macht."];
+};
+
+const buildMismatchExplanation = (task: LessonTask, userAnswer?: string): string | undefined => {
+  if (!userAnswer) return undefined;
+  const attempt = userAnswer.trim();
+  if (!attempt) return undefined;
+  if (taskAnswers(task).some((answer) => normalizeLessonText(answer) === normalizeLessonText(attempt))) {
+    if (normalizeLessonText(attempt) !== normalizeLessonText(task.answer)) {
+      return `Deine Lösung „${attempt}“ ist hier ebenfalls möglich. In der Lektion zeigen wir „${task.answer}“ als Standardform, damit du eine klare Hauptvariante mitnehmen kannst.`;
+    }
+    return undefined;
+  }
+
+  if (task.type === "mc") {
+    return `„${attempt}“ passt hier nicht, weil diese Option die Aussage entweder grammatisch unvollständig macht oder nicht genau das ausdrückt, was gefragt ist.`;
+  }
+  if (task.type === "order") {
+    return `Deine Reihenfolge „${attempt}“ wirkt im Englischen nicht natürlich, weil das Satzgerüst an einer wichtigen Stelle verrutscht. Gerade bei Fragen und Aussagen ist die Stellung von Subjekt, Verb und Ergänzungen entscheidend.`;
+  }
+  if (task.sentence === "This soup has too much salt — it's too ___.") {
+    return `„${attempt}“ passt hier nicht, weil der Satz schon genau sagt, welcher Geschmack gemeint ist: zu viel Salz. Gesucht ist also kein allgemeines Geschmackswort, sondern speziell die Bedeutung „zu salzig“.`;
+  }
+  if (task.sentence === "My phone isn't ___.") {
+    return `„${attempt}“ passt hier nicht gut, weil der Satz sagen will, dass das Handy gerade nicht funktioniert. Dafür braucht Englisch hier die Form „working“.`;
+  }
+  if (task.sentence.includes("have to ___")) {
+    return `„${attempt}“ passt hier nicht so gut, weil nach „have to“ zwar eine Grundform kommt, aber auch die Bedeutung stimmen muss. Gesucht ist genau die Handlung, die im Satz natürlich ist.`;
+  }
+
+  return `„${attempt}“ passt hier nicht, weil diese Lücke genau die Struktur oder Bedeutung braucht, die mit „${task.answer}“ gebildet wird.`;
+};
+
+const buildReusablePattern = (task: LessonTask): string => {
+  if (task.type === "mc") {
+    return "Achte bei ähnlichen Aufgaben immer darauf, welche Option nicht nur ungefähr, sondern als kompletter englischer Satz wirklich natürlich klingt.";
+  }
+  if (task.type === "order") {
+    return "Für ähnliche Satzbau-Aufgaben hilft es, zuerst das Grundgerüst zu bauen und Zeit- oder Ortsangaben erst danach einzuordnen.";
+  }
+  if (task.sentence.includes("forgot ___")) {
+    return "Dieses Muster kannst du direkt wiederverwenden, zum Beispiel in Sätzen wie „I forgot to call him“ oder „She forgot to lock the door“.";
+  }
+  if (task.sentence.includes("have to ___")) {
+    return "Dasselbe Muster funktioniert auch in Sätzen wie „I have to work tomorrow“ oder „We have to leave now“: Nach „have to“ steht immer die Grundform.";
+  }
+  if (task.answer === "working") {
+    return "So kannst du auch sagen: „The printer isn't working“ oder „My laptop isn't working today“.";
+  }
+  return "Wenn du dir diese Struktur als ganzen Ausdruck merkst, kannst du sie später in sehr ähnlichen Sätzen wiederverwenden.";
+};
+
+export function getTaskExplanation(task: LessonTask, opts: { isCorrect: boolean; userAnswer?: string }): string {
+  const answerLabel = task.answer;
+  const sentences: string[] = [];
+
+  if (task.type === "mc") {
+    sentences.push(`Die richtige Antwort ist „${answerLabel}", weil nur diese Option die Aufgabe als natürliches Englisch wiedergibt.`);
+  } else if (task.type === "order") {
+    sentences.push(`Die richtige Reihenfolge ist „${answerLabel}", weil der Satz so ein sauberes englisches Grundgerüst bekommt.`);
+  } else {
+    sentences.push(`„${answerLabel}" passt hier, weil der vollständige Satz dann natürlich klingt: „${filledClozeSentence(task, answerLabel)}“.`);
+  }
+
+  const mismatch = !opts.isCorrect ? buildMismatchExplanation(task, opts.userAnswer) : undefined;
+  if (mismatch) sentences.push(mismatch);
+  sentences.push(...buildRuleExplanation(task));
+  sentences.push(buildReusablePattern(task));
+
+  const cleaned = sentences
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .map((sentence) => /[.!?…]$/.test(sentence) ? sentence : `${sentence}.`);
+
+  return cleaned.slice(0, opts.isCorrect ? 4 : 5).join(" ");
+}
 
 export function getLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);
