@@ -498,8 +498,11 @@ export default function Chat() {
           </div>
         )}
         <header className="space-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl">Coach Ellie 💬</h1>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <span className="inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 border border-primary/20 shrink-0">
+              <EllieIcon size={28} alt="" />
+            </span>
+            <h1 className="text-2xl sm:text-3xl leading-tight">Coach Ellie</h1>
             {hasSelection && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent-foreground/90">
                 <Sparkles className="h-3 w-3 text-accent" />
