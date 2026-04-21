@@ -59,6 +59,12 @@ export default function AccessGate({ children }: { children: React.ReactNode }) 
                 Während du wartest: Hello! lebt von Spenden. Jeder Beitrag hilft.
               </p>
             </div>
+            <div className="rounded-xl bg-muted/40 p-3 sm:p-4 text-sm leading-relaxed text-muted-foreground">
+              Hello! ist mein privates Hobby-Projekt — kein Startup, keine Werbung, keine Datenverkäufe.
+              Mit Spenden geht es <strong className="text-foreground">nicht um Gewinn</strong>, sondern darum,
+              die laufenden Kosten zu decken (Server, KI-Modelle, Domain). Jeder Euro hilft, dass Hello!
+              online bleibt und weiterwächst. Danke! 💛
+            </div>
             <DonationCards />
           </Card>
         )}
