@@ -19,7 +19,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
 import { EllieButton } from "@/components/EllieButton";
-import { useLearning } from "@/hooks/useLearningContext";
+
 
 /** Build a lesson-aware prompt so Coach Ellie has the current task in context. */
 function buildEllieLessonPrompt(opts: {
@@ -72,7 +72,7 @@ const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
 
 export default function Lektion() {
-  const { level: ctxLevel } = useLearning();
+  const { level: _ctxLevel } = { level: "" }; void _ctxLevel;
   const { lessonId = "" } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
