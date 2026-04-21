@@ -9,6 +9,7 @@ import {
   getLesson,
   getTaskExplanation,
   getTaskHint,
+  getTaskMeaningHint,
   isTaskAnswerCorrect,
   LessonTask,
   markLessonComplete,
@@ -76,9 +77,25 @@ const taskTypeLabel = (t: LessonTask) =>
 
 const explanationParagraphs = (text: string) =>
   text
-    .split(/(?<=[.!?])\s+/)
+    .split("\u2003")
     .map((sentence) => sentence.trim())
     .filter(Boolean);
+
+/** Render very small **bold** markdown spans inside a hint string. */
+const renderInlineBold = (text: string): (string | JSX.Element)[] => {
+  const out: (string | JSX.Element)[] = [];
+  const re = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIndex) out.push(text.slice(lastIndex, m.index));
+    out.push(<strong key={`b-${key++}`} className="font-semibold text-foreground">{m[1]}</strong>);
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < text.length) out.push(text.slice(lastIndex));
+  return out;
+};
 
 export default function Lektion() {
   
@@ -340,6 +357,7 @@ export default function Lektion() {
       : textInput.trim();
 
   const taskHint = task ? getTaskHint(task) : undefined;
+  const taskMeaningHint = task ? getTaskMeaningHint(task) : undefined;
   const feedbackExplanation = task && revealed !== null
     ? getTaskExplanation(task, { isCorrect: revealed, userAnswer: userAttempt })
     : "";
@@ -412,11 +430,16 @@ export default function Lektion() {
         </div>
         <div className="text-base sm:text-lg font-medium leading-snug">{task.prompt}</div>
         {taskHint && revealed === null && (
-          <div className="flex items-start gap-2 rounded-xl bg-accent/10 border border-accent/30 p-2.5">
+          <div className="flex items-start gap-2 rounded-xl bg-accent/10 border border-accent/30 p-3">
             <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-1.5">
               <div className="text-[10px] font-bold uppercase tracking-widest text-accent">Hinweis</div>
-              <div className="text-sm text-foreground/90 leading-snug">{taskHint}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground leading-snug">{taskHint}</div>
+              {taskMeaningHint && (
+                <div className="text-sm sm:text-base text-foreground/95 leading-snug">
+                  {renderInlineBold(taskMeaningHint)}
+                </div>
+              )}
             </div>
           </div>
         )}
