@@ -576,26 +576,28 @@ export default function Vokabeln() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <EllieButton
+                      <div className="flex items-center gap-2 shrink-0">
+                        <VokabelnEllieButton
                           prefill={ellieAskWordPrompt(s.german, s.english, activeLevel)}
                           title={s.english}
+                          variant="sm"
                         />
                         <Button
                           type="button"
-                          variant={saved ? "soft" : "hero"}
-                          size="sm"
-                          className="h-9"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
                           onClick={() => !saved && saveSuggestion(s)}
                           disabled={saved || saving}
-                          title="Zur Sammlung hinzufügen"
+                          title={saved ? "Bereits gespeichert" : "Zur Sammlung hinzufügen"}
+                          aria-label={saved ? "Bereits gespeichert" : "Zur Sammlung hinzufügen"}
                         >
                           {saving ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                           ) : saved ? (
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-4 w-4 text-primary" />
                           ) : (
-                            <Plus className="h-3.5 w-3.5" />
+                            <Plus className="h-4 w-4" />
                           )}
                         </Button>
                       </div>
