@@ -472,7 +472,7 @@ export default function Lektion() {
         )}
 
         {task.type === "order" && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="min-h-12 rounded-xl border-2 border-dashed border-border p-2 flex flex-wrap gap-1.5">
               {orderPicked.length === 0 && (
                 <span className="text-xs text-muted-foreground self-center px-1">Tippe die Wörter unten in der richtigen Reihenfolge an.</span>
@@ -482,12 +482,40 @@ export default function Lektion() {
                   key={`${tok}-${i}`}
                   onClick={() => unpickOrderToken(i)}
                   disabled={revealed !== null}
-                  className="rounded-lg bg-primary/15 text-primary border border-primary/30 px-2.5 py-1 text-sm font-semibold"
+                  title="Tippen, um dieses Wort wieder zu entfernen"
+                  className="rounded-lg bg-primary/15 text-primary border border-primary/30 px-2.5 py-1 text-sm font-semibold hover:bg-primary/25"
                 >
                   {tok}
                 </button>
               ))}
             </div>
+            {revealed === null && orderPicked.length > 0 && (
+              <div className="flex items-center justify-between gap-2 px-1">
+                <span className="text-[11px] text-muted-foreground">
+                  Tippe ein platziertes Wort an, um es zu entfernen.
+                </span>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => unpickOrderToken(orderPicked.length - 1)}
+                    className="text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    ↶ Letztes zurück
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (task.type !== "order") return;
+                      setOrderTokens(shuffle(task.words));
+                      setOrderPicked([]);
+                    }}
+                    className="text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Zurücksetzen
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {orderTokens.map((tok, i) => (
                 <button
@@ -520,39 +548,47 @@ export default function Lektion() {
         )}
 
         {/* Coach Ellie's coaching moment — appears after every answer (correct
-            or wrong). Includes a contextual deep-dive button so learners can
-            jump straight into a chat about this exact task on any device. */}
+            or wrong). The built-in explanation must already teach something
+            useful on its own; Ellie remains available for deeper follow-up. */}
         {revealed !== null && (
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2.5">
             <div className="flex items-start gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
                 <EllieIcon size={18} />
               </span>
-              <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="min-w-0 flex-1 space-y-2 text-xs sm:text-sm leading-relaxed">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
                 {revealed ? (
-                  <div className="text-xs sm:text-sm text-foreground/90 leading-snug">
-                    {task.explain
-                      ? task.explain
-                      : `Stark — „${correctOf(task)}“ ist hier genau richtig. Merk dir die Wendung gleich für ähnliche Sätze.`}
-                  </div>
-                ) : (
-                  <div className="space-y-1.5 text-xs sm:text-sm leading-snug">
+                  <>
                     <div className="text-foreground/90">
-                      <span className="font-semibold text-success">„{correctOf(task)}“</span> ist hier richtig.
-                      {userAttempt && userAttempt.toLowerCase() !== correctOf(task).toLowerCase() && (
-                        <> Deine Antwort <span className="font-semibold text-destructive">„{userAttempt}“</span> passt im Satz nicht ganz.</>
-                      )}
+                      <span className="font-semibold text-success">Richtig!</span>{" "}
+                      „<span className="font-semibold">{correctOf(task)}</span>“ passt hier genau.
                     </div>
                     {task.explain && (
                       <div className="text-foreground/90">{task.explain}</div>
                     )}
                     {!task.explain && (
-                      <div className="text-muted-foreground italic">
-                        Lies den Satz mit der richtigen Lösung noch einmal langsam — oft erkennst du dann sofort, warum sie hier passt. Frag Coach Ellie, wenn du eine ausführlichere Erklärung möchtest.
+                      <div className="text-foreground/90">
+                        Diese Lösung ist die natürliche Wahl in diesem Satz. Achte beim nächsten Mal auf die gleiche Struktur — du kannst sie 1:1 auf ähnliche Sätze übertragen.
                       </div>
                     )}
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-foreground/90">
+                      Die richtige Lösung ist <span className="font-semibold text-success">„{correctOf(task)}“</span>.
+                      {userAttempt && userAttempt.toLowerCase() !== correctOf(task).toLowerCase() && (
+                        <> Deine Antwort <span className="font-semibold text-destructive">„{userAttempt}“</span> ergibt im Satz keine passende Bedeutung.</>
+                      )}
+                    </div>
+                    {task.explain ? (
+                      <div className="text-foreground/90">{task.explain}</div>
+                    ) : (
+                      <div className="text-foreground/90">
+                        Schau dir den Satz mit der richtigen Lösung an: die Bedeutung wird sofort schlüssig. Wenn du noch mehr Beispiele oder die Regel dahinter willst, frag Coach Ellie unten.
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
