@@ -2,89 +2,86 @@
 
 ## Plan
 
-Zwei Themen, sauber getrennt.
+Zwei Themen.
 
 ---
 
-### 1) Versatz beim Seitenwechsel beheben
+### 1) Statistik aufräumen + erweitern
 
-**Ursache:** Der Header zeigt zwei optionale Elemente, die je nach Seite/Datenstand erscheinen oder verschwinden — der **Niveau/Thema-Chip** (nur sichtbar wenn `ctxReady && hasSelection`) und auf manchen Seiten zusätzlich die **Sub-Navigation** (Training, Profil) gegenüber Seiten ohne Sub-Nav (Coach, Vokabeln direkt). Dadurch springt der Inhalt beim Routenwechsel um ein paar Pixel.
+**Problem:** Die meisten Sessions stehen in der DB mit `total_answers=0, correct_answers=0`. Ursache: `Quiz.tsx` legt die Session beim **Start** an (mit 0/0) und der spätere `update`-Call greift nur, wenn die Session sauber „abgeschlossen" wird (Quiz komplett durchgespielt). Bei Abbruch / Tab-Wechsel / Neustart bleibt die 0/0-Leiche stehen. Wortpuzzle, Grammatik, Lückentext schreiben aktuell **gar keine** Sessions — taucht in der Statistik also nie auf.
 
-Außerdem: der **Scroll-Position** wird beim Routenwechsel nicht zurückgesetzt → man landet je nach vorheriger Seite mal oben, mal mittendrin.
+**Fix:**
 
-**Fix in `src/components/AppLayout.tsx`:**
-- Niveau/Thema-Chip immer rendern, solange `ctxReady` ist — bei fehlender Auswahl als dezenter Platzhalter („Niveau wählen"), damit die Header-Höhe stabil bleibt.
-- Die Header-Zeile bekommt eine **feste Mindesthöhe**, damit das An/Aus von Chips den Inhalt nie verschiebt.
-- `main` bekommt eine **min-height**, damit kurze Seiten (z. B. Erfolge ohne Daten) nicht „nach oben springen".
+**a) Quiz nicht mehr bei Start einfügen, sondern erst am Ende:**
+- `Quiz.tsx`: Insert-beim-Start-Block entfernen, stattdessen am Ende **eine** Session mit den finalen Werten inserten (oder gar nicht, falls 0 beantwortet).
+- Beim Insert/Update niemals 0/0-Sessions speichern.
 
-**Fix in `src/App.tsx` (oder neuer kleiner `ScrollToTop`-Helper):**
-- Bei jedem Routenwechsel `window.scrollTo(0, 0)` — Standardlösung, exakt wie auf den meisten Webseiten.
+**b) Sessions auch für die anderen Übungen schreiben:**
+- `Wortpuzzle.tsx`, `Grammar.tsx`, `Lueckentext.tsx`: nach jeder beendeten Runde eine Session inserten (mode: `wortpuzzle` / `grammar` / `cloze`) mit `total_answers` und `correct_answers` der Runde.
+- `Lektion.tsx` schreibt bereits — bleibt.
 
-Kein visuelles Redesign, nur Stabilisierung.
+**c) 0/0-Altlasten in der UI ausblenden:**
+- `Statistik.tsx`: Sessions mit `total_answers=0` aus „Letzte Sessions" und Aggregaten herausfiltern (DB selbst nicht anfassen — fault-tolerant).
+
+**d) Statistik um sinnvolle Infos erweitern:**
+- **Neue Stat-Kacheln oben:** „Ø Antworten/Tag (14 T.)", „Bester Tag (Anzahl)", „Aktuelles Niveau" (aus Profil).
+- **Neuer Chart:** zweite Linie/Balken „Antworten pro Tag" parallel zur Trefferquote (Balken = Volumen, Linie = %).
+- **Verteilung nach Übungsart:** kleine Mini-Karte „Quiz 45% · Wortpuzzle 20% · Grammatik 15% · …" (basierend auf Sessions).
+- **Pro Niveau Trefferquote:** Liste „A1 92%, A2 78%, B1 65%" (Aggregat aus Sessions).
+- „Letzte Sessions": Mode-Label hübsch (Quiz/Wortpuzzle/Grammatik/Lückentext/Lektion), Icon je Mode in Kategorien-Farbe (gleich wie Erfolge).
 
 ---
 
-### 2) Echte Erfolge statt Mini-Badges
+### 2) „Gefahrenzone" → sicherer und granularer Bereich
 
-Die aktuelle Liste (11 Stück) wird komplett ersetzt durch ein **gestaffeltes, ehrgeizigeres System** mit klaren Stufen. Jedes Thema hat mehrere Stufen, damit man immer was zum Anstreben hat.
+**Umbenennung:** „Gefahrenzone" raus. Vorschläge zur Auswahl:
+- **„Konto & Daten verwalten"** (neutral, klar)
+- **„Daten löschen"** (direkt)
+- **„Privatsphäre & Datenkontrolle"** (DSGVO-Touch)
 
-**Neue Badge-Liste (4 Kategorien, 22 Badges):**
+**Empfehlung:** „Konto & Daten verwalten" als Section-Titel, darin Unterabschnitt „Daten löschen".
 
-**Streak (Tage in Folge)**
-- 🔥 *Dranbleiber* — 7 Tage in Folge
-- ⚡ *Eisern* — 14 Tage in Folge
-- 💎 *Unaufhaltsam* — 30 Tage in Folge
-- 👑 *Legende* — 100 Tage in Folge
-- 🏆 *Marathonläufer* — 365 Tage in Folge
+**Granulare Löschoptionen (statt einem „Alles löschen"-Knopf):**
 
-**Vokabeln (gelernt = Status „mastered" oder gleichwertig)**
-- 📘 *Wortsammler* — 100 Vokabeln gemeistert
-- 📚 *Wortschatz-Profi* — 500 Vokabeln gemeistert
-- 🏛️ *Bibliothekar* — 1.000 Vokabeln gemeistert
-- 🧠 *Wortgenie* — 2.500 Vokabeln gemeistert
+Drei separate Aktionen in eigenen Zeilen, jede mit Icon + Beschreibung + eigenem Button:
 
-**Lektionen / Übungen**
-- 🎯 *Perfektionist* — 1 Lektion ohne Fehler
-- 🎯🎯 *Doppelt sauber* — 10 Lektionen ohne Fehler
-- 🎯🎯🎯 *Makellos* — 50 Lektionen ohne Fehler
-- 🧩 *Puzzlemeister* — 25 Wortpuzzle gelöst
-- 📝 *Grammatikfuchs* — 25 Grammatik-Übungen abgeschlossen
-- 🔤 *Lückenfüller* — 25 Lückentexte abgeschlossen
-- 🚀 *Combo-Held* — 25 richtige Antworten in Folge
-- 🌪️ *Combo-King* — 50 richtige Antworten in Folge
+1. **Lernstatistiken zurücksetzen** — löscht `learning_sessions` (Sessions, Trefferquote, Streak-Historie). Vokabeln & Konto bleiben.
+2. **Vokabeln löschen** — löscht `vocabulary` (gesamte Sammlung inkl. Lernfortschritt). Statistiken & Konto bleiben.
+3. **Konto vollständig löschen** — löscht alles: Vokabeln, Sessions, Chats, Badges, Profil, Auth-User. Logout danach.
 
-**Level / Fortschritt**
-- 🎓 *Student* — Level 5 erreicht
-- ✈️ *Traveller* — Level 10 erreicht
-- 🌍 *Advanced* — Level 15 erreicht
-- 🗣️ *Fluent Speaker* — Level 20 erreicht
-- 👑 *Master* — Level 25 erreicht
+**Sicherheit gegen versehentliches Löschen:**
 
-**Was fliegt raus:** „First Steps" (10 Vokabeln), „Hello, Coach!" (erste Chat-Nachricht), „Collector" (50 Vokabeln) — zu klein, kein echter Erfolg.
+Statt `window.confirm` ein **AlertDialog** (`@/components/ui/alert-dialog`, ist im Projekt) mit:
+- Klarem roten Titel („Konto endgültig löschen?")
+- Auflistung was gelöscht wird
+- **Bestätigungs-Eingabefeld**: User muss exakt das Wort `LÖSCHEN` (oder bei Konto: die eigene E-Mail) tippen, sonst bleibt der Bestätigen-Button **disabled**.
+- Zweistufig nur fürs Konto (Statistiken/Vokabeln einstufig mit Dialog, weil weniger fatal).
 
-**Datenmodell:** keine Tabellenänderung nötig. Die Tabelle `user_badges` speichert nur `badge_key` — wir aktualisieren nur die Liste in `src/lib/gamification.ts` und die Vergabe-Logik in `awardActivity`. Alte Keys bleiben in der DB harmlos liegen, werden in der UI aber nicht mehr angezeigt (oder optional einmalig still gelöscht).
+**Konto-Löschung technisch korrekt:**
 
-**Neue Vergabelogik (`awardActivity` + Aufrufstellen):**
-- `vocabCount` zählt künftig **nur gemeisterte Vokabeln** (Status `mastered`), nicht die Sammlung. Das spiegelt echten Lernfortschritt.
-- Neue Zähler in `profiles` müssen wir **nicht** anlegen — wir prüfen Stufen direkt mit Aggregat-Queries beim Award (z. B. `count(*) where status='mastered'`, `count(*) from learning_sessions where mode='lesson' and correct=total`).
-- Aufrufer (`Lektion.tsx`, `Wortpuzzle.tsx`, `Quiz.tsx`, `Grammar.tsx`, `Lueckentext.tsx`) übergeben künftig `mode` mit, damit die richtigen Counter geprüft werden.
+Aktuell löscht der „Alle Daten löschen"-Button nur App-Daten und macht Logout — **der Auth-User bleibt** in der DB liegen. Das ist genau das, was du nicht willst.
 
-**UI in `src/pages/Erfolge.tsx`:**
-- Badges nach Kategorien gruppiert anzeigen (Streak / Vokabeln / Übungen / Level), je mit Überschrift.
-- Pro Badge zusätzlich kleiner Fortschritts-Hinweis bei verschlossenen („3/7 Tage", „120/500 Vokabeln") — macht es konkret und motivierend.
+Lösung: **Edge Function `delete-account`** mit Service-Role-Key:
+- Authentifiziert den aufrufenden User per JWT.
+- Löscht: `vocabulary`, `learning_sessions`, `chat_messages`, `chat_sessions`, `user_badges`, `user_roles`, `profiles` (alle nach `user_id = auth.uid()`).
+- Ruft `supabase.auth.admin.deleteUser(uid)` auf → User ist wirklich weg.
+- Frontend ruft die Function via `supabase.functions.invoke('delete-account')` auf, danach `signOut()` + Redirect zu `/auth`.
+
+**Trennung Statistiken / Vokabeln:**
+- Direkt aus `Einstellungen.tsx` per `supabase.from(...).delete().eq('user_id', user.id)` — RLS deckt das ab.
 
 ---
 
 ### Was nicht angefasst wird
 
-- Design, Farben, Layout (außer Header-Stabilisierung)
-- XP-/Level-Kurve
-- Andere Seiten als Header-Container und Erfolge
+- Andere Profil-Tabs, Erfolge, Layout
+- Auth-Flow, Onboarding
+- DB-Schema (keine Migration)
 
 ### Technische Notizen
 
-- Reine Frontend-Anpassungen + minimal erweiterte Aggregat-Queries
-- Keine Migration nötig
-- Alte `user_badges`-Einträge bleiben bestehen, werden ignoriert
-- Dateien: `AppLayout.tsx`, `App.tsx` (ScrollToTop), `src/lib/gamification.ts`, `src/pages/Erfolge.tsx`, kleine Anpassungen in Aufrufern von `awardActivity`
+- **Edge Function** `supabase/functions/delete-account/index.ts` — neu, nutzt `SUPABASE_SERVICE_ROLE_KEY` (bereits vorhanden), `verify_jwt = true` (Default).
+- Keine DB-Migration nötig.
+- Geänderte Dateien: `src/pages/Statistik.tsx`, `src/pages/Einstellungen.tsx`, `src/pages/Quiz.tsx`, `src/pages/Wortpuzzle.tsx`, `src/pages/Grammar.tsx`, `src/pages/Lueckentext.tsx`, neue Edge Function.
+- Optional: einmalige still ausgeführte Bereinigung der 0/0-Sessions in der DB, oder einfach in der UI ignorieren (mache Variante 2 — risikofrei).
 
