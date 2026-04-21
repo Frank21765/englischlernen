@@ -14,7 +14,7 @@ const baseNav = [
   { to: "/lernen", label: "Lernen", icon: Sparkles, match: ["/lernen"] },
   { to: "/uben", label: "Üben", icon: Dumbbell, match: ["/uben", "/quiz", "/grammatik", "/lueckentext"] },
   { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: ["/vokabeln"] },
-  { to: "/chat?new=1", label: "Coach", icon: MessageCircle, ellie: true, match: ["/chat"] },
+  { to: "/chat?new=1", label: "Coach", icon: MessageCircle, match: ["/chat"] },
   { to: "/profil", label: "Profil", icon: User, match: ["/profil", "/erfolge", "/statistik", "/einstellungen"] },
 ];
 
