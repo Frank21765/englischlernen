@@ -574,9 +574,13 @@ export default function Quiz() {
         };
         return (
           <div className="flex justify-center">
-            <Button variant="soft" size="sm" className="rounded-full" onClick={handleAskEllie}>
-              <MessageCircle className="h-4 w-4" />
-              {current.kind === "vocab" ? "Frag Ellie zu diesem Fehler" : "Lass es dir von Ellie erklären"}
+            <Button
+              size="sm"
+              className="h-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm"
+              onClick={handleAskEllie}
+            >
+              <Sparkles className="h-4 w-4" />
+              Frag Ellie
             </Button>
           </div>
         );
