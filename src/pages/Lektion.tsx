@@ -77,9 +77,25 @@ const taskTypeLabel = (t: LessonTask) =>
 
 const explanationParagraphs = (text: string) =>
   text
-    .split(/(?<=[.!?])\s+/)
+    .split("\u2003")
     .map((sentence) => sentence.trim())
     .filter(Boolean);
+
+/** Render very small **bold** markdown spans inside a hint string. */
+const renderInlineBold = (text: string): (string | JSX.Element)[] => {
+  const out: (string | JSX.Element)[] = [];
+  const re = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIndex) out.push(text.slice(lastIndex, m.index));
+    out.push(<strong key={`b-${key++}`} className="font-semibold text-foreground">{m[1]}</strong>);
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < text.length) out.push(text.slice(lastIndex));
+  return out;
+};
 
 export default function Lektion() {
   
