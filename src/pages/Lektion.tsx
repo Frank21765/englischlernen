@@ -357,6 +357,7 @@ export default function Lektion() {
       : textInput.trim();
 
   const taskHint = task ? getTaskHint(task) : undefined;
+  const taskMeaningHint = task ? getTaskMeaningHint(task) : undefined;
   const feedbackExplanation = task && revealed !== null
     ? getTaskExplanation(task, { isCorrect: revealed, userAnswer: userAttempt })
     : "";
