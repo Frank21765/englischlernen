@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
-import { Check, History, Pencil, Settings, Trophy, User, X } from "lucide-react";
+import { Check, Heart, History, Pencil, Settings, Trophy, User, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getProfileUsername, persistProfileUsername } from "@/lib/profile";
+import DonationCards from "@/components/DonationCards";
+import FeedbackBox from "@/components/FeedbackBox";
 
 const subNav = [
   { to: "/profil/erfolge", label: "Erfolge", icon: Trophy },
@@ -140,6 +142,21 @@ export default function Profil() {
         ))}
       </nav>
       <Outlet />
+
+      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="rounded-full bg-primary/10 p-2">
+            <Heart className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-display text-lg leading-tight">Hello! unterstützen</h2>
+            <p className="text-xs text-muted-foreground">Hilf mit, Hello! am Leben zu halten 💛</p>
+          </div>
+        </div>
+        <DonationCards />
+      </Card>
+
+      <FeedbackBox />
     </div>
   );
 }
