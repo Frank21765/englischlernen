@@ -688,7 +688,7 @@ export default function Vokabeln() {
                     >
                       {statusLabels[v.status] ?? "Neu"}
                     </span>
-                    <EllieButton
+                    <VokabelnEllieButton
                       prefill={ellieAskWordPrompt(v.german, v.english, v.level)}
                       title={v.english}
                     />
