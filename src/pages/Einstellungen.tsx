@@ -55,7 +55,7 @@ const KIND_META: Record<Exclude<DeleteKind, null>, {
       "Login-Konto (E-Mail/Passwort)",
     ],
     confirmWord: "KONTO LÖSCHEN",
-    buttonLabel: "Konto endgültig löschen",
+    buttonLabel: "Ja, Konto endgültig löschen",
   },
 };
 
