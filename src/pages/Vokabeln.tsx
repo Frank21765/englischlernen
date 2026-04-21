@@ -23,7 +23,8 @@ import {
 import { toast } from "sonner";
 import { useLearning } from "@/hooks/useLearningContext";
 import { FocusChip } from "@/components/FocusChip";
-import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { ellieAskWordPrompt } from "@/lib/ellie";
+import { EllieButton } from "@/components/EllieButton";
 import { Link } from "react-router-dom";
 
 interface Vocab {
