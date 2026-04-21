@@ -75,34 +75,8 @@ function consumePersisted(): Partial<PersistedState> {
   }
 }
 
-// Consistent Ellie button used everywhere on this page.
-function EllieButton({ prefill, title }: { prefill: string; title?: string }) {
-  const markReturning = () => {
-    try { sessionStorage.setItem(RETURN_FLAG_KEY, "1"); } catch { /* ignore */ }
-  };
-  return (
-    <Button
-      asChild
-      variant="ghost"
-      size="icon"
-      className="h-9 w-9 text-primary hover:bg-primary/10"
-      title="Mit Coach Ellie besprechen"
-    >
-      <Link
-        onClick={markReturning}
-        to={buildEllieUrl({
-          prefill,
-          auto: true,
-          title,
-          returnTo: "/lernen",
-          returnLabel: "Zurück zum Lernen",
-        })}
-      >
-        <MessageCircle className="h-4 w-4" />
-      </Link>
-    </Button>
-  );
-}
+// Persisted collapsed state for "Frag mich!"
+const ASK_OPEN_KEY = "lernen.askOpen.v1";
 
 export default function Lernen() {
   const { user } = useAuth();
