@@ -89,7 +89,7 @@ export default function Auth() {
             className="mx-auto h-24 w-24 mb-4 animate-pop"
           />
           <h1 className="font-display text-4xl">Hello!</h1>
-          <p className="text-muted-foreground mt-2">Englisch lernen mit KI – auf deinem Niveau.</p>
+          <p className="text-muted-foreground mt-2">Englisch lernen mit Coach Ellie – so, wie es zu dir passt</p>
         </div>
         <Card className="p-6 shadow-card">
           <div className="flex gap-1 p-1 mb-6 bg-muted rounded-full">
