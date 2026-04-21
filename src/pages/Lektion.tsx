@@ -349,6 +349,18 @@ export default function Lektion() {
               <Target className="h-3 w-3" /> Schwierige Aufgaben
             </span>
           )}
+          <div className="ml-auto">
+            {task && (
+              <EllieButton
+                variant="sm"
+                prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
+                title={`Lektion: ${lesson.title}`}
+                returnTo={`/uben/lektionen/${lesson.id}`}
+                returnLabel="Zurück zur Lektion"
+                returnFlagKey={`hello.lesson.return.${lesson.id}`}
+              />
+            )}
+          </div>
         </div>
         <Progress value={pct} className="h-2" />
         <div className="text-xs text-muted-foreground">{doneCount} / {total} der ganzen Lektion abgeschlossen</div>
@@ -381,18 +393,19 @@ export default function Lektion() {
       )}
 
       <Card className="p-5 sm:p-6 space-y-4 bg-gradient-card shadow-card animate-pop">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs font-bold uppercase tracking-widest text-primary">
-            {taskTypeLabel(task)}
-          </div>
-          {task.hint && revealed === null && (
-            <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-muted/50 border border-border rounded-full px-2 py-0.5">
-              <Lightbulb className="h-3 w-3 text-accent" />
-              {task.hint}
-            </div>
-          )}
+        <div className="text-xs font-bold uppercase tracking-widest text-primary">
+          {taskTypeLabel(task)}
         </div>
         <div className="text-base sm:text-lg font-medium leading-snug">{task.prompt}</div>
+        {task.hint && revealed === null && (
+          <div className="flex items-start gap-2 rounded-xl bg-accent/10 border border-accent/30 p-2.5">
+            <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-accent">Hinweis</div>
+              <div className="text-sm text-foreground/90 leading-snug">{task.hint}</div>
+            </div>
+          </div>
+        )}
 
         {task.type === "mc" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
