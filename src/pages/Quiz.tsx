@@ -284,21 +284,21 @@ export default function Quiz() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setMode("vocab")}
-                className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                className={`rounded-2xl p-3 text-left transition-bounce border-2 hover:-translate-y-0.5 hover:shadow-glow ${
                   mode === "vocab" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
                 }`}
               >
-                <BookOpen className="h-5 w-5 text-primary mb-1" />
+                <BookOpen className="h-5 w-5 text-sky-400 mb-1" />
                 <div className="font-bold text-sm">Vokabel-Quiz</div>
                 <div className="text-xs text-muted-foreground">Übersetzung wählen</div>
               </button>
               <button
                 onClick={() => setMode("grammar")}
-                className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                className={`rounded-2xl p-3 text-left transition-bounce border-2 hover:-translate-y-0.5 hover:shadow-glow ${
                   mode === "grammar" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
                 }`}
               >
-                <Library className="h-5 w-5 text-primary mb-1" />
+                <Library className="h-5 w-5 text-violet-400 mb-1" />
                 <div className="font-bold text-sm">Grammatik-Quiz</div>
                 <div className="text-xs text-muted-foreground">Richtige Form wählen</div>
               </button>
@@ -311,11 +311,11 @@ export default function Quiz() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setVocabSource("review")}
-                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 hover:-translate-y-0.5 hover:shadow-glow ${
                     vocabSource === "review" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
                   }`}
                 >
-                  <RefreshCw className="h-5 w-5 text-primary mb-1" />
+                  <RefreshCw className="h-5 w-5 text-emerald-400 mb-1" />
                   <div className="font-bold text-sm">Wiederholen</div>
                   <div className="text-xs text-muted-foreground">
                     {reviewCount === null ? "Gespeicherte Vokabeln" : `${reviewCount} gespeicherte Vokabeln`}
@@ -323,11 +323,11 @@ export default function Quiz() {
                 </button>
                 <button
                   onClick={() => setVocabSource("fresh")}
-                  className={`rounded-2xl p-3 text-left transition-bounce border-2 ${
+                  className={`rounded-2xl p-3 text-left transition-bounce border-2 hover:-translate-y-0.5 hover:shadow-glow ${
                     vocabSource === "fresh" ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted"
                   }`}
                 >
-                  <Sparkles className="h-5 w-5 text-primary mb-1" />
+                  <Sparkles className="h-5 w-5 text-amber-400 mb-1" />
                   <div className="font-bold text-sm">Neu starten</div>
                   <div className="text-xs text-muted-foreground">20 frische Vokabeln generieren</div>
                 </button>
