@@ -22,7 +22,6 @@ import {
   Info,
   Library,
   Loader2,
-  MessageCircle,
   PenLine,
   Pencil,
   Search,
