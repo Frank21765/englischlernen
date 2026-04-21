@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureProfileForUser } from "@/lib/profile";
 
 interface AuthCtx {
   user: User | null;
@@ -20,10 +21,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       setSession(s);
       setUser(s?.user ?? null);
+      if (s?.user) {
+        void ensureProfileForUser(s.user).catch((error) => {
+          console.error("Profile sync failed", error);
+        });
+      }
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      if (data.session?.user) {
+        try {
+          await ensureProfileForUser(data.session.user);
+        } catch (error) {
+          console.error("Initial profile sync failed", error);
+        }
+      }
       setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
