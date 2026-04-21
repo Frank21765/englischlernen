@@ -419,12 +419,13 @@ export default function Vokabeln() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <EllieButton
+                <div className="flex items-center gap-2 shrink-0">
+                  <VokabelnEllieButton
                     prefill={ellieAskWordPrompt(lookup.german, lookup.english, activeLevel)}
                     title={lookup.english}
+                    variant="sm"
                   />
-                  <Button size="sm" variant="soft" onClick={saveLookupToCollection} disabled={savingLookup}>
+                  <Button size="sm" variant="ghost" onClick={saveLookupToCollection} disabled={savingLookup} title="Zur Sammlung hinzufügen" className="h-9">
                     {savingLookup ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                     <span className="hidden sm:inline">Speichern</span>
                   </Button>
