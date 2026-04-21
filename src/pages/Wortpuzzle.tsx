@@ -194,7 +194,7 @@ export default function Wortpuzzle() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
+      <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-start gap-3 min-w-0">
             <div className="rounded-2xl bg-primary/15 p-2.5 shrink-0">
