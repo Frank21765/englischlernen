@@ -92,12 +92,14 @@
   .transition-smooth { transition: all 0.25s var(--transition-smooth); }
 
   /* Einheitlicher Hover-Effekt für alle interaktiven Boxen/Karten:
-     leichtes Anheben + warmer Coral-Glow am Rand. */
+     dezenter Coral-Rand, leichtes Anheben + warmer Coral-Glow beim Hover. */
   .hover-lift {
     transition: all 0.4s var(--transition-bounce);
+    border: 1px solid hsl(var(--primary) / 0.25);
   }
   .hover-lift:hover {
     transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.55);
     box-shadow: var(--shadow-glow);
   }
 

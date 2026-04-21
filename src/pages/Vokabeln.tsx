@@ -361,7 +361,7 @@ export default function Vokabeln() {
           <p className="text-sm text-muted-foreground">Wort eingeben und direkt übersetzen</p>
         </div>
 
-        <Card className="p-4 space-y-3">
+        <Card className="hover-lift p-4 space-y-3">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -467,7 +467,7 @@ export default function Vokabeln() {
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/40 transition-smooth text-left"
+              className="hover-lift w-full flex items-center justify-between gap-2 rounded-xl bg-card px-4 py-3 transition-smooth text-left"
             >
               <div className="space-y-0.5 min-w-0">
                 <div className="text-base font-semibold flex items-center gap-2">
@@ -563,7 +563,7 @@ export default function Vokabeln() {
                   const saved = savedKeys.has(key);
                   const saving = savingKey === key;
                   return (
-                    <Card key={key} className="p-3 flex items-center justify-between gap-2 bg-gradient-card overflow-hidden">
+                    <Card key={key} className="hover-lift p-3 flex items-center justify-between gap-2 bg-gradient-card overflow-hidden">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-x-2 gap-y-0.5 flex-wrap min-w-0">
                           <div className="font-semibold break-words min-w-0">{s.german}</div>
@@ -616,7 +616,7 @@ export default function Vokabeln() {
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 hover:bg-muted/40 transition-smooth"
+              className="hover-lift w-full flex items-center justify-between gap-2 rounded-xl bg-card px-4 py-3 transition-smooth"
             >
               <div className="flex items-center gap-2">
                 <span className="text-base font-semibold">Deine Sammlung</span>
@@ -668,7 +668,7 @@ export default function Vokabeln() {
 
             <div className="space-y-2">
               {filtered.map((v) => (
-                <Card key={v.id} className="p-3 flex items-center justify-between gap-3">
+                <Card key={v.id} className="hover-lift p-3 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <div className="font-semibold truncate">{v.german}</div>
