@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import EllieIcon from "@/components/EllieIcon";
+import { EllieIcon } from "@/components/EllieIcon";
 import { Heart, ExternalLink } from "lucide-react";
 
 const PAYPAL_HANDLE = "Englischlernen";
@@ -25,7 +25,7 @@ export default function DonationCards({ compact = false }: { compact?: boolean }
             <Card className="p-4 h-full bg-gradient-card shadow-card hover:shadow-glow hover:-translate-y-1 transition-bounce border-2 border-transparent hover:border-primary/30 cursor-pointer">
               <div className="flex items-center gap-2 mb-2">
                 <div className="rounded-full bg-primary/10 p-1.5">
-                  <EllieIcon className="h-5 w-5" />
+                  <EllieIcon size={20} />
                 </div>
                 <Heart className="h-4 w-4 text-primary opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-bounce" />
               </div>
