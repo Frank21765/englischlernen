@@ -11,6 +11,32 @@ function fallbackUsername(user: User) {
   return normalizeUsername(user.email?.split("@")[0]);
 }
 
+export async function ensureProfileForUser(user: User) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .limit(1);
+
+  if (error) throw error;
+  let created = false;
+
+  if (!data?.length) {
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: user.id,
+        display_name: fallbackUsername(user),
+        access_status: "pending",
+      });
+
+    if (insertError && insertError.code !== "23505") throw insertError;
+    created = true;
+  }
+
+  return created;
+}
+
 export async function getProfileUsername(user: User) {
   const { data, error } = await supabase
     .from("profiles")

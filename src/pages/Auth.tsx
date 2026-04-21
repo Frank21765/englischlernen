@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { z } from "zod";
 import appIcon from "@/assets/app-icon.png";
+import { ensureProfileForUser } from "@/lib/profile";
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Ungültige E-Mail-Adresse" }).max(255),
@@ -63,17 +64,26 @@ export default function Auth() {
         if (error) throw error;
         toast.success("Konto erstellt – welcome!");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: parsed.data.email,
           password: parsed.data.password,
         });
         if (error) throw error;
+        if (data.user) {
+          await ensureProfileForUser(data.user);
+        }
         toast.success("Welcome back!");
       }
       // Routing now handled by the useEffect above based on onboarding state.
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Etwas ist schiefgelaufen";
-      toast.error(msg.includes("Invalid login") ? "E-Mail oder Passwort falsch" : msg);
+      toast.error(
+        msg.includes("Invalid login")
+          ? "E-Mail oder Passwort falsch"
+          : msg.toLowerCase().includes("already registered")
+          ? "Diese E-Mail ist schon registriert – bitte mit dem bestehenden Passwort anmelden."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
