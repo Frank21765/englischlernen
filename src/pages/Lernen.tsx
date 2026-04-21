@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import { getProfileUsername } from "@/lib/profile";
-import { buildEllieUrl, ellieAskWordPrompt } from "@/lib/ellie";
+import { ellieAskWordPrompt } from "@/lib/ellie";
+import { EllieButton } from "@/components/EllieButton";
 import { toast } from "sonner";
 import {
   ArrowRightLeft,
