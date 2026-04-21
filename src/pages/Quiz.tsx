@@ -413,7 +413,8 @@ export default function Quiz() {
     const perfect = finalStats.total > 0 && finalStats.correct === finalStats.total;
     if (user) {
       const result = await awardActivity(user.id, finalStats.correct * 2, {
-        perfectQuiz: perfect,
+        mode: "quiz",
+        perfectRun: perfect,
         comboReached: combo,
       });
       celebrate(result);

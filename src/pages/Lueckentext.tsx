@@ -117,7 +117,7 @@ export default function Lueckentext() {
     }
 
     if (user) {
-      const result = await awardActivity(user.id, isCorrect ? 8 : 2, { comboReached: newCombo });
+      const result = await awardActivity(user.id, isCorrect ? 8 : 2, { mode: "cloze", comboReached: newCombo });
       celebrate(result);
     }
   };

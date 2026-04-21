@@ -71,6 +71,7 @@ export default function Wortpuzzle() {
   const [picked, setPicked] = useState<{ word: string; key: number }[]>([]);
   const [checked, setChecked] = useState<null | "right" | "wrong">(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [combo, setCombo] = useState(0);
   const [done, setDone] = useState(false);
   const keyCounter = useRef(0);
 
@@ -148,12 +149,22 @@ export default function Wortpuzzle() {
     setChecked(null);
   };
 
-  const check = () => {
+  const check = async () => {
     if (!task) return;
     const guess = picked.map((p) => p.word).join(" ");
     const ok = normalize(guess) === normalize(task.target);
     setChecked(ok ? "right" : "wrong");
-    if (ok) setCorrectCount((c) => c + 1);
+    if (ok) {
+      const newCombo = combo + 1;
+      setCombo(newCombo);
+      setCorrectCount((c) => c + 1);
+      if (user) {
+        const result = await awardActivity(user.id, 5, { mode: "wortpuzzle", comboReached: newCombo });
+        if (result.leveledUp || result.newBadges.length) celebrate(result);
+      }
+    } else {
+      setCombo(0);
+    }
   };
 
   const next = () => setIndex((i) => i + 1);

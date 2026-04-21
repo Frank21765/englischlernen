@@ -134,7 +134,7 @@ export default function Grammar() {
       toast.success(randomPraise());
       fireConfetti(false);
       if (user) {
-        const result = await awardActivity(user.id, 6);
+        const result = await awardActivity(user.id, 6, { mode: "grammar" });
         celebrate(result);
       }
     } else {
