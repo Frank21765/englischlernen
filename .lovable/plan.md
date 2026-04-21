@@ -1,72 +1,90 @@
 
 
-## Ziel
+## Plan
 
-Hinweise und Erklärungen in den Lektionen werden deutlich tiefer und konkreter — mit echter Mini-Grammatik, einem klaren Tipp zum gesuchten Wort und einem zusätzlichen Beispielsatz.
+Zwei Themen, sauber getrennt.
 
-## Was sich ändert
+---
 
-### 1) Hinweise mit echtem Sinn-Tipp (statt nur Wortart)
+### 1) Versatz beim Seitenwechsel beheben
 
-Aktuell stehen Hinweise wie *„Hier fehlt genau das Wort, das in dieser Situation üblich ist“* — das hilft beim Beispiel `Free ___ on orders over 50 euros.` nicht weiter.
+**Ursache:** Der Header zeigt zwei optionale Elemente, die je nach Seite/Datenstand erscheinen oder verschwinden — der **Niveau/Thema-Chip** (nur sichtbar wenn `ctxReady && hasSelection`) und auf manchen Seiten zusätzlich die **Sub-Navigation** (Training, Profil) gegenüber Seiten ohne Sub-Nav (Coach, Vokabeln direkt). Dadurch springt der Inhalt beim Routenwechsel um ein paar Pixel.
 
-Neu zeigt jeder Hinweis drei kurze Bausteine:
+Außerdem: der **Scroll-Position** wird beim Routenwechsel nicht zurückgesetzt → man landet je nach vorheriger Seite mal oben, mal mittendrin.
 
-- **Was für ein Wort** (z. B. „kurzes Strukturwort“, „-ing-Form“, „Adjektiv mit Geschmack“)
-- **Bedeutungs-/Sinn-Tipp** in einfachen Worten — wonach der Lerner inhaltlich suchen soll (z. B. „etwas, das beim Versand kostenlos ist“, „Lieferung ohne Extrakosten“)
-- **Eine kleine Eingrenzung** (Anfangsbuchstabe, Wortlänge oder eine deutsche Übersetzung in Klammern), damit der Lerner sich erinnert, ohne dass die Lösung verraten wird
+**Fix in `src/components/AppLayout.tsx`:**
+- Niveau/Thema-Chip immer rendern, solange `ctxReady` ist — bei fehlender Auswahl als dezenter Platzhalter („Niveau wählen"), damit die Header-Höhe stabil bleibt.
+- Die Header-Zeile bekommt eine **feste Mindesthöhe**, damit das An/Aus von Chips den Inhalt nie verschiebt.
+- `main` bekommt eine **min-height**, damit kurze Seiten (z. B. Erfolge ohne Daten) nicht „nach oben springen".
 
-Beispiel `Free ___ on orders over 50 euros.`:
-> *„Hier fehlt ein Nomen, das beschreibt, was bei Bestellungen über 50 € kostenlos ist — also der Vorgang, wie die Ware zu dir nach Hause kommt. Englisches Wort beginnt mit **sh** und endet auf **-ping**.“*
+**Fix in `src/App.tsx` (oder neuer kleiner `ScrollToTop`-Helper):**
+- Bei jedem Routenwechsel `window.scrollTo(0, 0)` — Standardlösung, exakt wie auf den meisten Webseiten.
 
-### 2) Erklärungen mit Mini-Grammatik + zweitem Beispielsatz
+Kein visuelles Redesign, nur Stabilisierung.
 
-Die Erklärung in der Coach-Ellie-Box wird zu einem kleinen Lernbaustein erweitert. Jede Antwort (richtig oder falsch) bekommt jetzt diese Struktur:
+---
 
-1. **Lösung im Satz** — warum „X“ hier passt (1 Satz)
-2. *(nur bei falsch)* **Warum die eigene Antwort nicht passt** (1 Satz)
-3. **Mini-Grammatik / Wortwissen** — kurze, lerngerechte Regel oder Bedeutungserklärung, z. B. *„‚shipping‘ ist die -ing-Form von ‚to ship‘ und wird im Englischen als Nomen für den Versand benutzt. Viele englische Tätigkeiten werden so zu Nomen: cooking, parking, shopping.“*
-4. **Zusätzlicher Beispielsatz** mit Übersetzung, z. B. *„We offer free shipping worldwide. — Wir bieten weltweit kostenlosen Versand.“*
-5. *(optional)* Wiederverwendbares Muster (wie heute schon)
+### 2) Echte Erfolge statt Mini-Badges
 
-Damit hat jede Erklärung 4–5 echte Sätze mit konkretem Lerninhalt — nie nur Floskeln.
+Die aktuelle Liste (11 Stück) wird komplett ersetzt durch ein **gestaffeltes, ehrgeizigeres System** mit klaren Stufen. Jedes Thema hat mehrere Stufen, damit man immer was zum Anstreben hat.
 
-### 3) Bessere Abdeckung statt Einzelfälle
+**Neue Badge-Liste (4 Kategorien, 22 Badges):**
 
-Heute sind viele gute Hinweise/Erklärungen an einzelnen Sätzen festgemacht (per `if (task.sentence === ...)`). Das wird umgebaut zu **strukturierten Pattern-Helfern**, die für ähnliche Aufgaben automatisch greifen:
+**Streak (Tage in Folge)**
+- 🔥 *Dranbleiber* — 7 Tage in Folge
+- ⚡ *Eisern* — 14 Tage in Folge
+- 💎 *Unaufhaltsam* — 30 Tage in Folge
+- 👑 *Legende* — 100 Tage in Folge
+- 🏆 *Marathonläufer* — 365 Tage in Folge
 
-- `-ing`-Formen (working, shipping, parking, …)
-- `write down`, `keep updated`, `pick up` u. ä. — Verb + Partikel
-- Adjektive aus Nomen (`salt → salty`, `rain → rainy`)
-- Strukturwörter (`to`, `for`, `at`, `than`, …) mit konkreter Bedeutungserklärung im jeweiligen Satz
-- Feste englische Kollokationen (`good at`, `interested in`, `free shipping`)
+**Vokabeln (gelernt = Status „mastered" oder gleichwertig)**
+- 📘 *Wortsammler* — 100 Vokabeln gemeistert
+- 📚 *Wortschatz-Profi* — 500 Vokabeln gemeistert
+- 🏛️ *Bibliothekar* — 1.000 Vokabeln gemeistert
+- 🧠 *Wortgenie* — 2.500 Vokabeln gemeistert
 
-So bekommen auch die Aufgaben, die heute nur den generischen Fallback sehen, automatisch einen sinnvollen Tipp und eine echte Mini-Erklärung.
+**Lektionen / Übungen**
+- 🎯 *Perfektionist* — 1 Lektion ohne Fehler
+- 🎯🎯 *Doppelt sauber* — 10 Lektionen ohne Fehler
+- 🎯🎯🎯 *Makellos* — 50 Lektionen ohne Fehler
+- 🧩 *Puzzlemeister* — 25 Wortpuzzle gelöst
+- 📝 *Grammatikfuchs* — 25 Grammatik-Übungen abgeschlossen
+- 🔤 *Lückenfüller* — 25 Lückentexte abgeschlossen
+- 🚀 *Combo-Held* — 25 richtige Antworten in Folge
+- 🌪️ *Combo-King* — 50 richtige Antworten in Folge
 
-### 4) Hinweis-Box optisch klarer
+**Level / Fortschritt**
+- 🎓 *Student* — Level 5 erreicht
+- ✈️ *Traveller* — Level 10 erreicht
+- 🌍 *Advanced* — Level 15 erreicht
+- 🗣️ *Fluent Speaker* — Level 20 erreicht
+- 👑 *Master* — Level 25 erreicht
 
-Der Hinweis bekommt im UI eine zusätzliche zweite Zeile in etwas größerer Schrift für den Sinn-Tipp, damit klar erkennbar ist: *„das hier ist die wichtige Information“*. Stil bleibt vollständig im aktuellen Dark-Theme — keine neue Farbpalette, keine neuen Komponenten.
+**Was fliegt raus:** „First Steps" (10 Vokabeln), „Hello, Coach!" (erste Chat-Nachricht), „Collector" (50 Vokabeln) — zu klein, kein echter Erfolg.
 
-## Was ausdrücklich erhalten bleibt
+**Datenmodell:** keine Tabellenänderung nötig. Die Tabelle `user_badges` speichert nur `badge_key` — wir aktualisieren nur die Liste in `src/lib/gamification.ts` und die Vergabe-Logik in `awardActivity`. Alte Keys bleiben in der DB harmlos liegen, werden in der UI aber nicht mehr angezeigt (oder optional einmalig still gelöscht).
 
-- 8 Lektionskarten, Level-Konsistenz, Fortschritt, Häkchen, Wieder-Aufnehmen
-- Confetti & Abschluss-Screen, Wiederholen-Optionen, „Schwierige nochmal“ inkl. Zurück-Button
-- Coach-Ellie-Box nach jeder Aufgabe + „Frag Ellie“-Button
-- Quiz / Grammatik / Lückentext unverändert
-- Mobile- und Desktop-Layout, dunkle Optik
+**Neue Vergabelogik (`awardActivity` + Aufrufstellen):**
+- `vocabCount` zählt künftig **nur gemeisterte Vokabeln** (Status `mastered`), nicht die Sammlung. Das spiegelt echten Lernfortschritt.
+- Neue Zähler in `profiles` müssen wir **nicht** anlegen — wir prüfen Stufen direkt mit Aggregat-Queries beim Award (z. B. `count(*) where status='mastered'`, `count(*) from learning_sessions where mode='lesson' and correct=total`).
+- Aufrufer (`Lektion.tsx`, `Wortpuzzle.tsx`, `Quiz.tsx`, `Grammar.tsx`, `Lueckentext.tsx`) übergeben künftig `mode` mit, damit die richtigen Counter geprüft werden.
 
-## Technische Umsetzung (kurz)
+**UI in `src/pages/Erfolge.tsx`:**
+- Badges nach Kategorien gruppiert anzeigen (Streak / Vokabeln / Übungen / Level), je mit Überschrift.
+- Pro Badge zusätzlich kleiner Fortschritts-Hinweis bei verschlossenen („3/7 Tage", „120/500 Vokabeln") — macht es konkret und motivierend.
 
-- `src/lib/lessons.ts`
-  - Optionales Feld `meaningHint?: string` und `extraExample?: { en: string; de: string }` an `LessonTask` anhängen (rückwärtskompatibel — bestehende Tasks ohne diese Felder bekommen automatisch generierte Inhalte aus den Pattern-Helfern).
-  - `getTaskHint` und `getTaskExplanation` umbauen auf:
-    - `buildMeaningHint(task)` → Sinn-Tipp + Wort-Hinweis (Anfang/Endung)
-    - `buildMiniGrammar(task)` → kurze Regel
-    - `buildExtraExample(task)` → zweiter Beispielsatz mit Übersetzung
-  - Pattern-Erkennung nach Wortform/Endung statt nach exakter Satz-ID, mit kuratierten Overrides für die wichtigsten Aufgaben (Versand/`shipping`, `working`, `salty`, `write down`, `keep updated`, `call/phone`, …).
-- `src/pages/Lektion.tsx`
-  - Hinweis-Karte: Zwei Zeilen (Wortart-Tipp + Sinn-Tipp).
-  - Coach-Ellie-Feedback-Box: strukturierte Anzeige mit kleiner Trennung zwischen Erklärung, Mini-Grammatik und Beispielsatz (kein neues Design, nur Absätze).
+---
 
-Keine weiteren Dateien werden geändert.
+### Was nicht angefasst wird
+
+- Design, Farben, Layout (außer Header-Stabilisierung)
+- XP-/Level-Kurve
+- Andere Seiten als Header-Container und Erfolge
+
+### Technische Notizen
+
+- Reine Frontend-Anpassungen + minimal erweiterte Aggregat-Queries
+- Keine Migration nötig
+- Alte `user_badges`-Einträge bleiben bestehen, werden ignoriert
+- Dateien: `AppLayout.tsx`, `App.tsx` (ScrollToTop), `src/lib/gamification.ts`, `src/pages/Erfolge.tsx`, kleine Anpassungen in Aufrufern von `awardActivity`
 
