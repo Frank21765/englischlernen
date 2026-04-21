@@ -406,7 +406,9 @@ const A2_LESSONS: Lesson[] = [
       mc("t16", "„Empfehlung des Hauses“ heißt …", [
         "the chef's recommendation", "house say food", "boss eat", "best home dish",
       ], "the chef's recommendation"),
-      cz("t17", "Lücke füllen", "I'm vegetarian — I don't eat ___.", "meat", { hint: "Hier fehlt ein passendes Wort (Ernährung)" }),
+      cz("t17", "Lücke füllen", "I'm vegetarian, so no chicken, beef or pork — basically no ___.", "meat",
+        { hint: "Oberbegriff für chicken, beef und pork.",
+          explain: "Gesucht ist der Oberbegriff für Hähnchen, Rind und Schwein — also „meat“. „Fish“ wäre zwar für viele Vegetarier auch tabu, ist aber kein Oberbegriff für die genannten Fleischsorten." }),
       ord("t18", "Sätze richtig anordnen", ["that", "was", "delicious", "thank", "you"], "that was delicious thank you"),
     ],
   },
