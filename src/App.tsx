@@ -18,6 +18,8 @@ import Statistik from "./pages/Statistik";
 import Einstellungen from "./pages/Einstellungen";
 import Admin from "./pages/Admin";
 import Uben from "./pages/Uben";
+import Lektionen from "./pages/Lektionen";
+import Lektion from "./pages/Lektion";
 import Profil from "./pages/Profil";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -47,6 +49,8 @@ const App = () => (
               <Route path="/chat" element={<Chat />} />
               <Route path="/vokabeln" element={<Vokabeln />} />
               <Route path="/uben" element={<Uben />}>
+                <Route path="lektionen" element={<Lektionen />} />
+                <Route path="lektionen/:lessonId" element={<Lektion />} />
                 <Route path="quiz" element={<Quiz />} />
                 <Route path="grammatik" element={<Grammar />} />
                 <Route path="lueckentext" element={<Lueckentext />} />

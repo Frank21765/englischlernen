@@ -26,8 +26,8 @@ export default function Uben() {
                 isActive
                   ? "bg-primary text-primary-foreground shadow-soft"
                   : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-              }`
-            }
+              }`;
+            }}
           >
             <Icon className="h-4 w-4" />
             {label}
