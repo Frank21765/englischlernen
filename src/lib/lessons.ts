@@ -6,6 +6,11 @@
 export type TaskType = "mc" | "cloze" | "order";
 export type LessonLevel = "A1" | "A2" | "B1" | "B2";
 
+export interface ExtraExample {
+  en: string;
+  de: string;
+}
+
 interface BaseTask {
   id: string;
   type: TaskType;
@@ -13,6 +18,10 @@ interface BaseTask {
   hint?: string;
   explain?: string;
   acceptedAnswers?: string[];
+  /** Optional richer "what to look for" tip shown as the second hint line. */
+  meaningHint?: string;
+  /** Optional second example sentence (with German translation) for the explanation. */
+  extraExample?: ExtraExample;
 }
 export interface MCTask extends BaseTask {
   type: "mc";
