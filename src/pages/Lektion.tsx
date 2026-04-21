@@ -9,6 +9,7 @@ import {
   getLesson,
   getTaskExplanation,
   getTaskHint,
+  getTaskMeaningHint,
   isTaskAnswerCorrect,
   LessonTask,
   markLessonComplete,
