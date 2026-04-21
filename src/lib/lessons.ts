@@ -402,7 +402,8 @@ const A2_LESSONS: Lesson[] = [
       cz("t13", "Lücke füllen", "I'd like a glass ___ red wine.", "of",
         { hint: "Hier fehlt ein kleines Verbindungswort (Mengen)", explain: "„a glass of …“ — Mengenangabe mit „of“." }),
       cz("t14", "Lücke füllen", "Is service ___ in the price?", "included",
-        { hint: "Hier passt eine Verb-Form auf -ed/-en (Rechnung)" }),
+        { hint: "Partizip von „include“ — „mit drin“ in der Rechnung.",
+          explain: "„be included in the price“ = im Preis enthalten. Hier braucht es das Partizip „included“, weil es als Passiv mit „is“ steht." }),
       ord("t15", "Sätze richtig anordnen", ["could", "we", "split", "the", "bill"], "could we split the bill"),
       mc("t16", "„Empfehlung des Hauses“ heißt …", [
         "the chef's recommendation", "house say food", "boss eat", "best home dish",
