@@ -312,7 +312,7 @@ export default function Lernen() {
       </Collapsible>
 
       {/* ============ 2) Aktueller Fokus ============ */}
-      <Card className="p-4 sm:p-5 bg-gradient-card shadow-card">
+      <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
             <div className="rounded-2xl bg-accent/15 p-2.5 sm:p-3 shrink-0">
@@ -423,7 +423,7 @@ export default function Lernen() {
       </Card>
 
       {/* ============ 3) Bereit für die nächste Runde? ============ */}
-      <Card className="p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
+      <Card className="hover-lift p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
         <div className="space-y-0.5">
           <h2 className="text-base sm:text-lg font-bold">Bereit für die nächste Runde?</h2>
           <p className="text-sm text-muted-foreground">
