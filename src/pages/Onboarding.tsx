@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfileForUser } from "@/lib/profile";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessGate from "@/components/AccessGate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -94,6 +96,7 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { setSelection } = useLearning();
+  const access = useUserAccess();
 
   const [stage, setStage] = useState<Stage>("welcome");
   const [qIndex, setQIndex] = useState(0);
@@ -201,6 +204,13 @@ export default function Onboarding() {
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  // Wenn der Account noch nicht freigeschaltet (oder gesperrt/abgelaufen) ist,
+  // zeigen wir vor dem Onboarding den Wartebereich – sonst läuft die Person
+  // ins Leere, sobald sie das Onboarding abschließt.
+  if (!access.loading && access.status !== "active") {
+    return <AccessGate>{null}</AccessGate>;
   }
 
   return (
