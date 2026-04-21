@@ -450,7 +450,7 @@ export default function Quiz() {
     }
 
     if (isCorrect && user) {
-      awardActivity(user.id, 5, { comboReached: newCombo }).then((r) => {
+      awardActivity(user.id, 5, { mode: "quiz", comboReached: newCombo }).then((r) => {
         if (r.leveledUp || r.newBadges.length) celebrate(r);
       });
       if (newCombo > 0 && newCombo % 5 === 0) {

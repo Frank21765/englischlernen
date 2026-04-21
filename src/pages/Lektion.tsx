@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getLesson,
   getTaskExplanation,
@@ -336,7 +337,7 @@ export default function Lektion() {
           user_id: user.id,
           mode: "lesson",
           level: lesson.level,
-          topic: lesson.topic,
+          topic: lesson.title,
           total_answers: total,
           correct_answers: perfect ? total : completed.size,
         });
