@@ -1,41 +1,49 @@
 
 
-## Plan: Spenden-Bereich verbessern (final)
+## Plan: Spenden-Boxen aufräumen + „Freier Betrag" hübscher
 
-### 1) Beträge & Beschriftungen korrigieren
+### 1) Spenden + Feedback nur an einer Stelle
 
-| Betrag | Titel | Untertitel |
-|---|---|---|
-| 5,40 € | 3 Monate Hello! | Ein Quartal lernen |
-| 10,20 € | 6 Monate Hello! | Ein halbes Jahr dabei |
-| 19,20 € | 1 Jahr Hello! | Das ganze Jahr 💛 |
+Aktuell stehen `<DonationCards />` und `<FeedbackBox />` direkt in `src/pages/Profil.tsx` — das ist das **gemeinsame Layout** für alle Unterseiten (`/profil/erfolge`, `/profil/statistik`, `/profil/einstellungen`). Deshalb tauchen sie überall auf.
 
-### 2) Vierte Karte „Freier Betrag"
+**Lösung**: Ein neuer eigener Tab **„Unterstützen"** in der Profil-Navigation:
 
-- Ellie-Icon mit kleinem **roten Herz oben rechts in der Ecke** (absolut positioniert, leicht überlappend)
-- Titel: „Freier Betrag"
-- Untertitel: „Du entscheidest"
-- Klick → `https://paypal.me/Englischlernen` (ohne Betrag)
+- Neue Route: `/profil/unterstuetzen`
+- Neue Seite: `src/pages/Unterstuetzen.tsx` mit Erklärbox + `<DonationCards />` + `<FeedbackBox />`
+- Neuer Tab in der Sub-Nav (mit Herz-Icon ❤️) zwischen „Statistik" und „Einstellungen"
+- Aus `Profil.tsx` werden die beiden Komponenten **entfernt**, sodass sie nur noch auf der neuen Seite erscheinen
 
-Layout: 4 Karten, Desktop nebeneinander, Mobile 2×2.
+### 2) „Freier Betrag"-Karte mit großer Ellie
 
-Hinweis: Das kleine rote Herz in der Ecke kommt **nur auf die „Freier Betrag"-Karte**, damit sie sich liebevoll von den drei Festbeträgen abhebt.
+Komplett-Redesign der 4. Karte:
 
-### 3) Erklärtext „Warum Spenden?"
+```text
+┌──────────────────────────┐
+│   ❤ (Herz-Badge oben)    │
+│                          │
+│        ┌──────┐          │
+│        │      │          │
+│        │ Ellie│  ← groß  │
+│        │ (64) │          │
+│        └──────┘          │
+│                          │
+│      Freier Betrag       │
+│      Du entscheidest     │
+└──────────────────────────┘
+```
 
-Direkt unter der Überschrift „Hello! unterstützen", über den Karten, in einer weichen Box (`bg-muted/30`, abgerundet):
+- Ellie zentriert, **groß** (`size={64}`), kein Hintergrundkreis (sie steht für sich)
+- Kleines rotes Herz-Badge oben rechts (bleibt wie jetzt)
+- Kein „★"-Symbol mehr — Ellie ersetzt es
+- Sanfter Verlaufs-Hintergrund, leicht hervorgehoben gegenüber den 3 Festbetrag-Karten
+- Feste Höhe damit alle 4 Karten gleich hoch sind
 
-> „Hello! ist mein privates Hobby-Projekt — kein Startup, keine Werbung, keine Datenverkäufe. Mit Spenden geht es **nicht um Gewinn**, sondern darum, die laufenden Kosten zu decken (Server, KI-Modelle, Domain). Jeder Euro hilft, dass Hello! online bleibt und weiterwächst. Danke! 💛"
+Die 3 Festbetrag-Karten bleiben unverändert (kleines Ellie-Icon oben links + Betrag groß).
 
-### 4) Hinweis vor PayPal-Weiterleitung
+### Geänderte / neue Dateien
 
-Unter den Karten, dezent:
-
-> „Einmalspende per PayPal · Kein Abo · Du wirst auf paypal.me weitergeleitet, wo du den Betrag bestätigen oder anpassen kannst."
-
-### Geänderte Dateien
-
-- `src/components/DonationCards.tsx` — neue Beträge/Titel, 4. Karte mit Herz-Badge, neuer Hinweistext
-- `src/pages/Profil.tsx` — Erklärbox oberhalb der Karten
-- `src/components/AccessGate.tsx` — gleiche Erklärbox auch im Pending-Screen
+- **Neu**: `src/pages/Unterstuetzen.tsx` — eigene Seite mit Spenden + Feedback + Erklärbox
+- `src/pages/Profil.tsx` — `DonationCards` und `FeedbackBox` entfernen, neuen Tab „Unterstützen" hinzufügen, Erklärbox entfernen
+- `src/App.tsx` — neue Route `/profil/unterstuetzen` registrieren
+- `src/components/DonationCards.tsx` — „Freier Betrag"-Karte mit großer Ellie statt Icon+Stern
 
