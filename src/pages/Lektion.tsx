@@ -72,7 +72,7 @@ const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
 
 export default function Lektion() {
-  const { level: _ctxLevel } = { level: "" }; void _ctxLevel;
+  
   const { lessonId = "" } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
