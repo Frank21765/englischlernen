@@ -18,6 +18,43 @@ import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, Target, 
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
+import { EllieButton } from "@/components/EllieButton";
+
+
+/** Build a lesson-aware prompt so Coach Ellie has the current task in context. */
+function buildEllieLessonPrompt(opts: {
+  lessonTitle: string;
+  level: string;
+  task: LessonTask;
+}): string {
+  const { lessonTitle, level, task } = opts;
+  const ctx = `Kontext: Lektion *${lessonTitle}* (Niveau ${level}).`;
+  if (task.type === "mc") {
+    return `${ctx}
+Ich übe gerade diese Multiple-Choice-Aufgabe und möchte sie besser verstehen:
+Frage: *${task.prompt}*
+Optionen: ${task.options.map((o) => `„${o}“`).join(", ")}
+Richtige Antwort: *${task.answer}*
+
+Bitte erklär mir freundlich, warum *${task.answer}* hier richtig ist, was die anderen Optionen bedeuten würden, und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+  }
+  if (task.type === "cloze") {
+    return `${ctx}
+Ich arbeite gerade an dieser Lückentext-Aufgabe:
+Satz: *${task.sentence.replace("___", "_____")}*
+Richtiges Wort: *${task.answer}*${task.translation ? `\nÜbersetzung: ${task.translation}` : ""}${task.hint ? `\nHinweis war: ${task.hint}` : ""}
+
+Bitte erklär mir freundlich, warum *${task.answer}* hier passt (Bedeutung, Form, typische Verwendung) und gib mir 1–2 weitere kurze Beispielsätze auf meinem Niveau.`;
+  }
+  // order
+  return `${ctx}
+Ich übe gerade diese Satzbau-Aufgabe:
+Aufgabe: *${task.prompt}*
+Wörter: ${task.words.map((w) => `„${w}“`).join(", ")}
+Richtige Reihenfolge: *${task.answer}*
+
+Bitte erklär mir kurz die Satzstruktur, warum diese Reihenfolge richtig ist, und gib 1–2 weitere ähnliche Beispielsätze auf meinem Niveau.`;
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -35,6 +72,7 @@ const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
 
 export default function Lektion() {
+  
   const { lessonId = "" } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -90,9 +128,14 @@ export default function Lektion() {
       setOrderPicked([]);
     }
     // Auto-focus the cloze input so users can start typing immediately.
+    // Use a slightly delayed retry so the focus survives layout shifts on
+    // task transitions (e.g. when a previous task type was different).
     if (t.type === "cloze") {
-      // Defer to next tick so the input is mounted.
-      requestAnimationFrame(() => inputRef.current?.focus());
+      const tryFocus = () => inputRef.current?.focus();
+      requestAnimationFrame(tryFocus);
+      const t1 = window.setTimeout(tryFocus, 60);
+      const t2 = window.setTimeout(tryFocus, 200);
+      return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
     }
   }, [activeIdx, taskList]);
 
@@ -306,6 +349,18 @@ export default function Lektion() {
               <Target className="h-3 w-3" /> Schwierige Aufgaben
             </span>
           )}
+          <div className="ml-auto">
+            {task && (
+              <EllieButton
+                variant="sm"
+                prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
+                title={`Lektion: ${lesson.title}`}
+                returnTo={`/uben/lektionen/${lesson.id}`}
+                returnLabel="Zurück zur Lektion"
+                returnFlagKey={`hello.lesson.return.${lesson.id}`}
+              />
+            )}
+          </div>
         </div>
         <Progress value={pct} className="h-2" />
         <div className="text-xs text-muted-foreground">{doneCount} / {total} der ganzen Lektion abgeschlossen</div>
@@ -338,18 +393,19 @@ export default function Lektion() {
       )}
 
       <Card className="p-5 sm:p-6 space-y-4 bg-gradient-card shadow-card animate-pop">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs font-bold uppercase tracking-widest text-primary">
-            {taskTypeLabel(task)}
-          </div>
-          {task.hint && revealed === null && (
-            <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground bg-muted/50 border border-border rounded-full px-2 py-0.5">
-              <Lightbulb className="h-3 w-3 text-accent" />
-              {task.hint}
-            </div>
-          )}
+        <div className="text-xs font-bold uppercase tracking-widest text-primary">
+          {taskTypeLabel(task)}
         </div>
         <div className="text-base sm:text-lg font-medium leading-snug">{task.prompt}</div>
+        {task.hint && revealed === null && (
+          <div className="flex items-start gap-2 rounded-xl bg-accent/10 border border-accent/30 p-2.5">
+            <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-accent">Hinweis</div>
+              <div className="text-sm text-foreground/90 leading-snug">{task.hint}</div>
+            </div>
+          </div>
+        )}
 
         {task.type === "mc" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
