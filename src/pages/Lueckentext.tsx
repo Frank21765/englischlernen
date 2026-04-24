@@ -161,7 +161,7 @@ export default function Lueckentext() {
         {!hasSelection ? (
           <Card className="p-6 sm:p-8 text-center space-y-3">
             <p className="text-sm text-muted-foreground">
-              Bitte zuerst auf der Lernen-Seite einen Fokus (Niveau & Thema) wählen.
+              Bitte zuerst auf der Startseite einen Fokus (Niveau & Thema) wählen.
             </p>
           </Card>
         ) : (
