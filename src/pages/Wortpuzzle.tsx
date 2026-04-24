@@ -375,7 +375,7 @@ export default function Wortpuzzle() {
               <EllieButton
                 prefill={elliePrompt}
                 title={task.targetLang === "en" ? task.target : task.source}
-                returnTo="/uben/wortpuzzle"
+                returnTo="/training/wortpuzzle"
                 returnLabel="Zurück zum Wortpuzzle"
                 returnFlagKey={RETURN_FLAG_KEY}
                 variant="sm"
@@ -397,7 +397,7 @@ export default function Wortpuzzle() {
               <EllieButton
                 prefill={elliePrompt}
                 title={task.targetLang === "en" ? task.target : task.source}
-                returnTo="/uben/wortpuzzle"
+                returnTo="/training/wortpuzzle"
                 returnLabel="Zurück zum Wortpuzzle"
                 returnFlagKey={RETURN_FLAG_KEY}
                 variant="sm"

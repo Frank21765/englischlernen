@@ -36,7 +36,7 @@ export default function Lektionen() {
           return (
             <Link
               key={lesson.id}
-              to={`/uben/lektionen/${lesson.id}`}
+              to={`/training/lektionen/${lesson.id}`}
               className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
             >
               <Card

@@ -267,7 +267,7 @@ export default function Lueckentext() {
                 }),
                 auto: true,
                 title: shortWord,
-                returnTo: `/uben/lueckentext?resume=${resumeId}`,
+                returnTo: `/training/lueckentext?resume=${resumeId}`,
                 returnLabel: "Zurück zur Übung",
               });
               navigate(url);

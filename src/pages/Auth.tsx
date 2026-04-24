@@ -36,7 +36,7 @@ export default function Auth() {
         .select("onboarding_completed")
         .eq("user_id", user.id)
         .maybeSingle();
-      navigate(data?.onboarding_completed ? "/lernen" : "/onboarding", { replace: true });
+      navigate(data?.onboarding_completed ? "/start" : "/onboarding", { replace: true });
     })();
   }, [user, navigate]);
 
