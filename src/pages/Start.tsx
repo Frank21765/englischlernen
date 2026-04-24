@@ -80,7 +80,7 @@ function consumePersisted(): Partial<PersistedState> {
 // Persisted collapsed state for "Frag mich!"
 const ASK_OPEN_KEY = "lernen.askOpen.v1";
 
-export default function Lernen() {
+export default function Start() {
   const { user } = useAuth();
   const { level, topic, hasSelection, setSelection } = useLearning();
   const navigate = useNavigate();
