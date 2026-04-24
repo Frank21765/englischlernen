@@ -1,82 +1,89 @@
-## Plan: Vorbereitungsdokument Phase 3 (Grundwortschatz) + Skizze Phase 4 (Grammatik)
+## Plan: Mobile-Test-Handout PDF
 
 ### Ziel
 
-Ein gründlich recherchiertes Vorbereitungsdokument als **Markdown + PDF**, das klärt:
-- Welche Wortlisten wir nehmen (Oxford 3000/5000 oder Alternativen)
-- Wie die Lizenz aussieht (kommerziell nutzbar?)
-- Welches Datenformat (CSV/JSON, Felder, Struktur)
-- Wie wir importieren und mit der App verbinden
-- Erste grobe Skizze Phase 4 (Grammatik-Themen nach CEFR)
-
-**Wichtig:** Keine Code-Änderungen, keine Datenbank-Änderungen. Nur Recherche + Dokument.
+Ein kompaktes, gut lesbares **PDF (5–6 Seiten)**, das Frank durch den Mobile-Test der Hello!-App führt — strikt nach Checkliste, mit klarem Beobachtungs-Format.
 
 ### Ablage
 
-Beide Dateien landen unter `/mnt/documents/` und sind über **Files** in Lovable einsehbar/herunterladbar:
-- `Hello-Phase3-Grundwortschatz-v1.md`
-- `Hello-Phase3-Grundwortschatz-v1.pdf`
+- `/mnt/documents/Hello-Mobile-Test-Handout-v1.pdf` — finales PDF
+- `/mnt/documents/Hello-Mobile-Test-Handout-v1.md` — Markdown-Quelle (zum Lesen am Handy ohne PDF-Reader)
 
-### Was ich recherchiere
+### Inhalt der 6 Seiten
 
-**Wortlisten:**
-1. **Oxford 3000 / Oxford 5000** — offizielle Quelle (Oxford Learner's Dictionaries) prüfen, Lizenzbedingungen lesen, Verfügbarkeit als Liste/Download checken
-2. **Falls Lizenz problematisch ist:** Alternativen prüfen
-   - **NGSL** (New General Service List) — frei, akademisch, sehr gut dokumentiert
-   - **GSL** (General Service List, klassisch)
-   - **CEFR-J Wordlist** (frei, japanische Forschung, CEFR-sortiert)
-3. Vergleich der Optionen: Vollständigkeit, CEFR-Zuordnung, Lizenz, Format
+**Seite 1 — Der große Plan**
+- Kurzer Überblick: Wo stehen wir, was kommt
+- Phasen 1–4 als Tabelle (Mobile → Übungs-UX → Level-Treue → Optional)
+- Was wir bewusst weglassen (CEFR-J-Komplettimport, Validator-Standard) und warum
 
-**Datenstruktur:**
-- Welche Felder pro Wort (Englisch, Deutsch, CEFR-Niveau, Wortart, Aussprache IPA, Beispielsatz)
-- Wie deutsche Übersetzungen ergänzen (offizielle Quellen vs. KI-generiert mit Prüfung)
+**Seite 2 — Dein Auftrag**
+- Gerät: Smartphone (iOS oder Android)
+- URL: https://englischlernen.lovable.app
+- Modus: Strikt nach Checkliste, jeden Punkt abhaken
+- Was du NICHT bewertest: Inhalte, KI-Antworten, Level-Treue (kommt in Phase 3)
+- Was du SEHR WOHL bewertest: Bedienbarkeit, Touch-Ziele, Layout, Lesbarkeit, Navigation
 
-**App-Integration:**
-- Neue Tabelle `curated_vocabulary` (geteilt, read-only für alle Nutzer)
-- Wie bestehende Vokabel-Logik angepasst wird (Kern-Wortschatz zuerst, KI ergänzt)
-- Neuer Lernmodus „Grundwortschatz nach Niveau"
+**Seite 3 — Die strikte Checkliste**
+Sortiert nach Bereich, jeder Punkt zum Abhaken:
+- **Header** (Logo, Level-Pille, Streak, Fokus-Pille, Logout)
+- **Hauptnavigation** (Start, Training, Coach, Profil — scrollt sie? klemmt sie?)
+- **Start-Seite** (Übersicht, CTA-Buttons, Ellie-Karten)
+- **Training** (Sub-Tabs: Lektionen, Wortpuzzle, Quiz, Lückentext, Grammatik — passen sie? brechen sie um?)
+- **Übungen einzeln** (Buttons groß genug? Tastatur verdeckt was? Skip-Buttons da?)
+- **Coach/Chat** (Eingabe-Feld, Senden-Button, Verlauf)
+- **Profil** (Sub-Tabs, Erfolge, Statistik, Einstellungen)
+- **Allgemein** (Texte zu klein? Kontraste? Buttons mind. 44×44px? horizontaler Scroll?)
 
-**Phase 4 Skizze (nur grob):**
-- Grammatik-Themen nach CEFR (A1: to be, Artikel, Plural, Present Simple … B1: Conditionals, Passiv … B2: Reported Speech, Mixed Conditionals)
-- Inspiration aus Cambridge/CEFR-Curricula (frei zugängliche Übersichten), **nicht** aus geschützten Büchern
-- Hinweis: Detail-Plan kommt in einer eigenen späteren Phase
+**Seite 4 — Beobachtungs-Format**
+Wie du Findings notierst, mit Beispiel:
+- **Wo:** Welche Seite/Komponente
+- **Was nervt:** Konkretes Problem (1 Satz)
+- **Was würdest du erwarten:** Deine Lösungs-Idee
+- **Schwere:** 🔴 Blocker / 🟡 Stört / 🟢 Schönheitsfehler
+- 2–3 Beispiel-Findings als Vorlage
 
-### Format des Dokuments
+**Seite 5 — Top-3-Verdächtige (vorab)**
+Wo wir schon was vermuten, ohne dich zu beeinflussen — kurz erklärt, damit du weißt, worauf du besonders schauen solltest:
+1. **Top-Navigation scrollt horizontal** (statt Bottom-Tab-Bar)
+2. **Fokus-Pille verschwindet auf kleinen Screens** (`hidden xs:flex`)
+3. **Training-Sub-Tabs passen vermutlich nicht in eine Reihe**
 
-1. **Zusammenfassung** (1 Seite, was empfehle ich, warum)
-2. **Wortlisten-Vergleich** (Tabelle: Oxford vs. NGSL vs. CEFR-J — Lizenz, Umfang, Niveau-Sortierung, Format)
-3. **Empfehlung** mit Begründung
-4. **Datenstruktur-Vorschlag** (Tabellen-Schema, Beispiel-Zeilen)
-5. **Übersetzungs-Strategie** (wie kommen deutsche Übersetzungen rein, wer prüft)
-6. **App-Logik-Änderungen** (wie sich Vokabel-Lernmodus verhält)
-7. **Aufwand-Schätzung** (klein/mittel/groß je Schritt)
-8. **Phase 4 Skizze** (Grammatik-Themen-Liste nach Niveau, ca. 1–2 Seiten)
-9. **Offene Fragen** (was wir vor Phase 3 noch entscheiden müssen)
+Jeweils mit „Worauf du achten solltest"-Hinweis, aber ohne dir die Wertung vorzugeben.
 
-### Vorgehen (im Build-Modus, nach deiner Freigabe)
+**Seite 6 — Was danach passiert**
+- Du gibst mir deine gesammelten Findings
+- Wir priorisieren gemeinsam (🔴 zuerst, 🟢 zuletzt)
+- Ich setze in Phase 1 um — Datei für Datei (`AppLayout.tsx`, `Training.tsx`, `Profil.tsx`)
+- Du testest jeden Schritt nach
+- Wir iterieren bis Mobile-UX rund ist
+- Erst DANN gehen wir zu Phase 2 (Übungs-Feinheiten)
 
-1. Web-Recherche zu Oxford 3000/5000 (offizielle Seite, Lizenztext)
-2. Web-Recherche zu Alternativen (NGSL, GSL, CEFR-J)
-3. Stichproben-Download/Sichtung der Listen, Format prüfen
-4. Recherche zu deutschen Übersetzungs-Quellen (z. B. dict.cc-Lizenz, Wiktionary)
-5. CEFR-Grammatik-Curriculum-Übersicht recherchieren (Cambridge English, Council of Europe)
-6. Alles in Markdown strukturiert schreiben
-7. Markdown → PDF rendern (gleicher Stil wie Mobile-Audit, klare Typo, Tabellen)
-8. **PDF-QA**: Seiten zu Bildern konvertieren, Layout/Tabellen/Umbrüche prüfen
-9. Übergabe mit kurzer Zusammenfassung im Chat
+### Stil
+
+- **Hello!-Look**: Sans-Serif, klare Hierarchie, ruhige Typografie
+- Wie das Mobile-Audit-PDF, das du schon hast
+- Tabellen sauber, Checkboxen als ☐, Schwere-Marker farbig
+- Kompakt: Lieber 5 als 7 Seiten
+
+### Vorgehen (im Build-Modus)
+
+1. Markdown-Datei mit allen 6 Sektionen schreiben
+2. Per ReportLab (Python) zu PDF rendern, Hello!-Stil
+3. **PDF-QA**: Jede Seite zu JPG konvertieren, Layout/Umbrüche/Lesbarkeit prüfen
+4. Bei Problemen: nachjustieren, neu rendern, neu prüfen
+5. Übergabe mit kurzer Zusammenfassung im Chat
 
 ### Was NICHT passiert
 
-- Keine Datenbank-Änderungen
-- Kein Datenimport
 - Keine Code-Änderungen an der App
-- Keine Entscheidungen für dich vorweggenommen — du bekommst Empfehlungen, du entscheidest
-- Kein Detail-Plan für Phase 4 (kommt später, eigener Plan)
+- Keine Datenbank-Aktionen
+- Keine externen Recherchen — alles ist schon im Kopf
+- Keine Bewertung der Findings vorab — du sammelst neutral
 
 ### Aufwand
 
-Konzentrierter Recherche-Durchgang. Erwarte ein PDF von ca. 10–15 Seiten.
+Konzentrierter Build inkl. QA. Erwarte ein PDF von 5–6 Seiten innerhalb weniger Minuten.
 
 ### Danach
 
-Du liest, entscheidest, welche Wortliste wir nehmen, und ob wir Phase 3 direkt nach dem Mobile-Umbau starten — oder zuerst Phase 2 (deine Bug-Liste).
+Frank-Modus „Testen, testen, testen!" 🔥
