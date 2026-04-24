@@ -254,7 +254,7 @@ export default function Quiz() {
         <p className="text-sm text-muted-foreground">
           Damit das Quiz zu dir passt, wähle bitte zuerst ein CEFR-Niveau und ein Thema.
         </p>
-        <Button variant="hero" onClick={() => navigate("/lernen")}>
+        <Button variant="hero" onClick={() => navigate("/start")}>
           <ArrowLeft className="h-4 w-4" /> Zur Auswahl
         </Button>
       </Card>
@@ -373,7 +373,7 @@ export default function Quiz() {
       <Card className="p-6 sm:p-8 text-center space-y-4">
         <h2 className="text-xl sm:text-2xl">Noch keine Vokabeln für {ctxLevel} · {ctxTopic}</h2>
         <p className="text-muted-foreground text-sm">Lass dir zuerst welche generieren.</p>
-        <Button variant="hero" onClick={() => navigate("/lernen")}>
+        <Button variant="hero" onClick={() => navigate("/start")}>
           <ArrowLeft className="h-4 w-4" /> Zur Themenwahl
         </Button>
       </Card>

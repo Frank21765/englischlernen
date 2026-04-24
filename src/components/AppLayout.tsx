@@ -11,8 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { levelFromXp } from "@/lib/gamification";
 
 const baseNav = [
-  { to: "/lernen", label: "Start", icon: Sparkles, match: ["/lernen"] },
-  { to: "/uben", label: "Training", icon: Dumbbell, match: ["/uben", "/quiz", "/grammatik", "/lueckentext", "/vokabeln"] },
+  { to: "/start", label: "Start", icon: Sparkles, match: ["/start"] },
+  { to: "/training", label: "Training", icon: Dumbbell, match: ["/training", "/quiz", "/grammatik", "/lueckentext", "/vokabeln"] },
   { to: "/chat?new=1", label: "Coach", icon: MessageCircle, match: ["/chat"] },
   { to: "/profil", label: "Profil", icon: User, match: ["/profil", "/erfolge", "/statistik", "/einstellungen"] },
 ];
@@ -80,7 +80,7 @@ export default function AppLayout() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md">
         <div className="container max-w-6xl flex items-center justify-between gap-4 py-3 min-h-[60px]">
           <div className="flex items-center gap-2 min-w-0">
-            <NavLink to="/lernen" className="flex items-center gap-2 shrink-0">
+            <NavLink to="/start" className="flex items-center gap-2 shrink-0">
               <img src={appIcon} alt="Hello!" className="h-9 w-9" />
               <span className="font-display text-xl">Hello!</span>
             </NavLink>
@@ -102,7 +102,7 @@ export default function AppLayout() {
             {ctxReady ? (
               hasSelection ? (
                 <NavLink
-                  to="/lernen"
+                  to="/start"
                   title="Aktuelles Niveau und Thema – tippen zum Ändern"
                   className="hidden xs:flex items-center gap-1 rounded-full bg-accent/15 hover:bg-accent/25 px-2.5 py-1 text-xs font-bold text-accent-foreground/90 transition-smooth max-w-[10rem] truncate"
                 >
@@ -113,7 +113,7 @@ export default function AppLayout() {
                 </NavLink>
               ) : (
                 <NavLink
-                  to="/lernen"
+                  to="/start"
                   title="Niveau und Thema wählen"
                   className="hidden xs:flex items-center gap-1 rounded-full bg-muted/60 hover:bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground transition-smooth"
                 >

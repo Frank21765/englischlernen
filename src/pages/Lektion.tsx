@@ -170,7 +170,7 @@ export default function Lektion() {
     return (
       <Card className="p-6 sm:p-8 text-center space-y-4 max-w-xl mx-auto">
         <h2 className="text-xl sm:text-2xl">Lektion nicht gefunden</h2>
-        <Button variant="hero" onClick={() => navigate("/uben/lektionen")}>
+        <Button variant="hero" onClick={() => navigate("/training/lektionen")}>
           <ArrowLeft className="h-4 w-4" /> Zurück zur Übersicht
         </Button>
       </Card>
@@ -221,7 +221,7 @@ export default function Lektion() {
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
             <Button variant="hero" size="default" asChild>
-              <Link to="/uben/lektionen">
+              <Link to="/training/lektionen">
                 <Trophy className="h-4 w-4" /> Zur Übersicht
               </Link>
             </Button>
@@ -382,7 +382,7 @@ export default function Lektion() {
           </Button>
         ) : (
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/uben/lektionen">
+            <Link to="/training/lektionen">
               <ArrowLeft className="h-4 w-4" /> Übersicht
             </Link>
           </Button>
@@ -618,7 +618,7 @@ export default function Lektion() {
                 variant="sm"
                 prefill={buildEllieLessonPrompt({ lessonTitle: lesson.title, level: lesson.level, task })}
                 title={`Lektion: ${lesson.title}`}
-                returnTo={`/uben/lektionen/${lesson.id}`}
+                returnTo={`/training/lektionen/${lesson.id}`}
                 returnLabel="Zurück zur Lektion"
                 returnFlagKey={`hello.lesson.return.${lesson.id}`}
               />

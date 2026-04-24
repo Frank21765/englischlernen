@@ -124,7 +124,7 @@ export default function Onboarding() {
         .eq("user_id", user.id)
         .maybeSingle();
       if (data?.onboarding_completed) {
-        navigate("/lernen", { replace: true });
+        navigate("/start", { replace: true });
         return;
       }
       setChecking(false);
@@ -186,10 +186,10 @@ export default function Onboarding() {
             .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
           toast.success(`${pairs.length} Vokabeln erzeugt – los geht's!`);
         }
-        navigate("/uben/quiz", { replace: true });
+        navigate("/training/quiz", { replace: true });
       } else {
         toast.success("Alles bereit – willkommen!");
-        navigate("/lernen", { replace: true });
+        navigate("/start", { replace: true });
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Etwas ist schiefgelaufen");

@@ -2,18 +2,18 @@ import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
 import { BookOpen, GraduationCap, Library, PenLine, Puzzle, Sparkles } from "lucide-react";
 
 const subNav = [
-  { to: "/uben/lektionen", label: "Lektionen", icon: Sparkles, match: "/uben/lektionen" },
-  { to: "/uben/wortpuzzle", label: "Wortpuzzle", icon: Puzzle, match: "/uben/wortpuzzle" },
-  { to: "/uben/quiz", label: "Quiz", icon: GraduationCap, match: "/uben/quiz" },
-  { to: "/uben/lueckentext", label: "Lückentext", icon: PenLine, match: "/uben/lueckentext" },
-  { to: "/uben/grammatik", label: "Grammatik", icon: Library, match: "/uben/grammatik" },
+  { to: "/training/lektionen", label: "Lektionen", icon: Sparkles, match: "/training/lektionen" },
+  { to: "/training/wortpuzzle", label: "Wortpuzzle", icon: Puzzle, match: "/training/wortpuzzle" },
+  { to: "/training/quiz", label: "Quiz", icon: GraduationCap, match: "/training/quiz" },
+  { to: "/training/lueckentext", label: "Lückentext", icon: PenLine, match: "/training/lueckentext" },
+  { to: "/training/grammatik", label: "Grammatik", icon: Library, match: "/training/grammatik" },
   { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: "/vokabeln" },
 ];
 
-export default function Uben() {
+export default function Training() {
   const location = useLocation();
-  if (location.pathname === "/uben" || location.pathname === "/uben/") {
-    return <Navigate to="/uben/lektionen" replace />;
+  if (location.pathname === "/training" || location.pathname === "/training/") {
+    return <Navigate to="/training/lektionen" replace />;
   }
   return (
     <div className="space-y-4">

@@ -58,7 +58,7 @@ export default function Admin() {
   }, [isAdmin]);
 
   if (loading) return <div className="text-muted-foreground">Lade…</div>;
-  if (!isAdmin) return <Navigate to="/lernen" replace />;
+  if (!isAdmin) return <Navigate to="/start" replace />;
 
   const activate = async (userId: string, days = 365) => {
     setBusy(userId);

@@ -71,7 +71,7 @@ export default function Grammar() {
       }),
       auto: true,
       title: shortTitle,
-      returnTo: `/uben/grammatik?resume=${resumeId}`,
+      returnTo: `/training/grammatik?resume=${resumeId}`,
       returnLabel: "Zurück zur Lektion",
     });
     navigate(url);
@@ -97,7 +97,7 @@ export default function Grammar() {
       }),
       auto: true,
       title: shortAns,
-      returnTo: `/uben/grammatik?resume=${resumeId}`,
+      returnTo: `/training/grammatik?resume=${resumeId}`,
       returnLabel: "Zurück zur Lektion",
     });
     navigate(url);
@@ -164,7 +164,7 @@ export default function Grammar() {
         <p className="text-sm text-muted-foreground">
           Damit die Grammatik zu deinem Lernstand passt, wähle bitte zuerst ein CEFR-Niveau und ein Thema.
         </p>
-        <Button variant="hero" onClick={() => navigate("/lernen")}>
+        <Button variant="hero" onClick={() => navigate("/start")}>
           <ArrowLeft className="h-4 w-4" /> Zur Auswahl
         </Button>
       </Card>
