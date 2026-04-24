@@ -1,43 +1,74 @@
 
 
-## Plan: Hello-App-Doku v2 — Kapitel 1 überarbeiten
+## Plan: Routen & Dateien sauber umbenennen (Lernen → Start, Uben → Training)
 
-Ich erstelle eine **neue Version** der Doku (PDF + Markdown) mit korrigiertem Kapitel 1. Kapitel 2–11 bleiben unverändert.
+### Ziel
 
-### Neuer Text Kapitel 1
+Code-Basis innen so konsistent machen wie die UI außen. Vorbereitung für: Mehrsprachigkeit (Spanisch/Französisch-Klone), Wartbarkeit durch Dritte, sauberes kommerzielles Setup.
 
-**Über Hello!**
-Hello! ist eine private, werbefreie Englisch-Lern-App. Entstanden aus einem persönlichen Projekt — währenddessen kam der Gedanke: Vielleicht ist das ja auch was für alle anderen, die Lust haben, Englisch zu lernen.
+### Was geändert wird
 
-**Vision**
-Englisch lernen ohne Druck, ohne Werbung, ohne nervige Menüs. Du bestimmst Tempo, Thema und Niveau. Coach Ellie ist immer dabei, geduldig und ermutigend.
+**1. Routen (URL-Pfade)**
+- `/lernen` → `/start`
+- `/uben` → `/training`
+- `/uben/lektionen` → `/training/lektionen` (analog für `/wortpuzzle`, `/quiz`, `/lueckentext`, `/grammatik`)
 
-**Zielgruppe**
-Alle, die Lust haben, Englisch zu lernen — in ihrem Tempo, mit ihren Themen, auf ihrem Level. Ob Anfänger oder Auffrischer: Hello! passt sich an.
+**2. Datei-Namen**
+- `src/pages/Lernen.tsx` → `src/pages/Start.tsx`
+- `src/pages/Uben.tsx` → `src/pages/Training.tsx`
 
-**Was Hello! NICHT ist**
-- Keine Werbung
-- Kein Datenverkauf
-- Kein Abo-Zwang
-- Keine unlogische Menüführung
-- Kein Startup mit Wachstumsdruck
+**3. Alle internen Verlinkungen**
+- `<NavLink to="/lernen">` → `<NavLink to="/start">` (in 14 Dateien)
+- `navigate("/lernen")` → `navigate("/start")`
+- `returnTo="/uben/..."` → `returnTo="/training/..."`
+- Match-Arrays in der Navigation (`match: ["/lernen"]` → `match: ["/start"]`)
 
-**Geschäftsmodell (zur Orientierung)**
-- **1 Monat kostenloses Testen** nach Freischaltung
-- Danach Freischaltung gegen eine **kleine Spende**: 3 Monate, 6 Monate oder 1 Jahr
-- Spenden decken laufende Kosten (Server, KI, Domain) — kein Gewinn
+**4. Legacy-Redirects (damit NICHTS kaputt geht)**
 
-### Dateien
+In `App.tsx` werden Weiterleitungen eingerichtet:
+```
+/lernen          → /start
+/uben            → /training
+/uben/lektionen  → /training/lektionen
+/uben/quiz       → /training/quiz
+/uben/wortpuzzle → /training/wortpuzzle
+/uben/lueckentext → /training/lueckentext
+/uben/grammatik  → /training/grammatik
+```
 
-- `Hello-App-Doku-v2.pdf` (neu)
-- `Hello-App-Doku-v2.md` (neu)
+So funktionieren Karos Bookmarks und alle alten Links automatisch weiter — sie landen einfach auf der neuen Adresse.
 
-Die v1-Dateien bleiben liegen, kannst du später löschen.
+**5. Kommentare & Variable**
+- Restliche Stellen mit „Lernen-Hub" / „Üben" in Kommentaren angleichen
+
+### Was NICHT geändert wird
+
+- **Datenbank-Tabellen** (`vocabulary`, `learning_sessions` etc.) — die bleiben technisch gleich. „Learning" ist englisch und passt ohnehin universell.
+- **UI-Labels** („Start", „Training") — die sind ja schon richtig.
+- **Andere Routen** (`/chat`, `/profil`, `/vokabeln`, `/admin`) — die sind sprachneutral oder schon ok.
+
+### Risiko-Einschätzung
+
+**Klein**, weil:
+- Legacy-Redirects fangen alte URLs ab
+- Keine Datenbank-Änderung nötig
+- Vite/React baut die Datei-Umbenennungen sauber neu
+
+**Was du nach dem Umbau merken wirst:**
+- In der Adresszeile steht jetzt `/start` statt `/lernen`
+- Sonst: nichts Sichtbares — die App fühlt sich identisch an
 
 ### Vorgehen
 
-1. Generierungs-Skript anpassen (nur Kapitel 1)
-2. PDF + Markdown rendern
-3. QA per Bild-Inspektion
-4. Kurze Bestätigung mit Artifact-Links
+1. Datei-Umbenennungen (`Lernen.tsx` → `Start.tsx`, `Uben.tsx` → `Training.tsx`)
+2. `App.tsx` umstellen: neue Routen + Legacy-Redirects
+3. Alle 14 Dateien mit internen Links aktualisieren
+4. Kommentare/Strings angleichen
+5. Im Preview einmal durchklicken: Start → Training → Lektionen → Quiz → zurück zur Übersicht etc.
+6. Test: Alte URL `/lernen` direkt eingeben → sollte auf `/start` umleiten
+7. Kurzer Bericht, was geändert wurde
+
+### Aufwand
+
+Ein Durchgang, ca. 15–20 Edit-Schritte. Kein „Riesen-Projekt", aber gründlich und konzentriert.
 
