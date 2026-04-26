@@ -83,11 +83,37 @@
     font-family: 'Nunito', system-ui, sans-serif;
     font-feature-settings: "ss01", "cv11";
   }
-  /* App-weite Sichtbarkeit: jede Card / jeder gerundete Container bekommt
-     eine klar erkennbare Bordeaux-Linie. Greift ohne Anfassen jeder Page. */
-  .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl {
-    border-color: hsl(var(--border));
+  h1, h2, h3, .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
+}
+
+@layer components {
+  /* App-weiter Standard-Stil für Boxen/Cards/Panels.
+     Border + Bordeaux-Ring + dunkler Schatten = klar abgegrenzt auf Schwarz.
+     Greift automatisch über die Card-Komponente. */
+  .card-surface {
+    border: 1.5px solid hsl(var(--border));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.18),
+      0 8px 24px hsl(0 0% 0% / 0.35);
+    transition: border-color 0.25s var(--transition-smooth),
+                box-shadow 0.25s var(--transition-smooth),
+                transform 0.25s var(--transition-smooth);
+  }
+  .card-surface-interactive:hover {
+    border-color: hsl(var(--border-strong));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary-glow) / 0.35),
+      0 12px 28px hsl(0 0% 0% / 0.45);
+    transform: translateY(-1px);
+  }
+  .card-surface-interactive:active {
+    transform: scale(0.985);
+  }
+}
   h1, h2, h3, .font-display {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 700;
