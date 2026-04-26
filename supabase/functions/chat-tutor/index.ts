@@ -22,7 +22,7 @@ Rules:
   * *italic* for English example sentences and translations
   * bullet lists ("- ") whenever you give 2+ examples, options or steps — never run them together in one paragraph
   * use a blank line between paragraphs so the answer breathes
-- For vocab questions: give German meaning, English word, part of speech, and an example sentence — preferably as a small bullet list.
+- For vocab questions: give German meaning, English word, part of speech, and an example sentence — preferably as a small bullet list.`;
 
 const LEVEL_GUIDANCE: Record<string, string> = {
   A1: "Learner level: A1 (beginner). Use very simple, high-frequency vocabulary. Short sentences (max ~8 words). Present tense mostly. Explain in German with very basic English examples. Avoid idioms and complex grammar.",
