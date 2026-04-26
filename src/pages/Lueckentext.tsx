@@ -252,7 +252,7 @@ export default function Lueckentext() {
                 : "border-destructive bg-destructive/20 text-destructive"
             }`}
           >
-            {revealed !== null ? current.missing_word : "___"}
+            {revealed !== null ? capitalizeFirst(current.missing_word) : "___"}
           </span>
           {masked.after}
         </div>
@@ -304,7 +304,7 @@ export default function Lueckentext() {
 
       {revealed === false && (
         <div className="flex items-center gap-2 text-sm text-destructive">
-          <X className="h-4 w-4" /> Richtig wäre: <span className="font-bold">{current.missing_word}</span>
+          <X className="h-4 w-4" /> Richtig wäre: <span className="font-bold">{capitalizeFirst(current.missing_word)}</span>
         </div>
       )}
 
@@ -319,11 +319,11 @@ export default function Lueckentext() {
             <div className="min-w-0 flex-1 space-y-1.5 text-xs sm:text-sm leading-relaxed">
               <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
               <p className="text-foreground/90">
-                <span className="font-semibold text-foreground">{current.missing_word}</span>
+                <span className="font-semibold text-foreground">{capitalizeFirst(current.missing_word)}</span>
                 {" — "}
                 {current.hint}
               </p>
-              <p className="text-muted-foreground italic">„{current.full_sentence}"</p>
+              <p className="text-muted-foreground italic">„{toSentenceCase(current.full_sentence)}"</p>
             </div>
           </div>
         </div>
