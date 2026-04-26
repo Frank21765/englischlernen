@@ -68,18 +68,8 @@ export default function Lektionen() {
                   {lesson.description}
                 </p>
 
-                {lesson.examples && lesson.examples.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {lesson.examples.slice(0, 2).map((ex) => (
-                      <span
-                        key={ex}
-                        className="text-[11px] italic text-muted-foreground bg-muted/60 border border-border rounded-md px-1.5 py-0.5 truncate max-w-full"
-                      >
-                        “{ex}”
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* Beispielsätze entfernt aus der Übersicht (Phase 2.4 — Karte entschlackt).
+                    Sie tauchen erst beim Öffnen der Lektion auf, wo sie hingehören. */}
 
                 <div className="mt-4 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">

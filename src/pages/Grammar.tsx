@@ -12,6 +12,7 @@ import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPrac
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
+import { capitalizeFirst } from "@/lib/text";
 
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
@@ -232,11 +233,11 @@ export default function Grammar() {
             <div className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <span className="line-through text-muted-foreground">{lesson.common_mistake.wrong}</span>
+                <span className="line-through text-muted-foreground">{capitalizeFirst(lesson.common_mistake.wrong)}</span>
               </div>
               <div className="flex items-start gap-2">
                 <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                <span className="font-medium">{lesson.common_mistake.correct}</span>
+                <span className="font-medium">{capitalizeFirst(lesson.common_mistake.correct)}</span>
               </div>
               <p className="text-xs text-muted-foreground italic pt-1">{lesson.common_mistake.why}</p>
             </div>
@@ -273,7 +274,7 @@ export default function Grammar() {
                         </Button>
                       ) : (
                         <span className={`text-xs font-semibold ${ok ? "text-success" : "text-destructive"}`}>
-                          {ok ? "Richtig!" : `Lösung: ${p.answer}`}
+                          {ok ? "Richtig!" : `Lösung: ${capitalizeFirst(p.answer)}`}
                         </span>
                       )}
                     </div>

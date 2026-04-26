@@ -10,7 +10,8 @@ import { EllieButton } from "@/components/EllieButton";
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { toSentenceCase } from "@/lib/text";
 import { toast } from "sonner";
-import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, SkipForward, Sparkles, X } from "lucide-react";
+import { EllieIcon } from "@/components/EllieIcon";
 import { awardActivity, celebrate } from "@/lib/gamification";
 
 interface PuzzleItem {
@@ -174,6 +175,16 @@ export default function Wortpuzzle() {
   };
 
   const next = () => setIndex((i) => i + 1);
+
+  // Skip = aktuelle Aufgabe überspringen, ohne sie zu prüfen.
+  // Zählt als beantwortet (nicht korrekt) und bricht den Combo, parallel
+  // zum Verhalten in Quiz und Lückentext. Symmetrisch zu den anderen Modi.
+  const skip = () => {
+    if (checked === "right") return;
+    setAnsweredCount((c) => c + 1);
+    setCombo(0);
+    next();
+  };
 
   // Record a single session at end of round (only if at least one answer given)
   useEffect(() => {
@@ -360,6 +371,27 @@ export default function Wortpuzzle() {
                 <span className="text-muted-foreground">Richtige Lösung: </span>
                 <span className="font-semibold">{toSentenceCase(task.target)}</span>
               </div>
+
+              {/* Mini-Erklärung von Ellie — parallel zu Lektion + Lückentext.
+                  Zeigt Quelle + Lösung kompakt an, damit der Lerner versteht
+                  WAS er sich merken soll, auch ohne den vollen Coach zu öffnen. */}
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 mt-1 flex items-start gap-2">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                  <EllieIcon size={14} alt="" />
+                </span>
+                <div className="min-w-0 flex-1 space-y-0.5 text-xs leading-relaxed">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+                  <p className="text-foreground/90">
+                    <span className="text-muted-foreground">{task.targetLang === "en" ? "Deutsch" : "Englisch"}: </span>
+                    <span className="italic">„{task.source}"</span>
+                  </p>
+                  <p className="text-foreground/90">
+                    <span className="text-muted-foreground">{task.targetLang === "en" ? "Englisch" : "Deutsch"}: </span>
+                    <span className="font-semibold">{toSentenceCase(task.target)}</span>
+                  </p>
+                </div>
+              </div>
+
               {checked === "wrong" && (
                 <div className="pt-1">
                   <Button variant="soft" size="sm" onClick={reset}>
@@ -372,24 +404,38 @@ export default function Wortpuzzle() {
 
           {/* Action row */}
           {!checked && (
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <EllieButton
-                prefill={elliePrompt}
-                title={task.targetLang === "en" ? task.target : task.source}
-                returnTo="/training/wortpuzzle"
-                returnLabel="Zurück zum Wortpuzzle"
-                returnFlagKey={RETURN_FLAG_KEY}
-                variant="sm"
-              />
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={reset} disabled={picked.length === 0}>
-                  <RotateCcw className="h-4 w-4" /> Zurücksetzen
-                </Button>
-                <Button variant="hero" size="sm" onClick={check} disabled={picked.length === 0 || bank.length > 0}>
-                  Prüfen <Check className="h-4 w-4" />
+            <>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <EllieButton
+                  prefill={elliePrompt}
+                  title={task.targetLang === "en" ? task.target : task.source}
+                  returnTo="/training/wortpuzzle"
+                  returnLabel="Zurück zum Wortpuzzle"
+                  returnFlagKey={RETURN_FLAG_KEY}
+                  variant="sm"
+                />
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={reset} disabled={picked.length === 0}>
+                    <RotateCcw className="h-4 w-4" /> Zurücksetzen
+                  </Button>
+                  <Button variant="hero" size="sm" onClick={check} disabled={picked.length === 0 || bank.length > 0}>
+                    Prüfen <Check className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {/* Skip-Button: parallel zu Lektion/Quiz/Lückentext.
+                  Nur sichtbar bevor man auf Prüfen geklickt hat. */}
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={skip}
+                  className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  <SkipForward className="h-4 w-4" /> Überspringen
                 </Button>
               </div>
-            </div>
+            </>
           )}
 
           {/* After check: Frag Ellie + Weiter side by side */}
