@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst } from "@/lib/text";
 
@@ -269,15 +269,45 @@ export default function Grammar() {
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="text-xs text-muted-foreground">💡 {p.hint}</span>
                       {!isRevealed ? (
-                        <Button size="sm" variant="soft" onClick={() => check(i)} disabled={!(answers[i] ?? "").trim()}>
-                          <Check className="h-3.5 w-3.5" /> Prüfen
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {/* Skip-Button: parallel zu Quiz/Lückentext/Wortpuzzle.
+                              Markiert die Aufgabe als gesehen, ohne sie als richtig
+                              zu werten. Nur sichtbar bevor geprüft wurde. */}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}
+                            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+                          >
+                            <SkipForward className="h-3.5 w-3.5" /> Überspringen
+                          </Button>
+                          <Button size="sm" variant="soft" onClick={() => check(i)} disabled={!(answers[i] ?? "").trim()}>
+                            <Check className="h-3.5 w-3.5" /> Prüfen
+                          </Button>
+                        </div>
                       ) : (
                         <span className={`text-xs font-semibold ${ok ? "text-success" : "text-destructive"}`}>
                           {ok ? "Richtig!" : `Lösung: ${capitalizeFirst(p.answer)}`}
                         </span>
                       )}
                     </div>
+                    {/* Mini-Ellie-Erklärung — parallel zu Lektion / Lückentext / Quiz / Wortpuzzle.
+                        Zeigt Lösung + Hint kompakt, sobald geprüft/übersprungen wurde. */}
+                    {isRevealed && (
+                      <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 flex items-start gap-2">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                          <EllieIcon size={14} alt="" />
+                        </span>
+                        <div className="min-w-0 flex-1 space-y-0.5 text-xs leading-relaxed">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+                          <p className="text-foreground/90">
+                            <span className="text-muted-foreground">Lösung: </span>
+                            <span className="font-semibold">{capitalizeFirst(p.answer)}</span>
+                          </p>
+                          <p className="text-muted-foreground italic">{p.hint}</p>
+                        </div>
+                      </div>
+                    )}
                     {isRevealed && (
                       <div className="flex justify-end">
                         <Button
