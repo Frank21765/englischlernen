@@ -343,6 +343,34 @@ export default function Lektion() {
     setActiveIdx(nextIdx);
   };
 
+  // Skip = Aufgabe überspringen ohne sie zu prüfen. Wird als Fehler markiert
+  // (damit sie im "Schwierige nochmal"-Stapel landet) und springt direkt zur
+  // nächsten. Im review-Mode wird nichts persistiert, nur weitergesprungen.
+  const handleSkip = () => {
+    if (!task) return;
+    if (revealed !== null) {
+      // Nach einer Antwort fungiert Skip wie Weiter.
+      handleNext();
+      return;
+    }
+    if (!reviewMode) {
+      recordTaskMistake(user?.id ?? null, lesson.id, task.id);
+      setMistakeIds((prev) => new Set(prev).add(task.id));
+    }
+    const nextIdx = activeIdx + 1;
+    if (nextIdx >= runTotal) {
+      if (reviewMode) {
+        setDone(true);
+        return;
+      }
+      // Letzte Aufgabe übersprungen — nicht als komplett markieren.
+      toast.message("Letzte Aufgabe übersprungen — schau dir die Übersicht an.");
+      navigate("/training/lektionen");
+      return;
+    }
+    setActiveIdx(nextIdx);
+  };
+
   const pickOrderToken = (tok: string, i: number) => {
     if (revealed !== null) return;
     setOrderPicked((p) => [...p, tok]);
