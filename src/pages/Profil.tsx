@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
-import { Check, Heart, History, Pencil, Settings, Trophy, User, X } from "lucide-react";
+import { NavLink, Outlet, useLocation, Navigate, useNavigate } from "react-router-dom";
+import { Check, Heart, History, Pencil, Settings, Shield, Trophy, User, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
