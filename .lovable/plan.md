@@ -40,7 +40,20 @@ Ziel: Alle Lern-Modi sauber, konsistent, ohne Reibungsverluste.
 
 ---
 
-## 📱 Phase 3 — Mobile Navigation *(direkt nach Phase 2)*
+## 🏠 Phase 2.5 — Startseite umsortieren *(geparkt, vor Phase 3)*
+
+Aus Frank's Mobile-Test-Handout: aktuell sieht man auf der Startseite nicht alles auf einen Blick. Neue Reihenfolge mit kleineren Boxen:
+
+- **Box 1 — „Weitermachen, wo du aufgehört hast"** (Wiederholung / letzte Lektion)
+- **Box 2 — „Bereit für die nächste Runde"** (Lernmodule: Quiz, Lückentext, Wortpuzzle, Grammatik)
+- **Box 3 — „Frag mich"** (Direktübersetzung / Coach-Einstieg)
+- **„Aktueller Fokus"-Box** entfällt → wandert in die kompakte Fokus-Pille im Header (existiert bereits)
+
+**Aufwand:** klein-mittel. **Risiko:** niedrig (nur Reihenfolge + Boxen-Größe). **Vorbedingung:** Phase 2 fertig.
+
+---
+
+## 📱 Phase 3 — Mobile Navigation *(nach Phase 2.5)*
 
 **Alex' klare Ansage:** Direkt Bottom-Tab-Bar bauen. **Keine Zwischenlösung.**
 
