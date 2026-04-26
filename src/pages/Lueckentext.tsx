@@ -256,11 +256,14 @@ export default function Lueckentext() {
           {masked.after}
         </div>
         <div className="text-sm text-muted-foreground italic">{current.translation}</div>
-        <div className="text-xs text-muted-foreground">💡 {current.hint}</div>
+        {revealed === null && (
+          <div className="text-xs text-muted-foreground">💡 {current.hint}</div>
+        )}
       </Card>
 
       <div className="flex gap-2">
         <Input
+          ref={inputRef}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={(e) => {
@@ -274,7 +277,7 @@ export default function Lueckentext() {
           className="rounded-2xl h-12 text-base"
         />
         {revealed === null ? (
-          <Button variant="hero" size="lg" onClick={submit} disabled={!answer.trim()}>
+          <Button variant="default" size="lg" onClick={submit} disabled={!answer.trim()}>
             <Check className="h-4 w-4" /> Prüfen
           </Button>
         ) : (
@@ -284,9 +287,44 @@ export default function Lueckentext() {
         )}
       </div>
 
+      {/* Skip-Button: nur bevor man geantwortet hat — danach übernimmt "Weiter". */}
+      {revealed === null && (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={skip}
+            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <SkipForward className="h-4 w-4" /> Überspringen
+          </Button>
+        </div>
+      )}
+
       {revealed === false && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <X className="h-4 w-4" /> Richtig wäre: <span className="font-bold">{current.missing_word}</span>
+        </div>
+      )}
+
+      {/* Mini-Erklärung von Ellie — auch bei richtiger Antwort, parallel zu Lektionen.
+          Zeigt Übersetzung + Hint kompakt formatiert, damit Frank versteht WARUM. */}
+      {revealed !== null && (
+        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+              <EllieIcon size={18} />
+            </span>
+            <div className="min-w-0 flex-1 space-y-1.5 text-xs sm:text-sm leading-relaxed">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+              <p className="text-foreground/90">
+                <span className="font-semibold text-foreground">{current.missing_word}</span>
+                {" — "}
+                {current.hint}
+              </p>
+              <p className="text-muted-foreground italic">„{current.full_sentence}"</p>
+            </div>
+          </div>
         </div>
       )}
 
