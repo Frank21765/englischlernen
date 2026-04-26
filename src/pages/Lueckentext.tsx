@@ -159,6 +159,39 @@ export default function Lueckentext() {
     setRevealed(null);
   };
 
+  // Skip = jump to next question without judging the answer. We DO count it
+  // in the total (so stats stay honest about what was attempted) but not as
+  // correct, and we don't break the combo punishingly — combo just resets.
+  const skip = () => {
+    if (revealed !== null) {
+      next();
+      return;
+    }
+    setStats((s) => ({ correct: s.correct, total: s.total + 1 }));
+    setCombo(0);
+    if (idx + 1 >= items.length) {
+      // Finishing the round via skip — record the session like in next().
+      if (user && stats.total + 1 > 0) {
+        supabase
+          .from("learning_sessions")
+          .insert({
+            user_id: user.id,
+            mode: "cloze",
+            level,
+            topic,
+            total_answers: stats.total + 1,
+            correct_answers: stats.correct,
+          })
+          .then(() => undefined);
+      }
+      toast.message(`Runde fertig! ${stats.correct}/${stats.total + 1} richtig`);
+      setItems([]);
+      return;
+    }
+    setIdx(idx + 1);
+    setAnswer("");
+    setRevealed(null);
+
   if (!items.length) {
     return (
       <div className="space-y-5 max-w-2xl mx-auto">
