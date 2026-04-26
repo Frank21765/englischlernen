@@ -91,21 +91,34 @@
   .bg-gradient-warm { background: var(--gradient-warm); }
   .bg-gradient-sun { background: var(--gradient-sun); }
   .bg-gradient-card { background: var(--gradient-card); }
+  .bg-gradient-lacquer { background: var(--gradient-lacquer); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-lacquer { box-shadow: var(--shadow-lacquer); }
   .transition-bounce { transition: all 0.4s var(--transition-bounce); }
   .transition-smooth { transition: all 0.25s var(--transition-smooth); }
 
+  /* Lack-Optik für Primär-Interaktionen: Bordeaux-Gradient + sanfter Glow
+     + dezenter Innenglanz oben. Nicht plastisch, sondern wie poliertes Holz. */
+  .lacquer {
+    background: var(--gradient-lacquer);
+    box-shadow: var(--shadow-lacquer);
+    border: 1px solid hsl(var(--primary-glow) / 0.35);
+  }
+  .lacquer:hover {
+    box-shadow: 0 0 24px hsl(var(--primary) / 0.45), 0 1px 0 hsl(0 0% 100% / 0.08) inset;
+  }
+
   /* Einheitlicher Hover-Effekt für alle interaktiven Boxen/Karten:
-     dezenter Coral-Rand, leichtes Anheben + warmer Coral-Glow beim Hover. */
+     dezenter Bordeaux-Rand, leichtes Anheben + warmer Wine-Glow beim Hover. */
   .hover-lift {
     transition: all 0.4s var(--transition-bounce);
-    border: 1px solid hsl(var(--primary) / 0.25);
+    border: 1px solid hsl(var(--primary) / 0.20);
   }
   .hover-lift:hover {
     transform: translateY(-2px);
-    border-color: hsl(var(--primary) / 0.55);
+    border-color: hsl(var(--primary-glow) / 0.55);
     box-shadow: var(--shadow-glow);
   }
 
