@@ -1,105 +1,151 @@
-# Strategie-Plan v2: Vokabel-Quelle für „Hello!"
-*Otto's überarbeiteter Vorschlag nach Frank's Klarstellung*
+# Hello! — Phasen-Fahrplan v3 🗺️
+
+Otto's Gesamtplan, wieder hergestellt nach kurzer Strategie-Diskussion zur Vokabel-Quelle. Die Vokabel-Datenbank-Strategie steht **nicht mehr oben**, sondern als **Phase 5** mit klarer Lizenz-Leitplanke von Alex.
+
+**Entscheidungs-Regel:** Frank + Otto entscheiden gemeinsam. Alex und Perplexity liefern Input — Bauchgefühl + technische Umsetzbarkeit haben Vorrang.
 
 ---
 
-## 🎯 Klare Entscheidung statt drei Optionen
+## ✅ Phase 1 — Auth, Onboarding, Foundation *(erledigt)*
 
-Frank hat den Markt sauber analysiert — wir machen es uns nicht unnötig schwer:
-
-- **Zielgruppe:** A1–B2 Lerner (Beruf, Uni, Alltag, Auswanderer, Expats)
-- **C1:** später, optional, als „goldener Tropfen" — kein MVP-Thema
-- **C2:** komplett gestrichen — diese Lerner brauchen keine App
-- **Lizenz:** Es gibt fertige, kommerziell nutzbare DE/EN-Datenbanken **bis B2** zu kaufen. Genau das holen wir uns.
-- **KI bleibt Helfer:** Beispielsätze, Ellie-Erklärungen, Lückentexte, Quizfragen — alles wo KI sicher und stark ist.
-
-**Strategie in einem Satz:**
-> Gekaufte Master-Wortliste A1–B2 als Fundament, KI für alles drumherum.
+- E-Mail-Login + Google
+- Onboarding-Flow (Niveau, Thema, Standardrichtung)
+- Profile, Roles, RLS, Admin-Bereich
+- Access-Gate für Test-/Pro-Zugänge
+- Streak + XP + Level-System
 
 ---
 
-## ✅ Was sich dadurch ändert (vs. heute)
+## 🔧 Phase 2 — Übungen & Trainings-Flow *(läuft, fast fertig)*
 
-| Bereich | Heute | Nach Umstellung |
-|---|---|---|
-| Vokabeln | KI generiert pro User | Aus lizenzierter Master-Liste |
-| Beispielsätze | KI generiert | KI generiert (bleibt) |
-| Lückentexte | KI generiert | KI auf Master-Vokabeln basierend |
-| Ellie-Erklärungen | KI generiert | KI generiert (bleibt) |
-| Karo's Aufwand | Theoretisch alles prüfen | Stichproben reichen |
-| AI-Kosten | Wachsen mit Usern | Bleiben niedrig (nur Ableitungen) |
-| Halluzinations-Risiko | Vorhanden | Bei Vokabeln = 0 |
+Ziel: Alle Lern-Modi sauber, konsistent, ohne Reibungsverluste.
 
----
+### Schon erledigt (Sprint 1A + 1B + 2A)
+- **MC-Bug** gefixt (Antworten werden gemischt)
+- **Toasts** liegen oben, blockieren keinen Button mehr
+- **Button-Farben** vereinheitlicht (alle Action-Buttons = primary)
+- **Casing-Helper** (`src/lib/text.ts`) zentral für Satzanfang-Regel
+- **Vokabel-Platzhalter** neutralisiert
+- **Lückentext:** Auto-Focus mit 600ms Delay, Skip-Button, Ellie-Mini-Erklärung bei richtig/falsch
+- **Skip-Buttons** in Lektion + Quiz
+- **Frag Ellie:** bessere Markdown-Formatierung (Fettung, Listen, Abstand)
 
-## 🛠️ Umsetzung in 3 Phasen
+### Noch offen — Phase 2 Restarbeit
+**2.1 Skip-Button überall**
+- Prüfen, ob `Wortpuzzle`, `Grammatik`, `Vokabeln` auch einen sauberen „Überspringen" haben. Falls nein → einbauen.
 
-### Phase V1 — Liste beschaffen *(Frank + Alex)*
-- Konkrete Anbieter recherchieren (Hueber, Klett, Cornelsen, Cambridge, Oxford, EFLIT, kaikki.org, etc.)
-- Lizenzbedingungen prüfen: **kommerzielle Nutzung in App** muss erlaubt sein
-- Format: idealerweise CSV/Excel, sonst PDF→Otto konvertiert
-- **Lieferumfang:** A1, A2, B1, B2 — sortiert nach Niveau, idealerweise auch Themen
-- **Output:** Eine Datei, die Otto importieren kann
+**2.2 Ellie-Mini-Erklärung überall konsistent**
+- Aktuell nur in Lektion und Lückentext. Otto prüft Quiz, Wortpuzzle, Grammatik — überall wo es sinnvoll ist, kommt eine kurze Ellie-Box bei richtig **und** falsch.
 
-### Phase V2 — Datenmodell + Import *(Otto)*
-- Neue Tabelle `master_vocabulary`:
-  - `level` (A1, A2, B1, B2)
-  - `topic` (Alltag, Reise, Arbeit, …)
-  - `german`, `english`
-  - `grammar_note` (optional)
-  - `source` (welche Liste), `license_ref` (für Compliance)
-- RLS: lesbar für alle eingeloggten User
-- Import-Script: CSV → Supabase (idempotent, damit Re-Imports gehen)
-- Indexe auf `(level, topic)` für schnelle Queries
+**2.3 Casing-Helper flächendeckend anwenden**
+- `toSentenceCase` ist nur in 2 Dateien. Otto checkt Quiz, Grammatik, Lückentext — überall wo Lösungen oder Sätze angezeigt werden.
 
-### Phase V3 — Edge Function umbauen *(Otto)*
-- `generate-vocabulary` zieht künftig aus `master_vocabulary`
-- KI-Aufruf nur noch für: Beispielsatz + Grammar-Note **pro Wort**
-- Fallback: Wenn keine Master-Vokabeln zum Topic vorhanden → KI wie bisher (Notnagel für seltene Themen)
-- Cache: gleiche Wörter werden nicht doppelt verarbeitet
-- `generate-cloze` und `generate-puzzle` ziehen ebenfalls aus Master-Liste
+**2.4 Lektionskarten entschlacken**
+- Beispielsätze raus aus der Karten-Übersicht (Alex' & Perplexity's Wunsch). Karte zeigt: Titel, Niveau, Fortschritt. Beispiele erst beim Öffnen.
+
+**Aufwand:** klein. **Risiko:** niedrig. **Testbarkeit:** sofort.
 
 ---
 
-## 🎯 C1 — der goldene Tropfen (später)
+## 📱 Phase 3 — Mobile-Navigation *(als nächstes nach Phase 2)*
 
-**Nicht jetzt, aber nicht vergessen:**
-- Wenn die App läuft und Frank sieht, dass User wirklich B2 abschließen → C1 nachkaufen
-- Positionierung: „Premium-Stufe für Fortgeschrittene"
-- Möglicher Trigger: User hat 80% der B2-Vokabeln gelernt → Upgrade-Prompt
-- Bis dahin: kein Code, keine Liste, kein Aufwand
+Hier wird's spannender. Frank, das ist der Punkt, an dem du Alex+Perplexity nochmal explizit einbeziehen kannst.
 
-**C2 = nicht geplant.** Wer C2 spricht, braucht kein Vokabel-Training mehr.
+**3.1 Bottom-Tab-Bar (Alex' Empfehlung)**
+- Vier Tabs unten: Start · Training · Coach · Profil
+- Admin wandert ins Profil
+- Daumen-freundlich, Standard auf Mobile
+- **Perplexity war vorsichtiger** → wir können auch erst nur die Sub-Tabs entscrollen und die Bottom-Bar später bauen
 
----
+**3.2 Sub-Tab-Navigation aufräumen**
+- Training- und Profil-Tabs scrollen aktuell horizontal → entweder wrappen, kompakter machen, oder als Dropdown
+- Otto's Empfehlung: erst wrappen (kleinere Änderung), Bottom-Bar danach
 
-## 💪 Warum das die richtige Entscheidung ist
+**3.3 Header verschlanken**
+- Aktuell: Logo + Level + Streak + Niveau-Chip + Abmelden — auf 390px Viewport eng
+- Vorschlag: Level/Streak ins Profil, Header nur Logo + Niveau-Chip + Menü
 
-1. **Realismus:** Frank kennt seinen Markt (Karo, Indonesien, internationales Unternehmen). Datenbasis ist solide.
-2. **Risiko ↓:** Lizenz-Liste = juristisch sauber, qualitativ geprüft, kein Halluzinations-Stress.
-3. **Aufwand ↓:** 4 Niveaus statt 6, klare Sortierung, einmaliger Import.
-4. **Kosten ↓:** Einmalig ~50–200 € statt monatlich wachsende AI-Kosten.
-5. **Karo entlastet:** Stichproben statt jede Vokabel.
-6. **KI bleibt sinnvoll eingesetzt:** für genau das, wo sie glänzt (Erklärungen, personalisierte Beispiele).
-
----
-
-## 📋 Was Frank jetzt tun kann
-
-1. **Liste suchen:** Welche Anbieter hast du im Netz gesehen? Schick Otto die Links/Namen.
-2. **Budget setzen:** Was ist dir die Liste wert? (Otto's Tipp: bis ~200 € wäre fair)
-3. **Lizenz checken (lassen):** Bei Anbieter-Auswahl unbedingt „kommerzielle App-Nutzung" bestätigen lassen — schriftlich.
-
-**Sobald die Liste da ist, baut Otto V2 + V3 in 1 Sprint (≈ 2–3 Sessions).**
+**Aufwand:** mittel. **Risiko:** mittel (UI-Umbau). **Testbarkeit:** gut, da visuell sofort sichtbar.
 
 ---
 
-## ❌ Was wir verwerfen
+## 🎨 Phase 4 — Frank's Design (Farben & Look)
 
-- Aktuell: KI generiert alle Vokabeln (zu riskant, zu teuer auf Dauer)
-- Vorher diskutiert: Hybrid mit KI für A1/A2 (überflüssig, wenn Liste eh A1–B2 abdeckt)
-- C2-Support (kein Markt)
+Frank liefert die Hex-Codes (Bordeaux glänzend auf schwarz). Sobald die da sind:
+
+**4.1 Farb-Tokens umstellen**
+- `src/index.css` → CSS-Variablen für Background, Primary, Accent neu setzen
+- Tailwind-Config zieht automatisch nach
+- Wirkt sich auf **alle** Komponenten aus → einmalig prüfen
+
+**4.2 „Lack-Glanz"-Effekt**
+- Gradient + subtiler Highlight auf Primary-Buttons (wie poliert)
+- Vorsichtig dosieren — sonst wirkt's billig
+
+**4.3 Komponenten-Check**
+- Cards, Buttons, Toasts, Chips, Active-States — alles einmal durchklicken
+- Kontrast prüfen (Lesbarkeit auf Schwarz!)
+
+**Aufwand:** mittel. **Risiko:** mittel-hoch (visueller Gesamteindruck). **Vorbedingung:** Hex-Codes von Frank.
 
 ---
 
-*Plan v2 · erstellt von Otto · Werkbank · nach Frank's Marktklärung · Endentscheidung: Frank + Otto*
+## 📚 Phase 5 — Vokabel-Datenbank (Master-Liste) *(später, mit harter Lizenz-Prüfung)*
+
+Aktuell werden alle Vokabeln per KI on-the-fly generiert. Mittelfristig wollen wir auf **eine lizenzierte A1–B2 Master-Liste** umsteigen, KI bleibt nur noch Helfer für Beispielsätze, Erklärungen, Übungen.
+
+### 🛑 Alex' Lizenz-Leitplanke (vor jedem Import zwingend!)
+
+Eine Wortliste darf **nur dann** importiert werden, wenn **alle sechs** Punkte schriftlich/nachweisbar erfüllt sind:
+
+1. **Klare Nutzungsrechte** oder schriftliche Freigabe vom Rechteinhaber
+2. **Erlaubte Speicherung** in unserer Datenbank (Supabase)
+3. **Erlaubte Anzeige** gegenüber unseren Nutzer:innen
+4. **Erlaubte Bearbeitung/Korrektur** durch Karo / das Team
+5. **Erlaubte Nutzung** für abgeleitete Inhalte (Quiz, Lückentexte, Puzzle, Erklärungen)
+6. **Brauchbares Format** — CSV/XLSX bevorzugt, sauber strukturiert nach Niveau
+
+### ⚠️ Wichtige Klarstellung
+- **Goethe-Wortlisten sind öffentlich, aber NICHT automatisch app-legal.** „Öffentlich als Prüfungsvorbereitung" ≠ „freie kommerzielle Weiterverwendung".
+- **„Andere Apps nutzen sie" ist KEIN Lizenzbeweis.** Andere können falsch liegen oder eine eigene Lizenz haben.
+- **Hueber B2 etc.:** nicht kaufen vor schriftlicher Lizenz-Klärung per Mail.
+
+### Bevorzugte Strategie
+- Gekaufte oder eindeutig lizenzierte A1–B2 Master-Liste (~50–200 €)
+- C1 später, C2 nicht geplant (kein Markt für App-Lerner)
+- KI für Ableitungen (Beispielsätze, Erklärungen) — bleibt
+- Karo prüft Stichproben statt jede Vokabel
+
+### Phasen V1–V3 (erst wenn Liste lizenziert da ist)
+- **V1:** Liste beschaffen *(Frank + Alex, läuft parallel)*
+- **V2:** Datenmodell `master_vocabulary` + Import-Script *(Otto, ~1 Sprint)*
+- **V3:** Edge Functions umbauen — `generate-vocabulary`, `generate-cloze`, `generate-puzzle` ziehen aus Master-Liste *(Otto)*
+
+### CEFR-J / NGSL als Backup
+Beide gelten lizenztechnisch als sauberer und bleiben in der Hinterhand, falls keine kaufbare Liste passt.
+
+**Aufwand:** mittel-groß. **Risiko:** niedrig (wenn Lizenz steht), hoch (wenn ohne Lizenz importiert). **Vorbedingung:** alle 6 Leitplanken erfüllt.
+
+---
+
+## 📋 Vorgeschlagene Reihenfolge
+
+1. **Phase 2 sauber abschließen** (2.1–2.4) — klein, schnell sichtbar
+2. **Phase 3** (Mobile-Navigation) — Frank entscheidet vorher: nur Sub-Tabs oder direkt Bottom-Bar?
+3. **Phase 4** (Farben) — sobald Hex-Codes da sind
+4. **Phase 5** (Vokabel-DB) — erst wenn lizenzierte Liste vorliegt
+
+Zwischen jeder Phase: **Frank testet auf dem Handy**, Otto wartet auf Feedback.
+
+---
+
+## 🤔 Was Otto von Frank, Alex und Perplexity jetzt hören will
+
+1. **Phase 2 erst komplett (2.1–2.4), oder direkt zu Phase 3 springen?**
+2. **Phase 3:** Bottom-Bar jetzt, oder erst nur Sub-Tabs aufräumen?
+3. **Phase 4:** Farb-Codes — wann kommen die? Soll Otto in der Zwischenzeit einen Vorschlag machen?
+4. **Phase 5:** Frank kümmert sich um Lizenz-Recherche parallel — kein Bau-Sprint, bis grünes Licht.
+
+---
+
+**Otto wartet an der Werkbank.** Sobald du entschieden hast, leg ich los. 🔧
