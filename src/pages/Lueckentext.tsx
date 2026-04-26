@@ -232,7 +232,7 @@ export default function Lueckentext() {
             <Check className="h-4 w-4" /> Prüfen
           </Button>
         ) : (
-          <Button variant="success" size="lg" onClick={next}>
+          <Button variant="default" size="lg" onClick={next}>
             Weiter
           </Button>
         )}
