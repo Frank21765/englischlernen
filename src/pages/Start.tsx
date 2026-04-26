@@ -26,10 +26,10 @@ import {
   Loader2,
   PenLine,
   Pencil,
+  Play,
   Puzzle,
   Search,
   Sparkles,
-  Target,
 } from "lucide-react";
 
 interface LookupResult {
@@ -48,23 +48,19 @@ const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const LONG_INPUT_WORDS = 12;
 
 // Persist UI state across navigation (e.g. side-trip to Coach Ellie).
-// Only restored when the user is explicitly returning from an Ellie side-trip
-// (flag set by EllieButton just before navigating). Fresh page entries / fresh
-// logins always start with a clean default state.
 const STATE_KEY = "lernen.uiState.v1";
 const RETURN_FLAG_KEY = "lernen.returningFromEllie";
 interface PersistedState {
   askInput: string;
   lookup: LookupResult | null;
   lookupQuery: string;
-  editFocus: boolean;
+  pickerOpen: boolean;
   customMode: boolean;
 }
 function consumePersisted(): Partial<PersistedState> {
   try {
     const isReturning = sessionStorage.getItem(RETURN_FLAG_KEY) === "1";
     if (!isReturning) {
-      // Fresh entry — wipe any leftover state so we truly start clean.
       sessionStorage.removeItem(STATE_KEY);
       return {};
     }
@@ -77,7 +73,6 @@ function consumePersisted(): Partial<PersistedState> {
   }
 }
 
-// Persisted collapsed state for "Frag mich!"
 const ASK_OPEN_KEY = "lernen.askOpen.v1";
 
 export default function Start() {
@@ -94,7 +89,9 @@ export default function Start() {
 
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
   const [customMode, setCustomMode] = useState<boolean>(persisted.customMode ?? isCustomTopic);
-  const [editFocus, setEditFocus] = useState<boolean>(persisted.editFocus ?? !hasSelection);
+  // Inline-Picker erscheint nur, wenn noch nichts gewählt ist (Erstauswahl).
+  // Spätere Änderung läuft über die Fokus-Pille im Header.
+  const [pickerOpen, setPickerOpen] = useState<boolean>(persisted.pickerOpen ?? !hasSelection);
   const [askOpen, setAskOpen] = useState<boolean>(() => {
     try { return sessionStorage.getItem(ASK_OPEN_KEY) !== "0"; } catch { return true; }
   });
@@ -102,19 +99,18 @@ export default function Start() {
     try { sessionStorage.setItem(ASK_OPEN_KEY, askOpen ? "1" : "0"); } catch { /* ignore */ }
   }, [askOpen]);
 
-  // ---- Box 1: Frag mich! ----
+  // ---- Frag mich! ----
   const [askInput, setAskInput] = useState(persisted.askInput ?? "");
   const [lookup, setLookup] = useState<LookupResult | null>(persisted.lookup ?? null);
   const [lookupQuery, setLookupQuery] = useState<string>(persisted.lookupQuery ?? "");
   const [lookingUp, setLookingUp] = useState(false);
 
-  // Persist relevant UI state.
   useEffect(() => {
-    const snapshot: PersistedState = { askInput, lookup, lookupQuery, editFocus, customMode };
+    const snapshot: PersistedState = { askInput, lookup, lookupQuery, pickerOpen, customMode };
     try {
       sessionStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
     } catch { /* ignore quota */ }
-  }, [askInput, lookup, lookupQuery, editFocus, customMode]);
+  }, [askInput, lookup, lookupQuery, pickerOpen, customMode]);
 
   useEffect(() => {
     if (!user) return;
@@ -175,6 +171,8 @@ export default function Start() {
   };
 
   const askIsLong = wordCount(askInput) >= LONG_INPUT_WORDS;
+  const hasDue = dueCount !== null && dueCount > 0;
+  const hasAnyVocab = vocabCount !== null && vocabCount > 0;
 
   return (
     <div className="space-y-5">
@@ -187,7 +185,194 @@ export default function Start() {
         <h1 className="text-2xl sm:text-3xl md:text-4xl break-words">Let's go!</h1>
       </header>
 
-      {/* ============ 1) Frag mich! ============ */}
+      {/* ============ Erstauswahl (nur ohne Fokus sichtbar) ============ */}
+      {!hasSelection && (
+        <Card className="p-4 sm:p-5 bg-gradient-card shadow-card border-2 border-accent/30">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold">Wähle dein Niveau & Thema</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Damit Ellie weiß, womit du loslegen willst.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPickerOpen((v) => !v)}
+              className="shrink-0"
+              aria-expanded={pickerOpen}
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
+            </Button>
+          </div>
+
+          {pickerOpen && (
+            <div className="mt-4 pt-4 border-t border-border space-y-4">
+              <div>
+                <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
+                <div className="flex flex-wrap gap-2">
+                  {LEVELS.map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => setSelection(l as Level, topic, { persist: true })}
+                      className={`min-w-[3rem] rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-bounce ${
+                        level === l
+                          ? "bg-primary text-primary-foreground shadow-glow scale-105"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="topic" className="text-sm font-semibold">Thema</Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_TOPICS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => { setCustomMode(false); setSelection(level, t, { persist: true }); }}
+                      className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth ${
+                        !customMode && topic === t
+                          ? "bg-accent text-accent-foreground shadow-soft"
+                          : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => { setCustomMode(true); if (!isCustomTopic) setSelection(level, ""); }}
+                    className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth inline-flex items-center gap-1.5 ${
+                      customMode
+                        ? "bg-accent text-accent-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                    }`}
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Eigenes Thema
+                  </button>
+                </div>
+                {customMode && (
+                  <Input
+                    id="topic"
+                    value={topic}
+                    maxLength={60}
+                    onChange={(e) => setSelection(level, e.target.value)}
+                    onBlur={() => topic.trim() && setSelection(level, topic.trim(), { persist: true })}
+                    placeholder="z. B. Weltraum, Autos, Büro-Englisch, Musik…"
+                    className="h-11 rounded-2xl text-base"
+                    autoFocus
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* ============ Box 1: Weitermachen ============ */}
+      <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="rounded-2xl bg-primary/15 p-2.5 sm:p-3 shrink-0">
+            <Play className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
+              {hasDue ? (
+                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
+                </p>
+              ) : hasAnyVocab ? (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Alles wiederholt — gönn dir eine neue Runde.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {hasDue ? (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate(`/training/quiz?fresh=${Date.now()}`)}
+                  className="rounded-xl"
+                >
+                  <Play className="h-4 w-4" /> Wiederholung starten
+                </Button>
+              ) : (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate(`/training/lektionen?fresh=${Date.now()}`)}
+                  className="rounded-xl"
+                >
+                  <Play className="h-4 w-4" /> Mit Lektionen weiter
+                </Button>
+              )}
+              {hasAnyVocab && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/vokabeln")}
+                  className="rounded-xl"
+                >
+                  <BookOpen className="h-4 w-4" /> Meine Vokabeln
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* ============ Box 2: Bereit für die nächste Runde? ============ */}
+      <Card className="hover-lift p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
+        <div className="space-y-0.5">
+          <h2 className="text-base sm:text-lg font-bold">Bereit für die nächste Runde?</h2>
+          <p className="text-sm text-muted-foreground">
+            Wähle, womit du jetzt weitermachen möchtest.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <Button variant="soft" size="lg" onClick={() => navigate(`/training/lektionen?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Sparkles className="h-4 w-4 shrink-0 text-amber-400" /> <span className="min-w-0">Lektionen</span>
+          </Button>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/training/wortpuzzle?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Puzzle className="h-4 w-4 shrink-0 text-emerald-400" /> <span className="min-w-0">Wortpuzzle</span>
+          </Button>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/training/quiz?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <GraduationCap className="h-4 w-4 shrink-0 text-sky-400" /> <span className="min-w-0">Quiz</span>
+          </Button>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/training/lueckentext?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <PenLine className="h-4 w-4 shrink-0 text-violet-400" /> <span className="min-w-0">Lückentext</span>
+          </Button>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/training/grammatik?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <Library className="h-4 w-4 shrink-0 text-rose-400" /> <span className="min-w-0">Grammatik</span>
+          </Button>
+          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
+            <BookOpen className="h-4 w-4 shrink-0 text-cyan-400" /> <span className="min-w-0">Vokabeln</span>
+          </Button>
+          <Button
+            variant="soft"
+            size="lg"
+            onClick={() => navigate(`/chat?new=1&t=${Date.now()}`)}
+            className="hover-lift col-span-2 w-full whitespace-normal text-center leading-tight px-3"
+          >
+            <EllieIcon size={20} alt="" /> <span className="min-w-0">Frag Ellie</span>
+          </Button>
+        </div>
+      </Card>
+
+      {/* ============ Box 3: Frag mich! ============ */}
       <Collapsible open={askOpen} onOpenChange={setAskOpen} asChild>
         <section className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-accent/5 shadow-card overflow-hidden">
           <CollapsibleTrigger asChild>
@@ -310,156 +495,6 @@ export default function Start() {
           </CollapsibleContent>
         </section>
       </Collapsible>
-
-      {/* ============ 2) Aktueller Fokus ============ */}
-      <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
-            <div className="rounded-2xl bg-accent/15 p-2.5 sm:p-3 shrink-0">
-              <Target className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Aktueller Fokus</div>
-              {hasSelection ? (
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-0.5">
-                  <span className="font-mono text-lg sm:text-xl font-bold text-primary">{level}</span>
-                  <span className="text-muted-foreground/60">·</span>
-                  <span className="text-base sm:text-lg font-semibold break-words">{topic || "—"}</span>
-                </div>
-              ) : (
-                <p className="text-sm mt-1">Noch nichts gewählt – leg unten dein Niveau und Thema fest.</p>
-              )}
-              {hasSelection && vocabCount !== null && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {vocabCount} Vokabel{vocabCount === 1 ? "" : "n"} insgesamt gespeichert
-                </p>
-              )}
-              {dueCount !== null && dueCount > 0 && (
-                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
-                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
-                </p>
-              )}
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditFocus((v) => !v)}
-            className="shrink-0"
-            aria-expanded={editFocus}
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="hidden sm:inline">{editFocus ? "Schließen" : "Anpassen"}</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${editFocus ? "rotate-180" : ""}`} />
-          </Button>
-        </div>
-
-        {editFocus && (
-          <div className="mt-4 pt-4 border-t border-border space-y-4">
-            <div>
-              <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
-              <div className="flex flex-wrap gap-2">
-                {LEVELS.map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => setSelection(l as Level, topic, { persist: true })}
-                    className={`min-w-[3rem] rounded-2xl px-3.5 py-1.5 text-sm font-bold transition-bounce ${
-                      level === l
-                        ? "bg-primary text-primary-foreground shadow-glow scale-105"
-                        : "bg-muted text-foreground hover:bg-muted/70"
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="topic" className="text-sm font-semibold">Thema</Label>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_TOPICS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => { setCustomMode(false); setSelection(level, t, { persist: true }); }}
-                    className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth ${
-                      !customMode && topic === t
-                        ? "bg-accent text-accent-foreground shadow-soft"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => { setCustomMode(true); if (!isCustomTopic) setSelection(level, ""); }}
-                  className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-smooth inline-flex items-center gap-1.5 ${
-                    customMode
-                      ? "bg-accent text-accent-foreground shadow-soft"
-                      : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                  }`}
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Eigenes Thema
-                </button>
-              </div>
-              {customMode && (
-                <Input
-                  id="topic"
-                  value={topic}
-                  maxLength={60}
-                  onChange={(e) => setSelection(level, e.target.value)}
-                  onBlur={() => topic.trim() && setSelection(level, topic.trim(), { persist: true })}
-                  placeholder="z. B. Weltraum, Autos, Büro-Englisch, Musik…"
-                  className="h-11 rounded-2xl text-base"
-                  autoFocus
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* ============ 3) Bereit für die nächste Runde? ============ */}
-      <Card className="hover-lift p-4 sm:p-5 md:p-6 space-y-4 bg-gradient-card shadow-card">
-        <div className="space-y-0.5">
-          <h2 className="text-base sm:text-lg font-bold">Bereit für die nächste Runde?</h2>
-          <p className="text-sm text-muted-foreground">
-            Wähle, womit du jetzt weitermachen möchtest.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <Button variant="soft" size="lg" onClick={() => navigate(`/training/lektionen?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <Sparkles className="h-4 w-4 shrink-0 text-amber-400" /> <span className="min-w-0">Lektionen</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/training/wortpuzzle?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <Puzzle className="h-4 w-4 shrink-0 text-emerald-400" /> <span className="min-w-0">Wortpuzzle</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/training/quiz?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <GraduationCap className="h-4 w-4 shrink-0 text-sky-400" /> <span className="min-w-0">Quiz</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/training/lueckentext?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <PenLine className="h-4 w-4 shrink-0 text-violet-400" /> <span className="min-w-0">Lückentext</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/training/grammatik?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <Library className="h-4 w-4 shrink-0 text-rose-400" /> <span className="min-w-0">Grammatik</span>
-          </Button>
-          <Button variant="soft" size="lg" onClick={() => navigate(`/vokabeln?fresh=${Date.now()}`)} className="hover-lift w-full whitespace-normal text-center leading-tight px-3">
-            <BookOpen className="h-4 w-4 shrink-0 text-cyan-400" /> <span className="min-w-0">Vokabeln</span>
-          </Button>
-          <Button
-            variant="soft"
-            size="lg"
-            onClick={() => navigate(`/chat?new=1&t=${Date.now()}`)}
-            className="hover-lift col-span-2 w-full whitespace-normal text-center leading-tight px-3"
-          >
-            <EllieIcon size={20} alt="" /> <span className="min-w-0">Frag Ellie</span>
-          </Button>
-        </div>
-      </Card>
     </div>
   );
 }
