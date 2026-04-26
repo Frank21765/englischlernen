@@ -114,12 +114,6 @@
     transform: scale(0.985);
   }
 }
-  h1, h2, h3, .font-display {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-}
 
 @layer utilities {
   .bg-gradient-warm { background: var(--gradient-warm); }
