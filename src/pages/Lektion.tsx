@@ -682,6 +682,21 @@ export default function Lektion() {
             </Button>
           )}
         </div>
+
+        {/* Skip-Button: nur sichtbar bevor man geantwortet hat. Markiert die
+            Aufgabe als "schwierig" und springt direkt weiter. */}
+        {revealed === null && (
+          <div className="flex justify-center pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+            >
+              <SkipForward className="h-4 w-4" /> Überspringen
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
