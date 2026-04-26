@@ -24,6 +24,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
 import { EllieButton } from "@/components/EllieButton";
+import { toSentenceCase } from "@/lib/text";
 
 
 /** Build a lesson-aware prompt so Coach Ellie has the current task in context. */
@@ -71,7 +72,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const correctOf = (t: LessonTask): string =>
-  t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : t.answer;
+  t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : toSentenceCase(t.answer);
 
 const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
@@ -144,7 +145,10 @@ export default function Lektion() {
     setActiveIdx(firstIncomplete === -1 ? 0 : firstIncomplete);
   }, [lesson, user?.id]);
 
-  // Reset per-task UI whenever active task changes; auto-focus cloze input.
+  // Reset per-task UI whenever active task changes.
+  // NOTE: We intentionally do NOT auto-focus the cloze input here. The mobile
+  // keyboard popping up unsolicited covers half the screen and was reported as
+  // a usability blocker — users now tap the field themselves when ready.
   useEffect(() => {
     const t = taskList[activeIdx];
     if (!t) return;
@@ -153,16 +157,6 @@ export default function Lektion() {
     if (t.type === "order") {
       setOrderTokens(shuffle(t.words));
       setOrderPicked([]);
-    }
-    // Auto-focus the cloze input so users can start typing immediately.
-    // Use a slightly delayed retry so the focus survives layout shifts on
-    // task transitions (e.g. when a previous task type was different).
-    if (t.type === "cloze") {
-      const tryFocus = () => inputRef.current?.focus();
-      requestAnimationFrame(tryFocus);
-      const t1 = window.setTimeout(tryFocus, 60);
-      const t2 = window.setTimeout(tryFocus, 200);
-      return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
     }
   }, [activeIdx, taskList]);
 
