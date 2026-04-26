@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { EllieButton } from "@/components/EllieButton";
 
 import { ellieAskWordPrompt } from "@/lib/ellie";
+import { toSentenceCase } from "@/lib/text";
 import { toast } from "sonner";
 import { ArrowRight, Check, Loader2, Puzzle, RefreshCw, RotateCcw, Sparkles, X } from "lucide-react";
 import { awardActivity, celebrate } from "@/lib/gamification";
@@ -357,7 +358,7 @@ export default function Wortpuzzle() {
               </div>
               <div className="text-foreground/90">
                 <span className="text-muted-foreground">Richtige Lösung: </span>
-                <span className="font-semibold">{task.target}</span>
+                <span className="font-semibold">{toSentenceCase(task.target)}</span>
               </div>
               {checked === "wrong" && (
                 <div className="pt-1">

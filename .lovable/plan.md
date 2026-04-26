@@ -1,89 +1,52 @@
-## Plan: Mobile-Test-Handout PDF
+# Sprint 1A — Blocker-Fixes 🔧
 
-### Ziel
+Otto, Alex und Perplexity sind sich einig: **erst die Blocker raus, dann der Rest.** Frank, du hast den finalen Call. Hier ist, was Otto in **Sprint 1A** anfasst — eng gehalten, keine Navigation, keine Startseite, kein Wintergarten.
 
-Ein kompaktes, gut lesbares **PDF (5–6 Seiten)**, das Frank durch den Mobile-Test der Hello!-App führt — strikt nach Checkliste, mit klarem Beobachtungs-Format.
+## 🐛 Bug-Fix (neu, von Frank entdeckt)
 
-### Ablage
+**1. Multiple-Choice: immer erste Antwort richtig**
+- **Ursache gefunden:** In `src/pages/Lektion.tsx` (Zeile 460) werden `task.options` direkt aus `lessons.ts` gerendert. Die `shuffle()`-Funktion existiert zwar (Zeile 64), wird aber nur für Wort-Sortier-Aufgaben verwendet, nie für MC.
+- **Fix:** Optionen einmal pro Aufgabe mischen (mit `useMemo`, damit sie beim Re-Render nicht erneut springen) und in stabiler Reihenfolge anzeigen.
+- Gilt auch für Quiz/Grammatik-Quiz — Otto checkt parallel, ob dort derselbe Bug schlummert.
 
-- `/mnt/documents/Hello-Mobile-Test-Handout-v1.pdf` — finales PDF
-- `/mnt/documents/Hello-Mobile-Test-Handout-v1.md` — Markdown-Quelle (zum Lesen am Handy ohne PDF-Reader)
+## 🔴 Blocker (alle drei Berater einig)
 
-### Inhalt der 6 Seiten
+**2. Toast verdeckt „Weiter"-Button**
+- Toast-Position so anpassen, dass sie weder „Weiter" noch „Prüfen" verdeckt — auf Mobile am oberen Rand statt unten, oder Button bekommt sicheren `safe-area`-Abstand.
 
-**Seite 1 — Der große Plan**
-- Kurzer Überblick: Wo stehen wir, was kommt
-- Phasen 1–4 als Tabelle (Mobile → Übungs-UX → Level-Treue → Optional)
-- Was wir bewusst weglassen (CEFR-J-Komplettimport, Validator-Standard) und warum
+**3. Tastatur springt im Lückentext sofort auf**
+- `autoFocus` aus dem Input entfernen. User tippt selbst, wenn er bereit ist.
 
-**Seite 2 — Dein Auftrag**
-- Gerät: Smartphone (iOS oder Android)
-- URL: https://englischlernen.lovable.app
-- Modus: Strikt nach Checkliste, jeden Punkt abhaken
-- Was du NICHT bewertest: Inhalte, KI-Antworten, Level-Treue (kommt in Phase 3)
-- Was du SEHR WOHL bewertest: Bedienbarkeit, Touch-Ziele, Layout, Lesbarkeit, Navigation
+**4. Vokabel-Platzhalter „z. B. aufgeben" ersetzen**
+- Generischer, neutraler Hinweistext statt eines konkreten Wortes (verwirrt Anfänger).
 
-**Seite 3 — Die strikte Checkliste**
-Sortiert nach Bereich, jeder Punkt zum Abhaken:
-- **Header** (Logo, Level-Pille, Streak, Fokus-Pille, Logout)
-- **Hauptnavigation** (Start, Training, Coach, Profil — scrollt sie? klemmt sie?)
-- **Start-Seite** (Übersicht, CTA-Buttons, Ellie-Karten)
-- **Training** (Sub-Tabs: Lektionen, Wortpuzzle, Quiz, Lückentext, Grammatik — passen sie? brechen sie um?)
-- **Übungen einzeln** (Buttons groß genug? Tastatur verdeckt was? Skip-Buttons da?)
-- **Coach/Chat** (Eingabe-Feld, Senden-Button, Verlauf)
-- **Profil** (Sub-Tabs, Erfolge, Statistik, Einstellungen)
-- **Allgemein** (Texte zu klein? Kontraste? Buttons mind. 44×44px? horizontaler Scroll?)
+**5. Button-Farben vereinheitlichen**
+- „Weiter"/„Prüfen"/„Nächste" überall **primary** (kein Mix aus grün/rot/blau).
+- Erfolgs-/Fehler-Feedback bleibt grün/rot, aber **Action-Buttons** sind konsistent.
 
-**Seite 4 — Beobachtungs-Format**
-Wie du Findings notierst, mit Beispiel:
-- **Wo:** Welche Seite/Komponente
-- **Was nervt:** Konkretes Problem (1 Satz)
-- **Was würdest du erwarten:** Deine Lösungs-Idee
-- **Schwere:** 🔴 Blocker / 🟡 Stört / 🟢 Schönheitsfehler
-- 2–3 Beispiel-Findings als Vorlage
+**6. Groß-/Kleinschreibung im Satzbau & Wortpuzzle vereinheitlichen**
+- Eine zentrale Regel: Satzanfang groß, Rest klein (außer Eigennamen).
+- Kleine Helper-Funktion in `src/lib/text.ts` (oder direkt in `lessons.ts`-Helpern), damit alle Module dieselbe Logik nutzen.
 
-**Seite 5 — Top-3-Verdächtige (vorab)**
-Wo wir schon was vermuten, ohne dich zu beeinflussen — kurz erklärt, damit du weißt, worauf du besonders schauen solltest:
-1. **Top-Navigation scrollt horizontal** (statt Bottom-Tab-Bar)
-2. **Fokus-Pille verschwindet auf kleinen Screens** (`hidden xs:flex`)
-3. **Training-Sub-Tabs passen vermutlich nicht in eine Reihe**
+## 🚫 Was Otto in 1A NICHT anfasst
 
-Jeweils mit „Worauf du achten solltest"-Hinweis, aber ohne dir die Wertung vorzugeben.
+- Bottom-Tab-Bar (kommt in 1B)
+- Startseite-Umbau (kommt in 1C)
+- Sub-Tab-Navigation (kommt in 1B)
+- Lektionskarten entschlacken (kommt in 1B)
+- Skip-Buttons überall (kommt in Sprint 2 — Alex' Vorschlag, weil das mehr Module berührt)
 
-**Seite 6 — Was danach passiert**
-- Du gibst mir deine gesammelten Findings
-- Wir priorisieren gemeinsam (🔴 zuerst, 🟢 zuletzt)
-- Ich setze in Phase 1 um — Datei für Datei (`AppLayout.tsx`, `Training.tsx`, `Profil.tsx`)
-- Du testest jeden Schritt nach
-- Wir iterieren bis Mobile-UX rund ist
-- Erst DANN gehen wir zu Phase 2 (Übungs-Feinheiten)
+## 📋 Ablauf
 
-### Stil
+1. Otto baut alle 6 Punkte in einem Rutsch (kleine, sichere Edits).
+2. Du testest auf dem Handy.
+3. Wenn 1A clean ist → Sprint 1B (Mobile-Struktur: Bottom-Nav + Sub-Navs).
+4. Dann 1C (Startseite-3-Box).
 
-- **Hello!-Look**: Sans-Serif, klare Hierarchie, ruhige Typografie
-- Wie das Mobile-Audit-PDF, das du schon hast
-- Tabellen sauber, Checkboxen als ☐, Schwere-Marker farbig
-- Kompakt: Lieber 5 als 7 Seiten
+## 🤔 Offene Frage an Frank
 
-### Vorgehen (im Build-Modus)
+Soll Otto direkt loslegen, oder willst du Alex erst noch einen finalen Bau-Prompt für 1A formulieren lassen? Beides ok — sag einfach Bescheid.
 
-1. Markdown-Datei mit allen 6 Sektionen schreiben
-2. Per ReportLab (Python) zu PDF rendern, Hello!-Stil
-3. **PDF-QA**: Jede Seite zu JPG konvertieren, Layout/Umbrüche/Lesbarkeit prüfen
-4. Bei Problemen: nachjustieren, neu rendern, neu prüfen
-5. Übergabe mit kurzer Zusammenfassung im Chat
+---
 
-### Was NICHT passiert
-
-- Keine Code-Änderungen an der App
-- Keine Datenbank-Aktionen
-- Keine externen Recherchen — alles ist schon im Kopf
-- Keine Bewertung der Findings vorab — du sammelst neutral
-
-### Aufwand
-
-Konzentrierter Build inkl. QA. Erwarte ein PDF von 5–6 Seiten innerhalb weniger Minuten.
-
-### Danach
-
-Frank-Modus „Testen, testen, testen!" 🔥
+**Otto wartet auf grünes Licht.** Wenn du auf „Approve" klickst, baue ich Sprint 1A in einem Aufwasch durch. 🛠️

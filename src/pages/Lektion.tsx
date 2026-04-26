@@ -24,6 +24,7 @@ import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gami
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
 import { EllieButton } from "@/components/EllieButton";
+import { toSentenceCase } from "@/lib/text";
 
 
 /** Build a lesson-aware prompt so Coach Ellie has the current task in context. */
@@ -71,7 +72,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const correctOf = (t: LessonTask): string =>
-  t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : t.answer;
+  t.type === "mc" ? t.answer : t.type === "cloze" ? t.answer : toSentenceCase(t.answer);
 
 const taskTypeLabel = (t: LessonTask) =>
   t.type === "mc" ? "Multiple Choice" : t.type === "cloze" ? "Lückentext" : "Satzbau";
@@ -144,7 +145,10 @@ export default function Lektion() {
     setActiveIdx(firstIncomplete === -1 ? 0 : firstIncomplete);
   }, [lesson, user?.id]);
 
-  // Reset per-task UI whenever active task changes; auto-focus cloze input.
+  // Reset per-task UI whenever active task changes.
+  // NOTE: We intentionally do NOT auto-focus the cloze input here. The mobile
+  // keyboard popping up unsolicited covers half the screen and was reported as
+  // a usability blocker — users now tap the field themselves when ready.
   useEffect(() => {
     const t = taskList[activeIdx];
     if (!t) return;
@@ -153,16 +157,6 @@ export default function Lektion() {
     if (t.type === "order") {
       setOrderTokens(shuffle(t.words));
       setOrderPicked([]);
-    }
-    // Auto-focus the cloze input so users can start typing immediately.
-    // Use a slightly delayed retry so the focus survives layout shifts on
-    // task transitions (e.g. when a previous task type was different).
-    if (t.type === "cloze") {
-      const tryFocus = () => inputRef.current?.focus();
-      requestAnimationFrame(tryFocus);
-      const t1 = window.setTimeout(tryFocus, 60);
-      const t2 = window.setTimeout(tryFocus, 200);
-      return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
     }
   }, [activeIdx, taskList]);
 
@@ -373,6 +367,16 @@ export default function Lektion() {
     ? getTaskExplanation(task, { isCorrect: revealed, userAnswer: userAttempt })
     : "";
 
+  // Stable, per-task shuffled options for multiple-choice tasks.
+  // Without this the answer was always rendered first (it sits at index 0
+  // in lessons.ts) — a giveaway that broke the whole exercise. We memoise
+  // by task.id so re-renders within the same task don't re-shuffle.
+  const mcOptions = useMemo<string[]>(() => {
+    if (!task || task.type !== "mc") return [];
+    return shuffle(task.options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id]);
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-2">
@@ -457,7 +461,7 @@ export default function Lektion() {
 
         {task.type === "mc" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {task.options.map((opt) => {
+            {mcOptions.map((opt) => {
               const picked = textInput === opt;
               const isAnsw = opt === task.answer;
               const showRight = revealed !== null && isAnsw;
@@ -514,7 +518,6 @@ export default function Lektion() {
               placeholder="Dein Wort…"
               disabled={revealed !== null}
               className="rounded-xl h-11"
-              autoFocus
             />
           </div>
         )}
@@ -578,7 +581,7 @@ export default function Lektion() {
             </div>
             {revealed !== null && (
               <div className="text-xs text-muted-foreground">
-                Richtig: <span className="font-semibold text-foreground">{task.answer}</span>
+                Richtig: <span className="font-semibold text-foreground">{toSentenceCase(task.answer)}</span>
               </div>
             )}
           </div>
@@ -644,7 +647,7 @@ export default function Lektion() {
               Prüfen
             </Button>
           ) : (
-            <Button variant="success" size="lg" className="flex-1" onClick={handleNext}>
+            <Button variant="default" size="lg" className="flex-1" onClick={handleNext}>
               {activeIdx + 1 >= runTotal
                 ? (reviewMode ? "Wiederholung beenden" : "Lektion abschließen")
                 : "Weiter"}

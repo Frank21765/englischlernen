@@ -226,14 +226,13 @@ export default function Lueckentext() {
           placeholder="Dein Wort…"
           disabled={revealed !== null}
           className="rounded-2xl h-12 text-base"
-          autoFocus
         />
         {revealed === null ? (
           <Button variant="hero" size="lg" onClick={submit} disabled={!answer.trim()}>
             <Check className="h-4 w-4" /> Prüfen
           </Button>
         ) : (
-          <Button variant="success" size="lg" onClick={next}>
+          <Button variant="default" size="lg" onClick={next}>
             Weiter
           </Button>
         )}
