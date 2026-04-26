@@ -367,6 +367,16 @@ export default function Lektion() {
     ? getTaskExplanation(task, { isCorrect: revealed, userAnswer: userAttempt })
     : "";
 
+  // Stable, per-task shuffled options for multiple-choice tasks.
+  // Without this the answer was always rendered first (it sits at index 0
+  // in lessons.ts) — a giveaway that broke the whole exercise. We memoise
+  // by task.id so re-renders within the same task don't re-shuffle.
+  const mcOptions = useMemo<string[]>(() => {
+    if (!task || task.type !== "mc") return [];
+    return shuffle(task.options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id]);
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-2">
