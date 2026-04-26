@@ -226,7 +226,6 @@ export default function Lueckentext() {
           placeholder="Dein Wort…"
           disabled={revealed !== null}
           className="rounded-2xl h-12 text-base"
-          autoFocus
         />
         {revealed === null ? (
           <Button variant="hero" size="lg" onClick={submit} disabled={!answer.trim()}>
