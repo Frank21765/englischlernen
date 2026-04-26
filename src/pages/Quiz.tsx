@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { CardDirection, Level, pickDirection } from "@/lib/learning";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, GraduationCap, Library, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 import { FocusChip } from "@/components/FocusChip";
 import { computeNextReview } from "@/lib/srs";
@@ -483,6 +483,24 @@ export default function Quiz() {
     setPicked(null);
   };
 
+  // Skip = aktuelle Frage überspringen (zählt als beantwortet, nicht als
+  // korrekt; bricht den Combo). Vokabel-Karten werden nicht in die Queue
+  // re-injected, weil "weiß ich nicht" hier weniger schmerzhaft sein soll
+  // als eine Falschantwort — sie bleiben aber für SRS unverändert.
+  const skipQuestion = () => {
+    if (picked) return;
+    const newStats = { correct: stats.correct, total: stats.total + 1 };
+    setStats(newStats);
+    setCombo(0);
+    const nextIdx = idx + 1;
+    if (nextIdx >= queue.length) {
+      finish(newStats);
+      return;
+    }
+    setIdx(nextIdx);
+    setPicked(null);
+  };
+
   const remaining = queue.length - idx;
 
   return (
@@ -594,6 +612,20 @@ export default function Quiz() {
             className="rounded-full px-8"
           >
             Weiter
+          </Button>
+        </div>
+      )}
+
+      {/* Skip-Button: nur sichtbar bevor man eine Antwort gewählt hat. */}
+      {!picked && (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={skipQuestion}
+            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <SkipForward className="h-4 w-4" /> Überspringen
           </Button>
         </div>
       )}

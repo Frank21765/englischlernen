@@ -19,7 +19,7 @@ import {
   recordTaskMistake,
   resetLessonRun,
 } from "@/lib/lessons";
-import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, Target, Trophy, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, SkipForward, Target, Trophy, X } from "lucide-react";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
@@ -343,6 +343,34 @@ export default function Lektion() {
     setActiveIdx(nextIdx);
   };
 
+  // Skip = Aufgabe überspringen ohne sie zu prüfen. Wird als Fehler markiert
+  // (damit sie im "Schwierige nochmal"-Stapel landet) und springt direkt zur
+  // nächsten. Im review-Mode wird nichts persistiert, nur weitergesprungen.
+  const handleSkip = () => {
+    if (!task) return;
+    if (revealed !== null) {
+      // Nach einer Antwort fungiert Skip wie Weiter.
+      handleNext();
+      return;
+    }
+    if (!reviewMode) {
+      recordTaskMistake(user?.id ?? null, lesson.id, task.id);
+      setMistakeIds((prev) => new Set(prev).add(task.id));
+    }
+    const nextIdx = activeIdx + 1;
+    if (nextIdx >= runTotal) {
+      if (reviewMode) {
+        setDone(true);
+        return;
+      }
+      // Letzte Aufgabe übersprungen — nicht als komplett markieren.
+      toast.message("Letzte Aufgabe übersprungen — schau dir die Übersicht an.");
+      navigate("/training/lektionen");
+      return;
+    }
+    setActiveIdx(nextIdx);
+  };
+
   const pickOrderToken = (tok: string, i: number) => {
     if (revealed !== null) return;
     setOrderPicked((p) => [...p, tok]);
@@ -654,6 +682,21 @@ export default function Lektion() {
             </Button>
           )}
         </div>
+
+        {/* Skip-Button: nur sichtbar bevor man geantwortet hat. Markiert die
+            Aufgabe als "schwierig" und springt direkt weiter. */}
+        {revealed === null && (
+          <div className="flex justify-center pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+            >
+              <SkipForward className="h-4 w-4" /> Überspringen
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );

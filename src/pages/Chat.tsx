@@ -569,7 +569,18 @@ export default function Chat() {
                     }`}
                   >
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm prose-invert max-w-none break-words [overflow-wrap:anywhere] [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_code]:break-words">
+                      <div className="prose prose-sm prose-invert max-w-none break-words [overflow-wrap:anywhere]
+                        prose-p:my-2 prose-p:leading-relaxed
+                        prose-strong:text-primary prose-strong:font-bold
+                        prose-em:text-foreground/90
+                        prose-ul:my-2 prose-ul:pl-5 prose-ol:my-2 prose-ol:pl-5
+                        prose-li:my-1 prose-li:marker:text-primary
+                        prose-h1:text-base prose-h1:font-bold prose-h1:mt-3 prose-h1:mb-1.5
+                        prose-h2:text-sm prose-h2:font-bold prose-h2:mt-3 prose-h2:mb-1
+                        prose-h3:text-sm prose-h3:font-semibold prose-h3:mt-2 prose-h3:mb-1
+                        prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-primary prose-code:before:content-none prose-code:after:content-none
+                        prose-blockquote:border-primary/40 prose-blockquote:text-foreground/80 prose-blockquote:not-italic
+                        [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_code]:break-words">
                         <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
                       </div>
                     ) : (
