@@ -461,7 +461,7 @@ export default function Lektion() {
 
         {task.type === "mc" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {task.options.map((opt) => {
+            {mcOptions.map((opt) => {
               const picked = textInput === opt;
               const isAnsw = opt === task.answer;
               const showRight = revealed !== null && isAnsw;
@@ -518,7 +518,6 @@ export default function Lektion() {
               placeholder="Dein Wort…"
               disabled={revealed !== null}
               className="rounded-xl h-11"
-              autoFocus
             />
           </div>
         )}
@@ -582,7 +581,7 @@ export default function Lektion() {
             </div>
             {revealed !== null && (
               <div className="text-xs text-muted-foreground">
-                Richtig: <span className="font-semibold text-foreground">{task.answer}</span>
+                Richtig: <span className="font-semibold text-foreground">{toSentenceCase(task.answer)}</span>
               </div>
             )}
           </div>
@@ -648,7 +647,7 @@ export default function Lektion() {
               Prüfen
             </Button>
           ) : (
-            <Button variant="success" size="lg" className="flex-1" onClick={handleNext}>
+            <Button variant="default" size="lg" className="flex-1" onClick={handleNext}>
               {activeIdx + 1 >= runTotal
                 ? (reviewMode ? "Wiederholung beenden" : "Lektion abschließen")
                 : "Weiter"}
