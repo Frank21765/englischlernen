@@ -13,6 +13,7 @@ import { EllieIcon } from "@/components/EllieIcon";
 import { FocusChip } from "@/components/FocusChip";
 import { computeNextReview } from "@/lib/srs";
 import { buildEllieUrl, ellieExplainGrammarPrompt, ellieExplainQuizMistakePrompt } from "@/lib/ellie";
+import { toSentenceCase } from "@/lib/text";
 import { Link } from "react-router-dom";
 
 interface Vocab {
@@ -546,6 +547,35 @@ export default function Quiz() {
           );
         })}
       </div>
+
+      {/* Mini-Ellie-Erklärung für Vokabel-Quiz — parallel zu Lektion / Lückentext.
+          Greift sowohl bei richtig als auch bei falsch und zeigt das Wortpaar
+          + ggf. Grammatik-Note kompakt an, damit der Lerner versteht WAS er
+          gerade gesehen hat (nicht nur "richtig/falsch"). */}
+      {picked && current.kind === "vocab" && (
+        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-start gap-2">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+            <EllieIcon size={18} />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm leading-relaxed">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+            <p className="text-foreground/90">
+              <span className="text-muted-foreground">Deutsch: </span>
+              <span className="font-semibold text-foreground">{current.vocab.german}</span>
+              <span className="text-muted-foreground"> · Englisch: </span>
+              <span className="font-semibold text-foreground">{current.vocab.english}</span>
+            </p>
+            {current.vocab.grammar_note && (
+              <p className="text-muted-foreground italic">{current.vocab.grammar_note}</p>
+            )}
+            {picked !== correctAnswer && (
+              <p className="text-destructive">
+                Deine Antwort: <span className="font-semibold">{picked}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {picked && current.kind === "grammar" && (
         <Card className="p-3 sm:p-4 bg-muted/40 text-sm">
