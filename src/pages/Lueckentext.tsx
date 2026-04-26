@@ -191,6 +191,7 @@ export default function Lueckentext() {
     setIdx(idx + 1);
     setAnswer("");
     setRevealed(null);
+  };
 
   if (!items.length) {
     return (
