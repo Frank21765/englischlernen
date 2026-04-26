@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Sparkles, SkipForward, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 
 interface ClozeItem {
