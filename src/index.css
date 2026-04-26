@@ -42,8 +42,11 @@
     --muted: 240 8% 10%;
     --muted-foreground: 30 8% 70%;
 
-    --border: 240 8% 14%;
-    --input: 240 8% 12%;
+    /* Border: warmer dunkler Bordeaux-Stich, sichtbarer als reines Grau,
+       aber ohne grell zu wirken. Aktive/wichtige Container nutzen --border-strong. */
+    --border: 355 25% 20%;
+    --border-strong: 355 50% 28%;
+    --input: 240 8% 16%;
     --ring: 352 82% 40%;
 
     --radius: 1rem;
