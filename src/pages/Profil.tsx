@@ -143,6 +143,25 @@ export default function Profil() {
           </NavLink>
         ))}
       </nav>
+
+      {isAdmin && (
+        <Card
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate("/admin")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate("/admin"); } }}
+          className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card cursor-pointer flex items-center gap-3 sm:gap-4"
+        >
+          <div className="rounded-2xl bg-primary/15 p-2.5 sm:p-3 shrink-0">
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-base sm:text-lg font-bold">Admin-Bereich</div>
+            <p className="text-sm text-muted-foreground">Nutzerverwaltung & Zugänge</p>
+          </div>
+        </Card>
+      )}
+
       <Outlet />
     </div>
   );
