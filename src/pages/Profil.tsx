@@ -18,7 +18,9 @@ const subNav = [
 
 export default function Profil() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useUserAccess();
   const [username, setUsername] = useState<string>("");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
