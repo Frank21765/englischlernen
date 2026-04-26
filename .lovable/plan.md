@@ -1,119 +1,103 @@
-# Hello! — Gesamtplan ab jetzt 🗺️
-
-Otto's Vorschlag, wie wir die nächsten Wochen ordentlich strukturieren. Vier Phasen, jede klein genug zum Testen, groß genug um sichtbar was zu bewegen. **Frank hat den finalen Call** — Alex und Perplexity dürfen mitreden, aber Frank+Otto entscheiden.
-
----
-
-## ✅ Schon erledigt (Sprint 1A + 1B)
-
-Damit klar ist, was schon steht:
-
-- **MC-Bug** gefixt (Antworten werden gemischt)
-- **Toasts** liegen oben, blockieren keinen Button mehr
-- **Button-Farben** vereinheitlicht (alle Action-Buttons = primary)
-- **Casing-Helper** (`src/lib/text.ts`) zentral für Satzanfang-Regel
-- **Vokabel-Platzhalter** neutralisiert
-- **Lückentext:** Auto-Focus mit 600ms Delay, Skip-Button, Ellie-Mini-Erklärung bei richtig/falsch
-- **Skip-Buttons** in Lektion + Quiz
-- **Frag Ellie:** bessere Markdown-Formatierung (Fettung, Listen, Abstand)
+# Strategie-Plan: Vokabel-Quelle für „Hello!"
+*Otto's Vorschlag zur Diskussion mit Frank, Alex & Perplexity*
 
 ---
 
-## 🔵 Phase 2 — Aufräumen & Konsistenz (klein, sicher, schnell)
+## 🎯 Ausgangslage
 
-Ziel: Die letzten kleinen Reibungen aus den Übungen rausholen, bevor wir an größere Umbauten gehen.
+Aktuell werden **alle Vokabeln per KI on-the-fly generiert** (`generate-vocabulary` Edge Function, Gemini 2.5 Flash). Das bedeutet:
+- ✅ Flexibel, dynamisch, themenbezogen
+- ❌ Qualität schwankt, Halluzinations-Risiko, keine Garantie
+- ❌ Karo müsste theoretisch jede Vokabel prüfen
+- ❌ Bei Wachstum steigen AI-Kosten linear
 
-**2.1 Skip-Button überall**
-- Prüfen, ob `Wortpuzzle`, `Grammatik`, `Vokabeln` auch einen sauberen „Überspringen" haben. Falls nein → einbauen.
-
-**2.2 Ellie-Mini-Erklärung überall konsistent**
-- Aktuell nur in Lektion und Lückentext. Otto prüft Quiz, Wortpuzzle, Grammatik — überall wo es sinnvoll ist, kommt eine kurze Ellie-Box bei richtig **und** falsch.
-
-**2.3 Casing-Helper flächendeckend anwenden**
-- `toSentenceCase` ist nur in 2 Dateien. Otto checkt Quiz, Grammatik, Lückentext — überall wo Lösungen oder Sätze angezeigt werden.
-
-**2.4 Lektionskarten entschlacken**
-- Beispielsätze raus aus der Karten-Übersicht (Alex' & Perplexity's Wunsch). Karte zeigt: Titel, Niveau, Fortschritt. Beispiele erst beim Öffnen.
-
-**Aufwand:** klein. **Risiko:** niedrig. **Testbarkeit:** sofort.
+Frank's Sorge: **„Was, wenn die KI falsch übersetzt? Ist das kommerziell safe?"** → Berechtigt.
 
 ---
 
-## 🟡 Phase 3 — Mobile-Struktur (Navigation)
+## 📋 Drei Optionen zur Entscheidung
 
-Hier wird's spannender. Frank, das ist der Punkt, an dem du Alex+Perplexity nochmal explizit fragen solltest.
+### Option A — Vollkauf (lizenzierte Master-Liste A1–C2)
+Komplette Wortlisten kaufen, KI nur noch für Beispielsätze nutzen.
 
-**3.1 Bottom-Tab-Bar (Alex' Empfehlung)**
-- Vier Tabs unten: Start · Training · Coach · Profil
-- Admin wandert ins Profil
-- Daumen-freundlich, Standard auf Mobile
-- **Perplexity war vorsichtiger** → wir können auch erst nur die Sub-Tabs entscrollen und die Bottom-Bar später bauen
+- **Kosten:** ~100–300 € einmalig (je nach Anbieter)
+- **Aufwand:** 1 Sprint Import + Umbau
+- **Qualität:** ⭐⭐⭐⭐⭐
+- **Risiko:** Statisch, weniger Personalisierung
 
-**3.2 Sub-Tab-Navigation aufräumen**
-- Training- und Profil-Tabs scrollen aktuell horizontal → entweder wrappen, kompakter machen, oder als Dropdown
-- Otto's Empfehlung: erst wrappen (kleinere Änderung), Bottom-Bar danach
+### Option B — KI behalten + Validierungs-Layer
+Aktuelles System bleibt, aber Karo bekommt ein Review-Tool zum Freigeben/Ablehnen.
 
-**3.3 Header verschlanken**
-- Aktuell: Logo + Level + Streak + Niveau-Chip + Abmelden — auf 390px Viewport eng
-- Vorschlag: Level/Streak ins Profil, Header nur Logo + Niveau-Chip + Menü
+- **Kosten:** 0 € extra, aber Karos Zeit
+- **Aufwand:** 1–2 Sprints (Review-UI + Workflow)
+- **Qualität:** ⭐⭐⭐⭐ (mit Geduld)
+- **Risiko:** Karo wird Engpass, Skalierung schwierig
 
-**Aufwand:** mittel. **Risiko:** mittel (UI-Umbau). **Testbarkeit:** gut, da visuell sofort sichtbar.
+### Option C — Hybrid (Otto's Empfehlung)
+Master-Liste für **B2 + C1** kaufen, **A1/A2** weiter mit KI, **Beispielsätze immer KI-generiert**.
 
----
-
-## 🎨 Phase 4 — franxs-Design (Farben & Look)
-
-Frank liefert die Hex-Codes (Bordeaux glänzend auf schwarz). Sobald die da sind:
-
-**4.1 Farb-Tokens umstellen**
-- `src/index.css` → CSS-Variablen für Background, Primary, Accent neu setzen
-- Tailwind-Config zieht automatisch nach
-- Wirkt sich auf **alle** Komponenten aus → einmalig prüfen
-
-**4.2 „Lack-Glanz"-Effekt**
-- Gradient + subtiler Highlight auf Primary-Buttons (wie poliert)
-- Vorsichtig dosieren — sonst wirkt's billig
-
-**4.3 Komponenten-Check**
-- Cards, Buttons, Toasts, Chips, Active-States — alles einmal durchklicken
-- Kontrast prüfen (Lesbarkeit auf Schwarz!)
-
-**Aufwand:** mittel. **Risiko:** mittel-hoch (visueller Gesamteindruck). **Vorbedingung:** Hex-Codes von Frank.
+- **Kosten:** ~50–150 € einmalig (nur 2 Levels)
+- **Aufwand:** 1 Sprint
+- **Qualität:** ⭐⭐⭐⭐⭐ wo's zählt, ⭐⭐⭐ wo Risiko gering
+- **Risiko:** Niedrig, weil Anfänger-Vokabeln simpler sind
 
 ---
 
-## 🚀 Phase 5 — Wachstum & Strategie (kein Code, sondern Konzept)
+## 🛠️ Phasen (falls Option A oder C gewählt wird)
 
-Frank's Frage „was wenn wir 1.000.000 Downloads wollen?" — das gehört in eine eigene Diskussion, nicht in einen Sprint.
+### Phase V1 — Listen recherchieren & kaufen *(Frank + Alex)*
+- Kandidaten prüfen: Hueber, Klett, Cornelsen, Cambridge, Oxford, EFLIT, etc.
+- Lizenz-Bedingungen checken (kommerzielle Nutzung in App!)
+- Format prüfen (CSV idealerweise, sonst PDF→OCR)
+- **Output:** 1–2 lizenzierte Listen im Haus
 
-**Otto's Empfehlung:** Bevor wir an Marketing/Skalierung denken, müssen drei Dinge stehen:
+### Phase V2 — Datenmodell & Import *(Otto)*
+- Neue Tabelle `master_vocabulary`:
+  - `level` (A1–C2), `topic`, `german`, `english`, `grammar_note`, `source`, `license_ref`
+- RLS: nur lesbar für eingeloggte User
+- Import-Script: CSV → Supabase
+- Indizierung für schnelle Topic-Queries
 
-1. **USP klar formulieren** — was macht Hello! anders als Duolingo, Babbel, Busuu?
-2. **Onboarding bullet-proof** — neue User müssen in 30 Sekunden „aha" sagen
-3. **Retention-Loop** — warum kommt jemand am Tag 2, 7, 30 wieder?
+### Phase V3 — Edge Function umbauen *(Otto)*
+- `generate-vocabulary` zieht künftig aus `master_vocabulary` statt zu halluzinieren
+- KI-Aufruf nur noch für: Beispielsätze + Grammar-Note pro Wort
+- Fallback: Wenn keine Master-Vokabeln zum Topic vorhanden → KI wie bisher
+- Cache-Mechanismus, damit gleiche Wörter nicht doppelt generiert werden
 
-Das ist ein Strategie-Gespräch zwischen Frank und Alex (mit Otto als Sparring), kein Bau-Sprint. **Vorschlag:** Phase 5 parken, bis Phase 2–4 durch sind.
+### Phase V4 — Karo's Review-Dashboard (optional, parallel) *(Otto)*
+- Admin-Bereich: „neue KI-generierte Vokabeln" → Approve/Edit/Reject
+- Approved Vokabeln wandern in `master_vocabulary` mit `source: "Karo-approved"`
+- Wächst die Master-Liste organisch über Zeit
+
+### Phase V5 — B2/C1 Fokus-Marketing *(Frank + Alex)*
+- App-Beschreibung schärfen: „Englisch für Beruf & Uni"
+- Onboarding: B2 als Default vorschlagen
+- C1 als „Premium-Stufe" positionieren
+- A1/A2 als „Einstiegs-Bonus" benennen
 
 ---
 
-## 📋 Vorgeschlagene Reihenfolge
+## ❓ Offene Fragen für die Diskussion
 
-1. **Phase 2** (Aufräumen) — 1 Sprint, klein, schnell sichtbar
-2. **Phase 3** (Navigation) — Frank entscheidet vorher: nur Sub-Tabs oder direkt Bottom-Bar?
-3. **Phase 4** (Farben) — sobald Hex-Codes da sind
-4. **Phase 5** (Strategie) — separates Gespräch, kein Sprint
-
-Zwischen jeder Phase: **Frank testet auf dem Handy**, Otto wartet auf Feedback.
-
----
-
-## 🤔 Was Otto von Frank, Alex und Perplexity hören will
-
-1. **Phase 2 erst komplett, oder direkt zu Phase 3 springen?**
-2. **Phase 3:** Bottom-Bar jetzt, oder erst nur Sub-Tabs?
-3. **Phase 4:** Farb-Codes — wann kommen die? Soll Otto in der Zwischenzeit einen Vorschlag machen?
-4. **Phase 5:** Wann reden wir über Strategie? Jetzt parallel, oder nach Phase 4?
+1. **Welche Option** — A, B oder C? *(Otto tendiert zu C)*
+2. **Budget** — wie viel ist Frank bereit, einmalig zu investieren?
+3. **Listen-Recherche** — übernimmt Alex (Markt) oder Perplexity (Anbieter-Check)?
+4. **B2-Fokus** — auch in der App-Navigation/Marketing sichtbar machen, oder nur intern?
+5. **Karo's Review-Tool** — gleich mitbauen (Phase V4) oder erst später?
+6. **A1/A2** — wirklich weiter KI, oder doch auch kaufen wenn günstig?
 
 ---
 
-**Otto wartet an der Werkbank.** Sobald du (mit oder ohne Alex/Perplexity) entschieden hast, leg ich los. 🔧
+## 🎬 Otto's nächster Schritt (nach Entscheidung)
+
+Sobald die Richtung steht:
+1. Otto baut die `master_vocabulary`-Tabelle + Import-Script
+2. Frank/Alex liefern die gekaufte Liste
+3. Otto integriert sie in `generate-vocabulary`
+4. Test mit echten B2-Vokabeln → Frank prüft Qualitätssprung
+
+**Geschätzter Zeitrahmen:** 1 Sprint (≈ 2–3 Sessions) nach Lieferung der Liste.
+
+---
+
+*Plan erstellt von Otto · Werkbank · zur Diskussion mit Frank, Alex, Perplexity · Endentscheidung: Frank + Otto*
