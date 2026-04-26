@@ -483,6 +483,24 @@ export default function Quiz() {
     setPicked(null);
   };
 
+  // Skip = aktuelle Frage überspringen (zählt als beantwortet, nicht als
+  // korrekt; bricht den Combo). Vokabel-Karten werden nicht in die Queue
+  // re-injected, weil "weiß ich nicht" hier weniger schmerzhaft sein soll
+  // als eine Falschantwort — sie bleiben aber für SRS unverändert.
+  const skipQuestion = () => {
+    if (picked) return;
+    const newStats = { correct: stats.correct, total: stats.total + 1 };
+    setStats(newStats);
+    setCombo(0);
+    const nextIdx = idx + 1;
+    if (nextIdx >= queue.length) {
+      finish(newStats);
+      return;
+    }
+    setIdx(nextIdx);
+    setPicked(null);
+  };
+
   const remaining = queue.length - idx;
 
   return (
