@@ -12,6 +12,7 @@ import { buildEllieUrl, ellieExplainClozePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, Sparkles, SkipForward, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
+import { capitalizeFirst, toSentenceCase } from "@/lib/text";
 
 interface ClozeItem {
   full_sentence: string;
