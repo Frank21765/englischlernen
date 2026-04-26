@@ -41,6 +41,18 @@ export default function Lueckentext() {
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
   const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the input when a new question appears, but with a small delay
+  // so the user can read the sentence before the mobile keyboard pops up and
+  // covers half the screen. 600ms is the sweet spot from Frank's testing.
+  useEffect(() => {
+    if (!items.length || revealed !== null) return;
+    const t = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 600);
+    return () => clearTimeout(t);
+  }, [idx, items.length, revealed]);
 
   // Restore a paused Lückentext session after a "Frag Ellie" side-trip.
   useEffect(() => {
