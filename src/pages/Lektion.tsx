@@ -19,7 +19,7 @@ import {
   recordTaskMistake,
   resetLessonRun,
 } from "@/lib/lessons";
-import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, Target, Trophy, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Loader2, Lightbulb, RotateCcw, SkipForward, Target, Trophy, X } from "lucide-react";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { toast } from "sonner";
 import { EllieIcon } from "@/components/EllieIcon";
