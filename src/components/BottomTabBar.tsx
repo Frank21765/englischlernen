@@ -44,13 +44,19 @@ export default function BottomTabBar() {
                     navigate(to);
                   }
                 }}
-                className={`w-full flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-semibold transition-smooth ${
+                className={`relative w-full flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-semibold transition-smooth ${
                   isActive
-                    ? "text-primary"
+                    ? "text-accent"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 aria-current={isActive ? "page" : undefined}
               >
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-10 rounded-full bg-gradient-lacquer shadow-glow"
+                  />
+                )}
                 <Icon className={`h-5 w-5 ${isActive ? "scale-110" : ""} transition-transform`} />
                 <span>{label}</span>
               </button>
