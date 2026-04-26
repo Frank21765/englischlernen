@@ -535,7 +535,7 @@ export default function Chat() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="text-left rounded-xl bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth flex items-start gap-2"
+                      className="text-left rounded-xl border-[1.5px] border-[hsl(var(--border))] bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth flex items-start gap-2"
                     >
                       <EllieIcon size={18} alt="" className="mt-0.5" />
                       <span>{s}</span>
@@ -562,10 +562,10 @@ export default function Chat() {
                   className={`flex min-w-0 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden ${
+                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden border-[1.5px] ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
+                        ? "bg-primary text-primary-foreground border-[hsl(var(--primary-glow))]/60"
+                        : "bg-muted text-foreground border-[hsl(var(--border))]"
                     }`}
                   >
                     {m.role === "assistant" ? (
