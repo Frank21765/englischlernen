@@ -133,7 +133,7 @@ export default function AppLayout() {
             <LogOut className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Abmelden</span>
           </Button>
         </div>
-        <nav className="container max-w-6xl flex gap-1 overflow-x-auto pb-2 -mt-1">
+        <nav className="hidden md:flex container max-w-6xl gap-1 overflow-x-auto pb-2 -mt-1">
           {navItems.map(({ to, label, icon: Icon, match }) => {
             const path = location.pathname;
             const isActive = match.some((m) => path === m || path.startsWith(m + "/"));
@@ -161,11 +161,12 @@ export default function AppLayout() {
           })}
         </nav>
       </header>
-      <main className="container max-w-6xl py-6 min-w-0 overflow-x-hidden min-h-[calc(100vh-140px)]">
+      <main className="container max-w-6xl py-6 pb-24 md:pb-6 min-w-0 overflow-x-hidden min-h-[calc(100vh-140px)]">
         <AccessGate>
           <Outlet />
         </AccessGate>
       </main>
+      <BottomTabBar />
     </div>
   );
 }
