@@ -42,11 +42,11 @@
     --muted: 240 8% 10%;
     --muted-foreground: 30 8% 70%;
 
-    /* Border: warmer dunkler Bordeaux-Stich, sichtbarer als reines Grau,
-       aber ohne grell zu wirken. Aktive/wichtige Container nutzen --border-strong. */
-    --border: 355 25% 20%;
-    --border-strong: 355 50% 28%;
-    --input: 240 8% 16%;
+    /* Border: warmer Bordeaux-Stich, deutlich sichtbar auf Schwarz.
+       Standard-Cards/Panels nutzen --border, wichtige Container --border-strong. */
+    --border: 355 45% 32%;
+    --border-strong: 355 65% 42%;
+    --input: 355 35% 26%;
     --ring: 352 82% 40%;
 
     --radius: 1rem;
@@ -82,6 +82,11 @@
     @apply bg-background text-foreground;
     font-family: 'Nunito', system-ui, sans-serif;
     font-feature-settings: "ss01", "cv11";
+  }
+  /* App-weite Sichtbarkeit: jede Card / jeder gerundete Container bekommt
+     eine klar erkennbare Bordeaux-Linie. Greift ohne Anfassen jeder Page. */
+  .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl {
+    border-color: hsl(var(--border));
   }
   h1, h2, h3, .font-display {
     font-family: 'Fraunces', Georgia, serif;
