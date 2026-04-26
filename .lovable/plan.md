@@ -1,52 +1,119 @@
-# Sprint 1A — Blocker-Fixes 🔧
+# Hello! — Gesamtplan ab jetzt 🗺️
 
-Otto, Alex und Perplexity sind sich einig: **erst die Blocker raus, dann der Rest.** Frank, du hast den finalen Call. Hier ist, was Otto in **Sprint 1A** anfasst — eng gehalten, keine Navigation, keine Startseite, kein Wintergarten.
-
-## 🐛 Bug-Fix (neu, von Frank entdeckt)
-
-**1. Multiple-Choice: immer erste Antwort richtig**
-- **Ursache gefunden:** In `src/pages/Lektion.tsx` (Zeile 460) werden `task.options` direkt aus `lessons.ts` gerendert. Die `shuffle()`-Funktion existiert zwar (Zeile 64), wird aber nur für Wort-Sortier-Aufgaben verwendet, nie für MC.
-- **Fix:** Optionen einmal pro Aufgabe mischen (mit `useMemo`, damit sie beim Re-Render nicht erneut springen) und in stabiler Reihenfolge anzeigen.
-- Gilt auch für Quiz/Grammatik-Quiz — Otto checkt parallel, ob dort derselbe Bug schlummert.
-
-## 🔴 Blocker (alle drei Berater einig)
-
-**2. Toast verdeckt „Weiter"-Button**
-- Toast-Position so anpassen, dass sie weder „Weiter" noch „Prüfen" verdeckt — auf Mobile am oberen Rand statt unten, oder Button bekommt sicheren `safe-area`-Abstand.
-
-**3. Tastatur springt im Lückentext sofort auf**
-- `autoFocus` aus dem Input entfernen. User tippt selbst, wenn er bereit ist.
-
-**4. Vokabel-Platzhalter „z. B. aufgeben" ersetzen**
-- Generischer, neutraler Hinweistext statt eines konkreten Wortes (verwirrt Anfänger).
-
-**5. Button-Farben vereinheitlichen**
-- „Weiter"/„Prüfen"/„Nächste" überall **primary** (kein Mix aus grün/rot/blau).
-- Erfolgs-/Fehler-Feedback bleibt grün/rot, aber **Action-Buttons** sind konsistent.
-
-**6. Groß-/Kleinschreibung im Satzbau & Wortpuzzle vereinheitlichen**
-- Eine zentrale Regel: Satzanfang groß, Rest klein (außer Eigennamen).
-- Kleine Helper-Funktion in `src/lib/text.ts` (oder direkt in `lessons.ts`-Helpern), damit alle Module dieselbe Logik nutzen.
-
-## 🚫 Was Otto in 1A NICHT anfasst
-
-- Bottom-Tab-Bar (kommt in 1B)
-- Startseite-Umbau (kommt in 1C)
-- Sub-Tab-Navigation (kommt in 1B)
-- Lektionskarten entschlacken (kommt in 1B)
-- Skip-Buttons überall (kommt in Sprint 2 — Alex' Vorschlag, weil das mehr Module berührt)
-
-## 📋 Ablauf
-
-1. Otto baut alle 6 Punkte in einem Rutsch (kleine, sichere Edits).
-2. Du testest auf dem Handy.
-3. Wenn 1A clean ist → Sprint 1B (Mobile-Struktur: Bottom-Nav + Sub-Navs).
-4. Dann 1C (Startseite-3-Box).
-
-## 🤔 Offene Frage an Frank
-
-Soll Otto direkt loslegen, oder willst du Alex erst noch einen finalen Bau-Prompt für 1A formulieren lassen? Beides ok — sag einfach Bescheid.
+Otto's Vorschlag, wie wir die nächsten Wochen ordentlich strukturieren. Vier Phasen, jede klein genug zum Testen, groß genug um sichtbar was zu bewegen. **Frank hat den finalen Call** — Alex und Perplexity dürfen mitreden, aber Frank+Otto entscheiden.
 
 ---
 
-**Otto wartet auf grünes Licht.** Wenn du auf „Approve" klickst, baue ich Sprint 1A in einem Aufwasch durch. 🛠️
+## ✅ Schon erledigt (Sprint 1A + 1B)
+
+Damit klar ist, was schon steht:
+
+- **MC-Bug** gefixt (Antworten werden gemischt)
+- **Toasts** liegen oben, blockieren keinen Button mehr
+- **Button-Farben** vereinheitlicht (alle Action-Buttons = primary)
+- **Casing-Helper** (`src/lib/text.ts`) zentral für Satzanfang-Regel
+- **Vokabel-Platzhalter** neutralisiert
+- **Lückentext:** Auto-Focus mit 600ms Delay, Skip-Button, Ellie-Mini-Erklärung bei richtig/falsch
+- **Skip-Buttons** in Lektion + Quiz
+- **Frag Ellie:** bessere Markdown-Formatierung (Fettung, Listen, Abstand)
+
+---
+
+## 🔵 Phase 2 — Aufräumen & Konsistenz (klein, sicher, schnell)
+
+Ziel: Die letzten kleinen Reibungen aus den Übungen rausholen, bevor wir an größere Umbauten gehen.
+
+**2.1 Skip-Button überall**
+- Prüfen, ob `Wortpuzzle`, `Grammatik`, `Vokabeln` auch einen sauberen „Überspringen" haben. Falls nein → einbauen.
+
+**2.2 Ellie-Mini-Erklärung überall konsistent**
+- Aktuell nur in Lektion und Lückentext. Otto prüft Quiz, Wortpuzzle, Grammatik — überall wo es sinnvoll ist, kommt eine kurze Ellie-Box bei richtig **und** falsch.
+
+**2.3 Casing-Helper flächendeckend anwenden**
+- `toSentenceCase` ist nur in 2 Dateien. Otto checkt Quiz, Grammatik, Lückentext — überall wo Lösungen oder Sätze angezeigt werden.
+
+**2.4 Lektionskarten entschlacken**
+- Beispielsätze raus aus der Karten-Übersicht (Alex' & Perplexity's Wunsch). Karte zeigt: Titel, Niveau, Fortschritt. Beispiele erst beim Öffnen.
+
+**Aufwand:** klein. **Risiko:** niedrig. **Testbarkeit:** sofort.
+
+---
+
+## 🟡 Phase 3 — Mobile-Struktur (Navigation)
+
+Hier wird's spannender. Frank, das ist der Punkt, an dem du Alex+Perplexity nochmal explizit fragen solltest.
+
+**3.1 Bottom-Tab-Bar (Alex' Empfehlung)**
+- Vier Tabs unten: Start · Training · Coach · Profil
+- Admin wandert ins Profil
+- Daumen-freundlich, Standard auf Mobile
+- **Perplexity war vorsichtiger** → wir können auch erst nur die Sub-Tabs entscrollen und die Bottom-Bar später bauen
+
+**3.2 Sub-Tab-Navigation aufräumen**
+- Training- und Profil-Tabs scrollen aktuell horizontal → entweder wrappen, kompakter machen, oder als Dropdown
+- Otto's Empfehlung: erst wrappen (kleinere Änderung), Bottom-Bar danach
+
+**3.3 Header verschlanken**
+- Aktuell: Logo + Level + Streak + Niveau-Chip + Abmelden — auf 390px Viewport eng
+- Vorschlag: Level/Streak ins Profil, Header nur Logo + Niveau-Chip + Menü
+
+**Aufwand:** mittel. **Risiko:** mittel (UI-Umbau). **Testbarkeit:** gut, da visuell sofort sichtbar.
+
+---
+
+## 🎨 Phase 4 — franxs-Design (Farben & Look)
+
+Frank liefert die Hex-Codes (Bordeaux glänzend auf schwarz). Sobald die da sind:
+
+**4.1 Farb-Tokens umstellen**
+- `src/index.css` → CSS-Variablen für Background, Primary, Accent neu setzen
+- Tailwind-Config zieht automatisch nach
+- Wirkt sich auf **alle** Komponenten aus → einmalig prüfen
+
+**4.2 „Lack-Glanz"-Effekt**
+- Gradient + subtiler Highlight auf Primary-Buttons (wie poliert)
+- Vorsichtig dosieren — sonst wirkt's billig
+
+**4.3 Komponenten-Check**
+- Cards, Buttons, Toasts, Chips, Active-States — alles einmal durchklicken
+- Kontrast prüfen (Lesbarkeit auf Schwarz!)
+
+**Aufwand:** mittel. **Risiko:** mittel-hoch (visueller Gesamteindruck). **Vorbedingung:** Hex-Codes von Frank.
+
+---
+
+## 🚀 Phase 5 — Wachstum & Strategie (kein Code, sondern Konzept)
+
+Frank's Frage „was wenn wir 1.000.000 Downloads wollen?" — das gehört in eine eigene Diskussion, nicht in einen Sprint.
+
+**Otto's Empfehlung:** Bevor wir an Marketing/Skalierung denken, müssen drei Dinge stehen:
+
+1. **USP klar formulieren** — was macht Hello! anders als Duolingo, Babbel, Busuu?
+2. **Onboarding bullet-proof** — neue User müssen in 30 Sekunden „aha" sagen
+3. **Retention-Loop** — warum kommt jemand am Tag 2, 7, 30 wieder?
+
+Das ist ein Strategie-Gespräch zwischen Frank und Alex (mit Otto als Sparring), kein Bau-Sprint. **Vorschlag:** Phase 5 parken, bis Phase 2–4 durch sind.
+
+---
+
+## 📋 Vorgeschlagene Reihenfolge
+
+1. **Phase 2** (Aufräumen) — 1 Sprint, klein, schnell sichtbar
+2. **Phase 3** (Navigation) — Frank entscheidet vorher: nur Sub-Tabs oder direkt Bottom-Bar?
+3. **Phase 4** (Farben) — sobald Hex-Codes da sind
+4. **Phase 5** (Strategie) — separates Gespräch, kein Sprint
+
+Zwischen jeder Phase: **Frank testet auf dem Handy**, Otto wartet auf Feedback.
+
+---
+
+## 🤔 Was Otto von Frank, Alex und Perplexity hören will
+
+1. **Phase 2 erst komplett, oder direkt zu Phase 3 springen?**
+2. **Phase 3:** Bottom-Bar jetzt, oder erst nur Sub-Tabs?
+3. **Phase 4:** Farb-Codes — wann kommen die? Soll Otto in der Zwischenzeit einen Vorschlag machen?
+4. **Phase 5:** Wann reden wir über Strategie? Jetzt parallel, oder nach Phase 4?
+
+---
+
+**Otto wartet an der Werkbank.** Sobald du (mit oder ohne Alex/Perplexity) entschieden hast, leg ich los. 🔧
