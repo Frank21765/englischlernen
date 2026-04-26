@@ -535,7 +535,7 @@ export default function Chat() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="text-left rounded-xl border-[1.5px] border-[hsl(var(--border))] bg-muted hover:bg-muted/70 p-3 text-sm transition-smooth flex items-start gap-2"
+                      className="text-left rounded-xl card-surface card-surface-interactive bg-muted hover:bg-muted/70 p-3 text-sm flex items-start gap-2"
                     >
                       <EllieIcon size={18} alt="" className="mt-0.5" />
                       <span>{s}</span>
