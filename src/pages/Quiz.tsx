@@ -616,6 +616,20 @@ export default function Quiz() {
         </div>
       )}
 
+      {/* Skip-Button: nur sichtbar bevor man eine Antwort gewählt hat. */}
+      {!picked && (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={skipQuestion}
+            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <SkipForward className="h-4 w-4" /> Überspringen
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
         <span>Richtig: <span className="font-semibold text-success">{stats.correct}</span></span>
         <span>Beantwortet: <span className="font-semibold text-foreground">{stats.total}</span></span>
