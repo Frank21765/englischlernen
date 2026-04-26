@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useLearning } from "@/hooks/useLearningContext";
 import AccessGate from "@/components/AccessGate";
+import BottomTabBar from "@/components/BottomTabBar";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Dumbbell, Flame, LogOut, MessageCircle, Shield, Sparkles, Trophy, User } from "lucide-react";
 import { useEffect, useState } from "react";
