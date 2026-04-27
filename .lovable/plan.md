@@ -1,147 +1,81 @@
-# Hello! — Phasen-Fahrplan v3.1 🗺️
+## Ziel
 
-Otto's Gesamtplan, mit Alex' finalen Korrekturen aus der Phase-3-Diskussion. Die Vokabel-Datenbank-Strategie steht **nicht oben**, sondern als **Phase 5** mit klarer Lizenz-Leitplanke.
+Boxen, Cards, Panels und Eingabefelder bekommen app-weit **eine** klar sichtbare Kontur. Schluss mit "stärker drehen". Wir entfernen alle konkurrierenden Border-Definitionen und ersetzen sie durch genau einen zentralen Stil.
 
-**Entscheidungs-Regel:** Frank + Otto entscheiden gemeinsam. Alex und Perplexity liefern Input — Bauchgefühl + technische Umsetzbarkeit haben Vorrang.
+## Warum der bisherige Ansatz scheitert
 
----
+- **Bordeaux auf Schwarz** = zu wenig Helligkeitsunterschied. Das Auge erkennt Konturen primär über Helligkeit, nicht Farbe. Egal wie satt das Rot — es bleibt schwach.
+- **Mehrfach-Stile konkurrieren**: globale `* { border-border }`-Regel, `.card-surface`, Spezial-Borders auf Training-Tiles und Chat-Bubbles. Auf Coach sieht man Linien gut, auf Training kaum — weil andere Klassen drüberliegen.
+- **Border + Ring + Shadow gestapelt** wirkt matschig statt klar.
 
-## ✅ Phase 1 — Auth, Onboarding, Foundation *(erledigt)*
+## Was sich ändert
 
-- E-Mail-Login + Google
-- Onboarding-Flow (Niveau, Thema, Standardrichtung)
-- Profile, Roles, RLS, Admin-Bereich
-- Access-Gate für Test-/Pro-Zugänge
-- Streak + XP + Level-System
+### 1. Border-Token: warm-neutral statt Bordeaux
 
----
+In `src/index.css`:
+- `--border` von `355 45% 32%` (gesättigtes Bordeaux) → **`30 8% 38%`** (warmes Beige-Grau, deutlich heller).
+- `--border-strong` → **`30 12% 50%`** (für aktive/wichtige Container).
+- `--input` → **`30 8% 34%`** (Eingabefelder etwas zurückhaltender).
 
-## 🔧 Phase 2 — Übungen & Trainings-Flow *(läuft, fast fertig)*
+Begründung: Helligkeit ~38% liefert echten Kontrast zu Background (3%). Warmer Hue (30°) bleibt zur Bordeaux-Welt passend, ohne mit dem Primary-Rot zu konkurrieren.
 
-Ziel: Alle Lern-Modi sauber, konsistent, ohne Reibungsverluste.
+### 2. Ein einziger Surface-Stil — Border, kein Ring
 
-### Schon erledigt (Sprint 1A + 1B + 2A)
-- **MC-Bug** gefixt (Antworten werden gemischt)
-- **Toasts** liegen oben, blockieren keinen Button mehr
-- **Button-Farben** vereinheitlicht (alle Action-Buttons = primary)
-- **Casing-Helper** (`src/lib/text.ts`) zentral für Satzanfang-Regel
-- **Vokabel-Platzhalter** neutralisiert
-- **Lückentext:** Auto-Focus mit 600ms Delay, Skip-Button, Ellie-Mini-Erklärung bei richtig/falsch
-- **Skip-Buttons** in Lektion + Quiz
-- **Frag Ellie:** bessere Markdown-Formatierung (Fettung, Listen, Abstand)
+`.card-surface` wird vereinfacht:
+- **1px solid** `hsl(var(--border))` (nicht mehr 1.5px — sauberer)
+- Schatten bleibt dezent (`0 4px 12px schwarz/30%`)
+- **Kein** zusätzlicher Ring/Box-Shadow-Outline mehr (war doppelt gemoppelt)
 
-### Noch offen — Phase 2 Restarbeit (jetzt)
-- **2.1 Skip-Button überall** — Wortpuzzle/Grammatik/Vokabeln prüfen, fehlende einbauen
-- **2.2 Ellie-Mini-Erklärung konsistent** — Quiz, Wortpuzzle, Grammatik durchchecken
-- **2.3 Casing-Helper flächendeckend** — Quiz, Grammatik, Lückentext-Lösungen
-- **2.4 Lektionskarten entschlacken** — Beispielsätze raus aus der Übersicht
+`.card-surface-interactive`: Hover hebt nur die Border auf `--border-strong` und fügt leichten `translateY(-1px)` hinzu. Kein Glow.
 
-**Aufwand:** klein. **Risiko:** niedrig. **Testbarkeit:** sofort.
+### 3. Spezial-Borders entfernen
 
----
+Aufräumen:
+- `src/components/ui/input.tsx`: zurück auf Standard `border` (nimmt automatisch `--input`), kein `border-[1.5px]` mehr.
+- `src/components/ui/textarea.tsx`: dito.
+- `src/pages/Chat.tsx`: explizite `border-[1.5px] border-[hsl(...)]` auf Bubbles und Suggestion-Buttons entfernen — sie nutzen wieder `.card-surface` einheitlich.
+- `src/pages/Training.tsx`: Tiles behalten `.card-surface` + `.card-surface-interactive`, aber ohne die Spezial-Border-Farbe für aktiv. Aktive Tile bleibt durch `bg-primary` erkennbar, nicht durch andere Border.
 
-## 🏠 Phase 2.5 — Startseite umsortieren *(geparkt, vor Phase 3)*
+### 4. Visuelle Verifikation auf jeder Hauptseite
 
-Aus Frank's Mobile-Test-Handout: aktuell sieht man auf der Startseite nicht alles auf einen Blick. Neue Reihenfolge mit kleineren Boxen:
+Nach dem Code-Change öffne ich nacheinander Start, Training (mobile + desktop), Coach, Profil, eine Übung (Quiz) und prüfe per Browser-Tool, ob die Linien überall **gleich** und **deutlich** wirken. Erst dann melde ich fertig.
 
-- **Box 1 — „Weitermachen, wo du aufgehört hast"** (Wiederholung / letzte Lektion)
-- **Box 2 — „Bereit für die nächste Runde"** (Lernmodule: Quiz, Lückentext, Wortpuzzle, Grammatik)
-- **Box 3 — „Frag mich"** (Direktübersetzung / Coach-Einstieg)
-- **„Aktueller Fokus"-Box** entfällt → wandert in die kompakte Fokus-Pille im Header (existiert bereits)
+## Was sich NICHT ändert
 
-**Aufwand:** klein-mittel. **Risiko:** niedrig (nur Reihenfolge + Boxen-Größe). **Vorbedingung:** Phase 2 fertig.
+- Farbsystem (Background, Primary, Card-Background) bleibt
+- Bottom-Bar, Navigation, Routing, Trainingsablauf
+- Lack-Effekt auf Buttons (`.lacquer`)
+- `hover-lift` auf Start-/Profil-Cards (wirkt dort gut)
+- Datenbank, Phasen-Plan
 
----
+## Geänderte Dateien (geplant)
 
-## 📱 Phase 3 — Mobile Navigation *(nach Phase 2.5)*
+- `src/index.css` — Tokens + `.card-surface` vereinfacht
+- `src/components/ui/input.tsx` — Border zurück auf Standard
+- `src/components/ui/textarea.tsx` — Border zurück auf Standard
+- `src/pages/Chat.tsx` — Spezial-Borders raus
+- `src/pages/Training.tsx` — aktive-Tile-Border raus
 
-**Alex' klare Ansage:** Direkt Bottom-Tab-Bar bauen. **Keine Zwischenlösung.**
+## Bericht nach Umsetzung
 
-**3.1 Bottom-Tab-Bar**
-- Vier Tabs unten: **Start · Training · Coach · Profil**
-- Daumen-freundlich, Standard auf Mobile
-- Admin **wandert ins Profil** (nicht in die Bottom-Bar)
+1. Welche Tokens jetzt aktiv sind (Hex-Werte zur Kontrolle)
+2. Bestätigung: nur noch **ein** Surface-Stil
+3. Visuelle Prüfung pro Seite (Start, Training mobil/desktop, Coach, Profil, Quiz)
+4. Falls eine Seite trotzdem schwach wirkt: konkrete Stelle benennen statt nochmal blind zu drehen
 
-**3.2 Sub-Tab-Navigation (Training, Profil)**
-- Aktuell horizontal scrollbar — wird mit Bottom-Bar überflüssig oder kompakter wrappen
+## Falls auch dieser Versuch nicht überzeugt
 
-**3.3 Header verschlanken (Alex' Korrektur!)**
-- **Header:** Logo links · kompakter Niveau/Fokus-Chip rechts
-- **Bottom-Bar:** Start · Training · Coach · Profil
-- **Profil-Seite:** Einstellungen · Admin · Logout
-- ❌ **KEIN zusätzlicher Menüknopf im Header**, solange nicht zwingend nötig
-- Sonst hätten wir doppelte Navigation — genau das, was wir loswerden wollen
-
-**Aufwand:** mittel. **Risiko:** mittel (UI-Umbau). **Testbarkeit:** gut, da visuell sofort sichtbar.
+Dann liegt es nicht mehr an Tokens, sondern am Grundkonzept (z. B. Cards bräuchten leicht hellere Background-Fläche statt nur Border). In dem Fall stoppen wir das Thema bewusst und gehen weiter.
 
 ---
 
-## 🎨 Phase 4 — Frank's Design (Farben & Look) *(erst nach Phase 3)*
+## Parallel: Plan v4.0 — noch nicht schreiben, erst besprechen
 
-Frank sammelt die Hex-Codes parallel, **Otto baut sie noch nicht ein.**
+Nach dem Linien-Reset reden wir in Ruhe über die Grok-Vorschläge:
+- Macht "SRS schon in Phase 2 vorbereiten" wirklich Sinn oder verzettelt es uns?
+- Wie viele Vokabeln planen wir realistisch (1.000? 5.000? 10.000)?
+- Audio: vorgenerierte Files oder Live-TTS? Budget?
+- NGSL-Lizenz wirklich kommerziell nutzbar — wer prüft?
+- Phase 6 Speaking: nur Browser-API oder externe Engine?
 
-**4.1 Farb-Tokens umstellen** *(später)*
-- `src/index.css` → CSS-Variablen für Background, Primary, Accent neu setzen
-- Tailwind-Config zieht automatisch nach
-
-**4.2 „Lack-Glanz"-Effekt**
-- Gradient + subtiler Highlight auf Primary-Buttons (wie poliert)
-
-**4.3 Komponenten-Check**
-- Cards, Buttons, Toasts, Chips, Active-States
-- Kontrast prüfen (Lesbarkeit auf Schwarz!)
-
-**Aufwand:** mittel. **Risiko:** mittel-hoch (visueller Gesamteindruck). **Vorbedingung:** Hex-Codes von Frank + Phase 3 fertig.
-
----
-
-## 📚 Phase 5 — Vokabel-Datenbank (Master-Liste) *(geparkt)*
-
-Aktuell werden alle Vokabeln per KI on-the-fly generiert. Mittelfristig wollen wir auf **eine lizenzierte A1–B2 Master-Liste** umsteigen, KI bleibt nur noch Helfer für Beispielsätze, Erklärungen, Übungen.
-
-### 🛑 Alex' Lizenz-Leitplanke (vor jedem Import zwingend!)
-
-Eine Wortliste darf **nur dann** importiert werden, wenn **alle sechs** Punkte schriftlich/nachweisbar erfüllt sind:
-
-1. **Klare Nutzungsrechte** oder schriftliche Freigabe vom Rechteinhaber
-2. **Erlaubte Speicherung** in unserer Datenbank
-3. **Erlaubte Anzeige** gegenüber unseren Nutzer:innen
-4. **Erlaubte Bearbeitung/Korrektur** durch Karo / das Team
-5. **Erlaubte Nutzung** für abgeleitete Inhalte (Quiz, Lückentexte, Puzzle, Erklärungen)
-6. **Brauchbares Format** — CSV/XLSX bevorzugt, sauber strukturiert nach Niveau
-
-### ⚠️ Wichtige Klarstellung
-- **Goethe-Wortlisten sind öffentlich, aber NICHT automatisch app-legal.** „Öffentlich als Prüfungsvorbereitung" ≠ „freie kommerzielle Weiterverwendung".
-- **„Andere Apps nutzen sie" ist KEIN Lizenzbeweis.** Andere können falsch liegen oder eine eigene Lizenz haben.
-- **Hueber B2 etc.:** nicht kaufen vor schriftlicher Lizenz-Klärung per Mail.
-
-### Bevorzugte Strategie
-- Gekaufte oder eindeutig lizenzierte A1–B2 Master-Liste (~50–200 €)
-- C1 später, C2 nicht geplant (kein Markt für App-Lerner)
-- KI für Ableitungen (Beispielsätze, Erklärungen) — bleibt
-- Karo prüft Stichproben statt jede Vokabel
-
-### Phasen V1–V3 (erst wenn Liste lizenziert da ist)
-- **V1:** Liste beschaffen *(Frank + Alex, läuft parallel)*
-- **V2:** Datenmodell `master_vocabulary` + Import-Script *(Otto, ~1 Sprint)*
-- **V3:** Edge Functions umbauen *(Otto)*
-
-### CEFR-J / NGSL als Backup
-Beide gelten lizenztechnisch als sauberer und bleiben in der Hinterhand.
-
-**Aufwand:** mittel-groß. **Risiko:** niedrig (wenn Lizenz steht), hoch (wenn ohne Lizenz). **Vorbedingung:** alle 6 Leitplanken erfüllt.
-
----
-
-## 📋 Vorgeschlagene Reihenfolge *(von Frank am 26.04. freigegeben)*
-
-1. **Phase 2 sauber abschließen** (2.1–2.4) ← *jetzt aktiv*
-2. **Phase 3** Mobile-Navigation mit **Bottom-Bar direkt** (keine Zwischenlösung)
-3. **Phase 4** Farben — sobald Hex-Codes da sind UND Phase 3 fertig
-4. **Phase 5** Vokabel-DB — erst wenn lizenzierte Liste vorliegt
-
-Zwischen jeder Phase: **Frank testet auf dem Handy**, Otto wartet auf Feedback.
-
----
-
-**Otto an der Werkbank.** Phase 2 läuft. 🔧
+Sobald wir das geklärt haben, schreibe ich Plan v4.0 als PDF + MD nach `/mnt/documents/`.

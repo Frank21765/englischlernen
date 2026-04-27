@@ -26,7 +26,7 @@ export default function Training() {
               const isActive = location.pathname === match || location.pathname.startsWith(`${match}/`);
               return `flex items-center justify-center md:justify-start gap-2 rounded-2xl md:rounded-full px-4 py-3.5 md:px-3.5 md:py-1.5 text-base md:text-sm font-semibold leading-tight text-center md:whitespace-nowrap card-surface card-surface-interactive ${
                 isActive
-                  ? "bg-primary text-primary-foreground border-[hsl(var(--primary-glow))]"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:text-foreground"
               }`;
             }}
