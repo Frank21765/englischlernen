@@ -42,11 +42,11 @@
     --muted: 240 8% 10%;
     --muted-foreground: 30 8% 70%;
 
-    /* Border: warmer Bordeaux-Stich, deutlich sichtbar auf Schwarz.
-       Standard-Cards/Panels nutzen --border, wichtige Container --border-strong. */
-    --border: 355 45% 32%;
-    --border-strong: 355 65% 42%;
-    --input: 355 35% 26%;
+    /* Border: warm-neutrale Linie. Helligkeit ~38% sorgt fuer echten Kontrast
+       zum tiefschwarzen Background, ohne mit dem Primary-Rot zu konkurrieren. */
+    --border: 30 8% 38%;
+    --border-strong: 30 12% 50%;
+    --input: 30 8% 34%;
     --ring: 352 82% 40%;
 
     --radius: 1rem;
@@ -91,23 +91,17 @@
 }
 
 @layer components {
-  /* App-weiter Standard-Stil für Boxen/Cards/Panels.
-     Border + Bordeaux-Ring + dunkler Schatten = klar abgegrenzt auf Schwarz.
-     Greift automatisch über die Card-Komponente. */
+  /* App-weiter Standard-Stil fuer Boxen/Cards/Panels.
+     Eine klare 1px-Linie + dezenter Schatten. Kein zusaetzlicher Ring,
+     kein Glow - eine einzige, gut sichtbare Kontur. */
   .card-surface {
-    border: 1.5px solid hsl(var(--border));
-    box-shadow:
-      0 0 0 1px hsl(var(--primary) / 0.18),
-      0 8px 24px hsl(0 0% 0% / 0.35);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.3);
     transition: border-color 0.25s var(--transition-smooth),
-                box-shadow 0.25s var(--transition-smooth),
                 transform 0.25s var(--transition-smooth);
   }
   .card-surface-interactive:hover {
     border-color: hsl(var(--border-strong));
-    box-shadow:
-      0 0 0 1px hsl(var(--primary-glow) / 0.35),
-      0 12px 28px hsl(0 0% 0% / 0.45);
     transform: translateY(-1px);
   }
   .card-surface-interactive:active {

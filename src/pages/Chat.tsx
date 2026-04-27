@@ -562,10 +562,10 @@ export default function Chat() {
                   className={`flex min-w-0 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden border-[1.5px] ${
+                    className={`rounded-2xl px-3.5 py-2.5 max-w-[88%] sm:max-w-[85%] min-w-0 overflow-hidden card-surface ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground border-[hsl(var(--primary-glow))]/60"
-                        : "bg-muted text-foreground border-[hsl(var(--border))]"
+                       ? "bg-primary text-primary-foreground"
+                       : "bg-muted text-foreground"
                     }`}
                   >
                     {m.role === "assistant" ? (
