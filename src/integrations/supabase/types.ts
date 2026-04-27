@@ -127,6 +127,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ngsl_words: {
+        Row: {
+          cefr_level: string
+          created_at: string
+          english: string
+          example_de: string | null
+          example_en: string | null
+          german: string
+          id: string
+          pos: string | null
+          rank: number | null
+          topics: string[]
+        }
+        Insert: {
+          cefr_level?: string
+          created_at?: string
+          english: string
+          example_de?: string | null
+          example_en?: string | null
+          german: string
+          id?: string
+          pos?: string | null
+          rank?: number | null
+          topics?: string[]
+        }
+        Update: {
+          cefr_level?: string
+          created_at?: string
+          english?: string
+          example_de?: string | null
+          example_en?: string | null
+          german?: string
+          id?: string
+          pos?: string | null
+          rank?: number | null
+          topics?: string[]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           access_status: string
@@ -239,6 +278,8 @@ export type Database = {
           last_seen_at: string | null
           level: string
           next_review_at: string | null
+          ngsl_id: string | null
+          source: string
           status: string
           topic: string
           updated_at: string
@@ -257,6 +298,8 @@ export type Database = {
           last_seen_at?: string | null
           level: string
           next_review_at?: string | null
+          ngsl_id?: string | null
+          source?: string
           status?: string
           topic: string
           updated_at?: string
@@ -275,13 +318,23 @@ export type Database = {
           last_seen_at?: string | null
           level?: string
           next_review_at?: string | null
+          ngsl_id?: string | null
+          source?: string
           status?: string
           topic?: string
           updated_at?: string
           user_id?: string
           wrong_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vocabulary_ngsl_id_fkey"
+            columns: ["ngsl_id"]
+            isOneToOne: false
+            referencedRelation: "ngsl_words"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
