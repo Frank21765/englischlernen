@@ -61,7 +61,7 @@ export async function saveOnboardingProfile(
   if (!existing) {
     const { error: insErr } = await supabase.from("profiles").insert({
       user_id: userId,
-      ...update,
+      ...(update as Record<string, never>),
     });
     if (insErr) {
       console.error("[onboarding] profile insert failed", insErr);
@@ -70,7 +70,7 @@ export async function saveOnboardingProfile(
   } else {
     const { data: upd, error: updErr } = await supabase
       .from("profiles")
-      .update(update)
+      .update(update as Record<string, never>)
       .eq("user_id", userId)
       .select("user_id, learning_goal, self_assessment, interests, recommended_level, weekly_minutes_goal, onboarding_completed");
     if (updErr) {
@@ -98,13 +98,13 @@ export async function saveDiagnosticResult(
   userId: string,
   result: DiagnosticResultInput,
 ): Promise<{ ok: boolean; error?: string }> {
-  const row: Record<string, unknown> = {
+  const row = {
     user_id: userId,
     area: result.area,
     score: result.score,
+    ...(result.cefrEstimate ? { cefr_estimate: result.cefrEstimate } : {}),
+    ...(result.details ? { details: result.details as never } : {}),
   };
-  if (result.cefrEstimate) row.cefr_estimate = result.cefrEstimate;
-  if (result.details) row.details = result.details;
 
   const { error } = await supabase.from("diagnostic_results").insert([row]);
   if (error) {
