@@ -265,10 +265,10 @@ export default function Statistik() {
 
 function Stat({ label, value, accent, sub }: { label: string; value: string | number; accent?: boolean; sub?: string }) {
   return (
-    <Card className={`hover-lift p-4 ${accent ? "bg-gradient-warm text-primary-foreground shadow-glow" : ""}`}>
-      <div className={`text-xs uppercase font-bold tracking-wider ${accent ? "opacity-90" : "text-muted-foreground"}`}>{label}</div>
-      <div className="font-display text-2xl md:text-3xl mt-1">{value}</div>
-      {sub && <div className={`text-xs mt-0.5 ${accent ? "opacity-80" : "text-muted-foreground"}`}>{sub}</div>}
+    <Card className={`hover-lift p-3 sm:p-4 min-w-0 ${accent ? "bg-gradient-warm text-primary-foreground shadow-glow" : ""}`}>
+      <div className={`text-[10px] sm:text-xs uppercase font-bold tracking-wider leading-tight ${accent ? "opacity-90" : "text-muted-foreground"}`}>{label}</div>
+      <div className="font-display text-xl sm:text-2xl md:text-3xl mt-1 break-words">{value}</div>
+      {sub && <div className={`text-xs mt-0.5 truncate ${accent ? "opacity-80" : "text-muted-foreground"}`}>{sub}</div>}
     </Card>
   );
 }
