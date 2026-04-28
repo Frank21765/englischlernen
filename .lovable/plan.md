@@ -311,4 +311,4 @@ Bestehende App **nicht neu bauen**. Pädagogisches Rückgrat schichtweise einzie
 
 Nach deiner Freigabe liefere ich diesen Fahrplan als **PDF + MD** ins Documents-Verzeichnis (Bordeaux-Header), damit du ihn mit Alex und Grok teilen kannst.
 
-Danach starten wir mit **Phase 1: Onboarding-Felder + Event-Log**.
+Danach schließen wir **Phase 1** mit Onboarding-UI und Sprachrichtungs-Migration ab.
