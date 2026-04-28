@@ -301,32 +301,25 @@ export default function Start() {
           </div>
           <div className="min-w-0 flex-1 space-y-2">
             <div>
+              <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
               {hasOnboarding ? (
-                <>
-                  <h2 className="text-base sm:text-lg font-bold">Deine ersten Wörter warten</h2>
-                  <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
-                    <Sparkles className="h-3.5 w-3.5 text-accent" />
-                    {onboardingPool!.count} frische Vokabeln aus dem Onboarding · {onboardingPool!.level} · {onboardingPool!.topic}
-                  </p>
-                </>
+                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <Sparkles className="h-3.5 w-3.5 text-accent" />
+                  Deine ersten Wörter warten · {onboardingPool!.count} frische Vokabeln aus dem Onboarding · {onboardingPool!.level} · {onboardingPool!.topic}
+                </p>
+              ) : hasDue ? (
+                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
+                </p>
+              ) : hasAnyVocab ? (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Alles wiederholt — starte eine neue Lektion für frischen Stoff.
+                </p>
               ) : (
-                <>
-                  <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
-                  {hasDue ? (
-                    <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                      <CalendarClock className="h-3.5 w-3.5 text-primary" />
-                      {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
-                    </p>
-                  ) : hasAnyVocab ? (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Alles wiederholt — gönn dir eine neue Runde.
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
-                    </p>
-                  )}
-                </>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Noch keine Vokabeln gespeichert — leg gleich mit einer Lektion los.
+                </p>
               )}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
