@@ -290,6 +290,10 @@ export default function Start() {
       )}
 
       {/* ============ Box 1: Weitermachen ============ */}
+      {/* Priorität:
+          1) Onboarding-Pool noch ungesehen → "Erste Wörter starten" mit autostart=1
+          2) Reguläre Wiederholung fällig    → "Wiederholung starten"
+          3) Sonst                           → Lektionen-Empfehlung */}
       <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="rounded-2xl bg-primary/15 p-2.5 sm:p-3 shrink-0">
@@ -297,24 +301,47 @@ export default function Start() {
           </div>
           <div className="min-w-0 flex-1 space-y-2">
             <div>
-              <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
-              {hasDue ? (
-                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
-                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
-                </p>
-              ) : hasAnyVocab ? (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Alles wiederholt — gönn dir eine neue Runde.
-                </p>
+              {hasOnboarding ? (
+                <>
+                  <h2 className="text-base sm:text-lg font-bold">Deine ersten Wörter warten</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <Sparkles className="h-3.5 w-3.5 text-accent" />
+                    {onboardingPool!.count} frische Vokabeln aus dem Onboarding · {onboardingPool!.level} · {onboardingPool!.topic}
+                  </p>
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
-                </p>
+                <>
+                  <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
+                  {hasDue ? (
+                    <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                      {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
+                    </p>
+                  ) : hasAnyVocab ? (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Alles wiederholt — gönn dir eine neue Runde.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
+                    </p>
+                  )}
+                </>
               )}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              {hasDue ? (
+              {hasOnboarding ? (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate(
+                    `/training/quiz?level=${encodeURIComponent(onboardingPool!.level)}&topic=${encodeURIComponent(onboardingPool!.topic)}&autostart=1`,
+                  )}
+                  className="rounded-xl"
+                >
+                  <Play className="h-4 w-4" /> Erstes Quiz starten
+                </Button>
+              ) : hasDue ? (
                 <Button
                   variant="hero"
                   size="sm"
