@@ -73,6 +73,36 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostic_results: {
+        Row: {
+          area: string
+          cefr_estimate: string | null
+          details: Json | null
+          id: string
+          score: number
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          area: string
+          cefr_estimate?: string | null
+          details?: Json | null
+          id?: string
+          score: number
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: string
+          cefr_estimate?: string | null
+          details?: Json | null
+          id?: string
+          score?: number
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           created_at: string
@@ -90,6 +120,42 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      learning_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          level: string | null
+          metadata: Json
+          object_id: string | null
+          object_type: string | null
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          level?: string | null
+          metadata?: Json
+          object_id?: string | null
+          object_type?: string | null
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          level?: string | null
+          metadata?: Json
+          object_id?: string | null
+          object_type?: string | null
+          topic?: string | null
           user_id?: string
         }
         Relationships: []
@@ -176,13 +242,19 @@ export type Database = {
           direction_mode: string
           display_name: string | null
           id: string
+          interests: string[]
           last_active_date: string | null
+          last_compass_update: string | null
           last_login_at: string | null
+          learning_goal: string | null
           longest_streak: number
           onboarding_completed: boolean
+          recommended_level: string | null
+          self_assessment: string | null
           updated_at: string
           user_id: string
           valid_until: string | null
+          weekly_minutes_goal: number
           xp: number
         }
         Insert: {
@@ -194,13 +266,19 @@ export type Database = {
           direction_mode?: string
           display_name?: string | null
           id?: string
+          interests?: string[]
           last_active_date?: string | null
+          last_compass_update?: string | null
           last_login_at?: string | null
+          learning_goal?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
+          recommended_level?: string | null
+          self_assessment?: string | null
           updated_at?: string
           user_id: string
           valid_until?: string | null
+          weekly_minutes_goal?: number
           xp?: number
         }
         Update: {
@@ -212,13 +290,19 @@ export type Database = {
           direction_mode?: string
           display_name?: string | null
           id?: string
+          interests?: string[]
           last_active_date?: string | null
+          last_compass_update?: string | null
           last_login_at?: string | null
+          learning_goal?: string | null
           longest_streak?: number
           onboarding_completed?: boolean
+          recommended_level?: string | null
+          self_assessment?: string | null
           updated_at?: string
           user_id?: string
           valid_until?: string | null
+          weekly_minutes_goal?: number
           xp?: number
         }
         Relationships: []
