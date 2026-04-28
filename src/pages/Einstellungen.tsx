@@ -311,17 +311,19 @@ function DangerRow({
   onClick: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border p-3 sm:p-4 flex items-start gap-3">
-      <div className="rounded-lg bg-muted/60 p-2 shrink-0">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold">{title}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+    <div className="rounded-xl border border-border p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="rounded-lg bg-muted/60 p-2 shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-sm sm:text-base">{title}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+        </div>
       </div>
       <Button
         variant={destructive ? "destructive" : "outline"}
         size="sm"
         onClick={onClick}
-        className="shrink-0"
+        className="shrink-0 w-full sm:w-auto"
       >
         {buttonLabel}
       </Button>
