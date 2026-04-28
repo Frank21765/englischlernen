@@ -4,6 +4,26 @@
 ## Leitidee
 Bestehende App **nicht neu bauen**. Pädagogisches Rückgrat schichtweise einziehen. Jede Phase liefert ein sichtbares Ergebnis. Datenmodell von Anfang an so, dass Onboarding, Lernkompass und Mastery sauber andocken können — ohne dass wir vorher 6 Wochen blind im Backend wühlen.
 
+---
+
+## 5 Leitplanken (verbindlich, gelten für alle Phasen)
+
+1. **Onboarding ist sichtbar, nicht nur Datenfundament.** Phase 1 darf schlank bleiben, aber neue Nutzer werden perspektivisch durch eine kurze Startdiagnose geführt: Ziel → Selbsteinschätzung → Interessen → empfohlenes Startlevel → erste Lernspur. Das Onboarding-UI ist Teil von Phase 1, bevor Phase 2 freigegeben wird.
+
+2. **A1–B2 von Anfang an als vollständiger Levelrahmen.** A1/A2 dürfen zuerst stärker kuratiert sein, aber B1/B2 werden technisch nicht „später angebaut". Alle Tabellen, Filter, Level-Felder und UI-Strukturen sind von Anfang an A1–B2-fähig (C1/C2 bleiben Option für später).
+
+3. **Echte Inhalte testbar ab Phase 3.** Nicht bis Phase 8 warten. Ab Phase 3 mit 2–3 Seed-Lektionen arbeiten: A1 *Daily Routine*, A2 *Travel / Past Simple*, B1 *Work Conversation*. So testen wir früh, ob Lessons, Micro Goals, Grammar, SRS und Mastery wirklich zusammenspielen.
+
+4. **Übungsrichtungen für deutsche Lerner.** V1 unterstützt **Deutsch → Englisch**, **Englisch → Deutsch** und **gemischt**. Beide Richtungen sind pädagogisch nötig (passives Verstehen vs. aktives Abrufen). Bei jedem `learning_event` wird die tatsächlich geübte Richtung mitgeloggt — Basis dafür, später zu erkennen, ob jemand ein Wort nur passiv versteht.
+
+5. **Architektonische Erweiterbarkeit für andere Sprachrichtungen.** V1 bleibt klar Englisch lernen für deutsche Muttersprachler. Aber das Datenmodell wird **nicht** hart auf eine Lernrichtung festgenagelt. Felder `source_language`, `target_language`, `explanation_language`, `exercise_direction` (Werte: `source_to_target`, `target_to_source`, `mixed`) sind ab jetzt im Schema. Das öffnet keine neue Baustelle, blockiert aber spätere Sprachvarianten nicht.
+
+**Schema-Status (nach Phase 1 + Sprachrichtungs-Migration):**
+- `profiles`: `source_language='de'`, `target_language='en'`, `explanation_language='de'`, `exercise_direction='mixed'` (Defaults). Altes `direction_mode` koexistiert.
+- `vocabulary`: `source_language`, `target_language` ergänzt.
+- `learning_events`: `source_language`, `target_language`, `exercise_direction` werden bei jeder Übung mitgeschrieben.
+- `ngsl_words`: bleibt vorerst englisch-zentriert. Eine allgemeinere `lexicon`-Tabelle ist Option für später, **jetzt nicht** als Baustelle öffnen.
+
 **Architektur-Schichten (unten → oben):**
 
 ```text
