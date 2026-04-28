@@ -328,6 +328,60 @@ export type Database = {
         }
         Relationships: []
       }
+      review_items: {
+        Row: {
+          correct_count: number
+          created_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          last_seen_at: string | null
+          level: string | null
+          next_review_at: string | null
+          object_id: string
+          object_type: string
+          status: string
+          topic: string | null
+          updated_at: string
+          user_id: string
+          wrong_count: number
+        }
+        Insert: {
+          correct_count?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_seen_at?: string | null
+          level?: string | null
+          next_review_at?: string | null
+          object_id: string
+          object_type: string
+          status?: string
+          topic?: string | null
+          updated_at?: string
+          user_id: string
+          wrong_count?: number
+        }
+        Update: {
+          correct_count?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_seen_at?: string | null
+          level?: string | null
+          next_review_at?: string | null
+          object_id?: string
+          object_type?: string
+          status?: string
+          topic?: string | null
+          updated_at?: string
+          user_id?: string
+          wrong_count?: number
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_key: string
