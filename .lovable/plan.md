@@ -269,7 +269,7 @@ Bestehende App **nicht neu bauen**. Pädagogisches Rückgrat schichtweise einzie
 
 | Phase | Inhalt | Sichtbar nach Phase |
 |-------|--------|---------------------|
-| 1 | Onboarding-Felder + Event-Log | Nichts (still im Hintergrund) |
+| 1 | Onboarding-Felder + Event-Log | Schlankes Onboarding / Startdiagnose vorbereitet bzw. sichtbar ergänzt + Event-Log im Hintergrund |
 | 2 | Universelle SRS + NGSL + Audio | Quiz priorisiert, Lautsprecher, NGSL-Wörter |
 | 3 | Lessons-Container | „Weiter machen" funktioniert minimal |
 | 4 | Micro Goals | Lektionsabschluss zeigt Lernziele |
