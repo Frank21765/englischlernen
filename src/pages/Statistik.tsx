@@ -147,13 +147,13 @@ export default function Statistik() {
   }, [sessions]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <header>
-        <h1 className="text-3xl">Dein Fortschritt</h1>
-        <p className="text-muted-foreground">Übersicht über alle Lernsessions.</p>
+        <h1 className="text-2xl sm:text-3xl">Dein Fortschritt</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Übersicht über alle Lernsessions.</p>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
         <Stat label="Antworten gesamt" value={totals.total} />
         <Stat label="Trefferquote" value={`${totals.pct}%`} accent />
         <Stat label="Streak" value={`${streak} 🔥`} />
@@ -265,10 +265,10 @@ export default function Statistik() {
 
 function Stat({ label, value, accent, sub }: { label: string; value: string | number; accent?: boolean; sub?: string }) {
   return (
-    <Card className={`hover-lift p-4 ${accent ? "bg-gradient-warm text-primary-foreground shadow-glow" : ""}`}>
-      <div className={`text-xs uppercase font-bold tracking-wider ${accent ? "opacity-90" : "text-muted-foreground"}`}>{label}</div>
-      <div className="font-display text-2xl md:text-3xl mt-1">{value}</div>
-      {sub && <div className={`text-xs mt-0.5 ${accent ? "opacity-80" : "text-muted-foreground"}`}>{sub}</div>}
+    <Card className={`hover-lift p-3 sm:p-4 min-w-0 ${accent ? "bg-gradient-warm text-primary-foreground shadow-glow" : ""}`}>
+      <div className={`text-[10px] sm:text-xs uppercase font-bold tracking-wider leading-tight ${accent ? "opacity-90" : "text-muted-foreground"}`}>{label}</div>
+      <div className="font-display text-xl sm:text-2xl md:text-3xl mt-1 break-words">{value}</div>
+      {sub && <div className={`text-xs mt-0.5 truncate ${accent ? "opacity-80" : "text-muted-foreground"}`}>{sub}</div>}
     </Card>
   );
 }

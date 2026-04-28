@@ -85,6 +85,9 @@ export default function Start() {
 
   const [vocabCount, setVocabCount] = useState<number | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
+  // Onboarding-Pool: ungesehene Vokabeln (frisch erzeugt im Onboarding),
+  // die der Nutzer noch nie im Quiz gesehen hat. Wird priorisiert.
+  const [onboardingPool, setOnboardingPool] = useState<{ count: number; level: string; topic: string } | null>(null);
   const [username, setUsername] = useState<string>("");
 
   const isCustomTopic = hasSelection && !(QUICK_TOPICS as readonly string[]).includes(topic);
@@ -117,18 +120,29 @@ export default function Start() {
     let cancelled = false;
     const load = async () => {
       const nowIso = new Date().toISOString();
-      const [{ count: total }, { count: dueScheduled }, { count: dueUnseen }, profileRes] = await Promise.all([
+      const [{ count: total }, { count: dueScheduled }, { count: dueUnseen }, profileRes, onbRes] = await Promise.all([
         supabase.from("vocabulary").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).lte("next_review_at", nowIso),
         supabase.from("vocabulary").select("id", { count: "exact", head: true })
           .eq("user_id", user.id).is("next_review_at", null).is("last_seen_at", null),
         getProfileUsername(user),
+        // Onboarding-Pool: source='onboarding' UND noch nie gesehen.
+        supabase.from("vocabulary")
+          .select("level, topic", { count: "exact" })
+          .eq("user_id", user.id).eq("source", "onboarding").is("last_seen_at", null),
       ]);
       if (cancelled) return;
       setVocabCount(total ?? 0);
       setDueCount((dueScheduled ?? 0) + (dueUnseen ?? 0));
       setUsername(profileRes.greetingUsername);
+      const onbCount = onbRes.count ?? 0;
+      const first = onbRes.data?.[0];
+      if (onbCount > 0 && first) {
+        setOnboardingPool({ count: onbCount, level: first.level, topic: first.topic });
+      } else {
+        setOnboardingPool(null);
+      }
     };
     load();
     const onFocus = () => load();
@@ -171,6 +185,7 @@ export default function Start() {
   };
 
   const askIsLong = wordCount(askInput) >= LONG_INPUT_WORDS;
+  const hasOnboarding = onboardingPool !== null && onboardingPool.count > 0;
   const hasDue = dueCount !== null && dueCount > 0;
   const hasAnyVocab = vocabCount !== null && vocabCount > 0;
 
@@ -275,6 +290,10 @@ export default function Start() {
       )}
 
       {/* ============ Box 1: Weitermachen ============ */}
+      {/* Priorität:
+          1) Onboarding-Pool noch ungesehen → "Erste Wörter starten" mit autostart=1
+          2) Reguläre Wiederholung fällig    → "Wiederholung starten"
+          3) Sonst                           → Lektionen-Empfehlung */}
       <Card className="hover-lift p-4 sm:p-5 bg-gradient-card shadow-card">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="rounded-2xl bg-primary/15 p-2.5 sm:p-3 shrink-0">
@@ -282,24 +301,47 @@ export default function Start() {
           </div>
           <div className="min-w-0 flex-1 space-y-2">
             <div>
-              <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
-              {hasDue ? (
-                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                  <CalendarClock className="h-3.5 w-3.5 text-primary" />
-                  {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
-                </p>
-              ) : hasAnyVocab ? (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Alles wiederholt — gönn dir eine neue Runde.
-                </p>
+              {hasOnboarding ? (
+                <>
+                  <h2 className="text-base sm:text-lg font-bold">Deine ersten Wörter warten</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <Sparkles className="h-3.5 w-3.5 text-accent" />
+                    {onboardingPool!.count} frische Vokabeln aus dem Onboarding · {onboardingPool!.level} · {onboardingPool!.topic}
+                  </p>
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
-                </p>
+                <>
+                  <h2 className="text-base sm:text-lg font-bold">Weitermachen, wo du aufgehört hast</h2>
+                  {hasDue ? (
+                    <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                      <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                      {dueCount} {dueCount === 1 ? "Vokabel wartet" : "Vokabeln warten"} auf eine kurze Wiederholung
+                    </p>
+                  ) : hasAnyVocab ? (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Alles wiederholt — gönn dir eine neue Runde.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Noch keine Vokabeln gespeichert — leg gleich los und sammle die ersten.
+                    </p>
+                  )}
+                </>
               )}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              {hasDue ? (
+              {hasOnboarding ? (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate(
+                    `/training/quiz?level=${encodeURIComponent(onboardingPool!.level)}&topic=${encodeURIComponent(onboardingPool!.topic)}&autostart=1`,
+                  )}
+                  className="rounded-xl"
+                >
+                  <Play className="h-4 w-4" /> Erstes Quiz starten
+                </Button>
+              ) : hasDue ? (
                 <Button
                   variant="hero"
                   size="sm"

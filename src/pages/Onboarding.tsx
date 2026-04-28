@@ -338,17 +338,17 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-4 py-6 sm:py-10">
-      <div className="mx-auto w-full max-w-xl space-y-5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-3 sm:px-4 py-5 sm:py-10">
+      <div className="mx-auto w-full max-w-xl space-y-4 sm:space-y-5">
         <div className="flex items-center gap-3">
-          <img src={appIcon} alt="Hello!" className="h-9 w-9" />
-          <div className="flex-1">
+          <img src={appIcon} alt="Hello!" className="h-9 w-9 shrink-0" />
+          <div className="flex-1 min-w-0">
             <Progress value={progress} className="h-2" />
           </div>
         </div>
 
         {stage === "welcome" && (
-          <Card className="p-6 sm:p-8 space-y-5 bg-gradient-card shadow-card">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5 bg-gradient-card shadow-card">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
@@ -386,7 +386,7 @@ export default function Onboarding() {
         )}
 
         {stage === "goal" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Target className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
@@ -423,7 +423,7 @@ export default function Onboarding() {
         )}
 
         {stage === "self" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-accent/15 p-3"><Heart className="h-6 w-6 text-accent" /></div>
               <div className="space-y-1">
@@ -460,7 +460,7 @@ export default function Onboarding() {
         )}
 
         {stage === "check" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="font-semibold uppercase tracking-wide">Frage {qIndex + 1} / {QUESTIONS.length}</span>
               <button
@@ -502,7 +502,7 @@ export default function Onboarding() {
         )}
 
         {stage === "result" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-accent/15 p-3"><GraduationCap className="h-6 w-6 text-accent" /></div>
               <div className="space-y-1">
@@ -536,7 +536,7 @@ export default function Onboarding() {
         )}
 
         {stage === "interests" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Heart className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
@@ -566,7 +566,7 @@ export default function Onboarding() {
         )}
 
         {stage === "minutes" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-accent/15 p-3"><Timer className="h-6 w-6 text-accent" /></div>
               <div className="space-y-1">
@@ -596,7 +596,7 @@ export default function Onboarding() {
         )}
 
         {stage === "topic" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Target className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
@@ -649,7 +649,7 @@ export default function Onboarding() {
         )}
 
         {stage === "start" && (
-          <Card className="p-6 sm:p-8 space-y-5">
+          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="space-y-2">
               <h2 className="text-xl sm:text-2xl">Bereit? 🎉</h2>
               <p className="text-sm text-muted-foreground">

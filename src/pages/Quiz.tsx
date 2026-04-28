@@ -55,12 +55,44 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// Distraktoren didaktisch sauber wählen:
+// Die falschen Optionen müssen im Format zur richtigen Antwort passen, sonst
+// kann man die Lösung allein an der Länge erkennen ("the housework" zwischen
+// drei ganzen Sätzen wäre verraten). Wir gruppieren nach Wortzahl-Bucket und
+// füllen erst aus dem gleichen Bucket auf, danach mit nächstliegenden.
+function wordBucket(s: string): "single" | "short" | "long" {
+  const n = s.trim().split(/\s+/).filter(Boolean).length;
+  if (n <= 1) return "single";
+  if (n <= 3) return "short";
+  return "long";
+}
+
 function buildOptions(target: Vocab, pool: Vocab[], direction: CardDirection): string[] {
   const correct = direction === "de_en" ? target.english : target.german;
-  const distractors = shuffle(pool.filter((v) => v.id !== target.id))
+  const targetBucket = wordBucket(correct);
+
+  const candidates = pool
+    .filter((v) => v.id !== target.id)
     .map((v) => (direction === "de_en" ? v.english : v.german))
-    .filter((s, i, arr) => arr.indexOf(s) === i && s !== correct)
-    .slice(0, 3);
+    .filter((s, i, arr) => s && s !== correct && arr.indexOf(s) === i);
+
+  const sameBucket = shuffle(candidates.filter((s) => wordBucket(s) === targetBucket));
+  const distractors: string[] = sameBucket.slice(0, 3);
+
+  if (distractors.length < 3) {
+    // Auffüllen mit den nächstliegenden Längen, damit es trotzdem passt.
+    const correctLen = correct.trim().split(/\s+/).filter(Boolean).length;
+    const rest = shuffle(candidates.filter((s) => !distractors.includes(s)))
+      .sort((a, b) => {
+        const da = Math.abs(a.trim().split(/\s+/).length - correctLen);
+        const db = Math.abs(b.trim().split(/\s+/).length - correctLen);
+        return da - db;
+      });
+    for (const s of rest) {
+      if (distractors.length >= 3) break;
+      distractors.push(s);
+    }
+  }
   while (distractors.length < 3) distractors.push("—");
   return shuffle([correct, ...distractors]);
 }
