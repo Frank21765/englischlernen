@@ -312,3 +312,10 @@ Bestehende App **nicht neu bauen**. Pädagogisches Rückgrat schichtweise einzie
 Nach deiner Freigabe liefere ich diesen Fahrplan als **PDF + MD** ins Documents-Verzeichnis (Bordeaux-Header), damit du ihn mit Alex und Grok teilen kannst.
 
 Danach schließen wir **Phase 1** mit Onboarding-UI und Sprachrichtungs-Migration ab.
+
+---
+
+## Backlog (nicht in aktueller Phase, terminiert nach Phase 1-Nacharbeit)
+
+- **Admin-Onboarding-Preview** — Als Admin das gesamte Onboarding jederzeit ansehen/durchklicken können, auch wenn das eigene Onboarding bereits abgeschlossen ist. Idealerweise als Preview/Testmodus (Read-only oder mit `?preview=1`-Flag), der nichts in das echte Profil schreibt. Ziel: Onboarding-UI prüfen ohne neuen Test-Account anlegen zu müssen. **Priorität: nach aktueller Phase-1-Nacharbeit, vor Phase 2-Abschluss.**
+
