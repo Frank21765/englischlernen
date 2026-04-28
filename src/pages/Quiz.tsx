@@ -344,6 +344,27 @@ export default function Quiz() {
                   <div className="text-xs text-muted-foreground">
                     {reviewCount === null ? "Gespeicherte Vokabeln" : `${reviewCount} gespeicherte Vokabeln`}
                   </div>
+                  {reviewCount !== null && reviewCount > 0 && Object.keys(sourceBreakdown).length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {Object.entries(sourceBreakdown)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([src, n]) => {
+                          const label =
+                            src === "onboarding" ? "Onboarding"
+                            : src === "ngsl" ? "NGSL"
+                            : src === "manual" ? "Eigene"
+                            : "KI";
+                          return (
+                            <span
+                              key={src}
+                              className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60"
+                            >
+                              {label} · {n}
+                            </span>
+                          );
+                        })}
+                    </div>
+                  )}
                 </button>
                 <button
                   onClick={() => setVocabSource("fresh")}
