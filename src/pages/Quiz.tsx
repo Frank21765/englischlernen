@@ -86,7 +86,11 @@ export default function Quiz() {
   const [started, setStarted] = useState(false);
   const [vocabSource, setVocabSource] = useState<VocabSource>("review");
   const [reviewCount, setReviewCount] = useState<number | null>(null);
+  // Aufschlüsselung der gespeicherten Vokabeln nach Herkunft
+  // (Onboarding-Pool, KI-generiert, NGSL-Pool, manuell). Wird im Picker angezeigt.
+  const [sourceBreakdown, setSourceBreakdown] = useState<Record<string, number>>({});
   const [emptyReview, setEmptyReview] = useState(false);
+  const [autoStartTried, setAutoStartTried] = useState(false);
 
   // sync URL deep links
   useEffect(() => {
@@ -141,17 +145,45 @@ export default function Quiz() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // count saved vocab for current context (refreshed when picker shown)
+  // count saved vocab for current context + breakdown by source
   useEffect(() => {
     if (!user || !ctxReady || started) return;
     (async () => {
-      const { count } = await supabase
+      const { data, count } = await supabase
         .from("vocabulary")
-        .select("id", { count: "exact", head: true })
+        .select("source", { count: "exact" })
         .eq("user_id", user.id).eq("level", ctxLevel).eq("topic", ctxTopic);
       setReviewCount(count ?? 0);
+      const breakdown: Record<string, number> = {};
+      for (const row of data ?? []) {
+        const key = (row.source as string) || "ai";
+        breakdown[key] = (breakdown[key] ?? 0) + 1;
+      }
+      setSourceBreakdown(breakdown);
     })();
   }, [user, ctxReady, ctxLevel, ctxTopic, started]);
+
+  // Auto-Start aus dem Onboarding heraus (?autostart=1) –
+  // direkt mit dem frischen Pool starten, ohne dass der Picker dazwischenkommt.
+  useEffect(() => {
+    if (autoStartTried) return;
+    if (!user || !ctxReady || started || loading) return;
+    const wantsAuto = params.get("autostart") === "1";
+    if (!wantsAuto) return;
+    if (reviewCount === null) return; // noch nicht geladen
+    setAutoStartTried(true);
+    if (reviewCount > 0) {
+      setMode("vocab");
+      setVocabSource("review");
+      void startVocab("review");
+    }
+    // autostart-Param aus URL entfernen, damit ein Reload nicht erneut auto-startet.
+    const search = new URLSearchParams(window.location.search);
+    search.delete("autostart");
+    const qs = search.toString();
+    navigate({ pathname: window.location.pathname, search: qs ? `?${qs}` : "" }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, ctxReady, started, loading, reviewCount, autoStartTried, params]);
 
   const startVocab = async (source: VocabSource = vocabSource) => {
     if (!user) return;
