@@ -12,11 +12,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
+import {
+  saveOnboardingProfile,
+  saveDiagnosticResult,
+  type LearningGoal,
+  type SelfAssessment,
+} from "@/lib/onboarding";
+import { logLearningEvent } from "@/lib/events";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, GraduationCap, Loader2, Sparkles, Target, Wand2 } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Compass,
+  GraduationCap,
+  Heart,
+  Loader2,
+  Sparkles,
+  Target,
+  Timer,
+  Wand2,
+} from "lucide-react";
 import appIcon from "@/assets/app-icon.png";
 
-type Stage = "welcome" | "check" | "result" | "topic" | "start";
+// Phase 1 Onboarding-Reihenfolge laut Leitplanke 1:
+// Ziel → Selbsteinschätzung → kurze Diagnose → Empfehlung → Interessen → Minutenziel → Thema → Start.
+type Stage =
+  | "welcome"
+  | "goal"
+  | "self"
+  | "check"
+  | "result"
+  | "interests"
+  | "minutes"
+  | "topic"
+  | "start";
 
 interface Question {
   prompt: string;
@@ -92,6 +121,36 @@ function computeLevel(answers: Level[]): Level {
   return (Object.entries(LEVEL_WEIGHT).find(([, v]) => v === rounded)?.[0] as Level) ?? "A1";
 }
 
+const GOALS: { key: LearningGoal; label: string; helper: string }[] = [
+  { key: "alltag", label: "Alltag & Smalltalk", helper: "Locker reden, verstehen, einkaufen." },
+  { key: "reisen", label: "Reisen", helper: "Hotel, Restaurant, unterwegs." },
+  { key: "arbeit", label: "Beruf", helper: "Meetings, E-Mails, Fachbegriffe." },
+  { key: "pruefung", label: "Prüfung", helper: "Schule, Studium, Zertifikat." },
+  { key: "frei", label: "Einfach lernen", helper: "Aus Spaß und Neugier." },
+];
+
+const SELF_ASSESS: { key: SelfAssessment; label: string; helper: string }[] = [
+  { key: "anfaenger", label: "Anfänger:in", helper: "Kaum bis keine Vorkenntnisse." },
+  { key: "etwas_erfahrung", label: "Etwas Erfahrung", helper: "Schule lange her, Reste vorhanden." },
+  { key: "unsicher", label: "Unsicher", helper: "Ich kann viel verstehen, traue mich aber selten zu sprechen." },
+  { key: "fortgeschritten", label: "Fortgeschritten", helper: "Ich komme im Alltag gut klar, will den Feinschliff." },
+];
+
+const INTEREST_TAGS = [
+  "Reisen",
+  "Essen & Trinken",
+  "Sport",
+  "Technik",
+  "Musik",
+  "Filme & Serien",
+  "Natur",
+  "Familie",
+  "Beruf",
+  "Smalltalk",
+] as const;
+
+const MINUTE_GOALS = [10, 20, 30, 45] as const;
+
 export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -105,6 +164,10 @@ export default function Onboarding() {
   const [chosenLevel, setChosenLevel] = useState<Level>("A1");
   const [chosenTopic, setChosenTopic] = useState<string>("Alltag");
   const [customTopic, setCustomTopic] = useState("");
+  const [goal, setGoal] = useState<LearningGoal | null>(null);
+  const [selfAssessment, setSelfAssessment] = useState<SelfAssessment | null>(null);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [weeklyMinutes, setWeeklyMinutes] = useState<number>(20);
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -133,30 +196,69 @@ export default function Onboarding() {
 
   const progress = useMemo(() => {
     const total = QUESTIONS.length;
-    if (stage === "welcome") return 5;
-    if (stage === "check") return 10 + (qIndex / total) * 50;
-    if (stage === "result") return 65;
-    if (stage === "topic") return 80;
-    return 95;
+    if (stage === "welcome") return 4;
+    if (stage === "goal") return 12;
+    if (stage === "self") return 22;
+    if (stage === "check") return 30 + (qIndex / total) * 35;
+    if (stage === "result") return 70;
+    if (stage === "interests") return 78;
+    if (stage === "minutes") return 86;
+    if (stage === "topic") return 92;
+    return 96;
   }, [stage, qIndex]);
 
   const finalTopic = chosenTopic === "__custom" ? customTopic.trim() : chosenTopic;
+
+  const toggleInterest = (tag: string) => {
+    setInterests((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  };
 
   const completeAndStart = async (action: "quiz" | "lernen") => {
     if (!user) return;
     if (!finalTopic) { toast.error("Bitte ein Thema wählen"); return; }
     setBusy(true);
     try {
-      // Save focus + mark onboarding complete
+      // 1) Onboarding-Profil sauber ablegen (alle Phase-1-Felder).
+      const profileRes = await saveOnboardingProfile(user.id, {
+        learning_goal: goal ?? "frei",
+        self_assessment: selfAssessment ?? "anfaenger",
+        interests,
+        recommended_level: estimated,
+        weekly_minutes_goal: weeklyMinutes,
+      });
+      if (!profileRes.ok) throw new Error(profileRes.error ?? "Profil-Update fehlgeschlagen");
+
+      // 2) Default-Level + Thema fürs Lernen setzen.
       const { error: upErr } = await supabase
         .from("profiles")
         .update({
           default_level: chosenLevel,
           default_topic: finalTopic,
-          onboarding_completed: true,
         })
         .eq("user_id", user.id);
       if (upErr) throw upErr;
+
+      // 3) Diagnose-Ergebnis ablegen, wenn echte Antworten vorhanden sind.
+      if (answers.length > 0) {
+        const score = answers.reduce((sum, l) => sum + LEVEL_WEIGHT[l], 0);
+        await saveDiagnosticResult(user.id, {
+          area: "vocab",
+          score,
+          cefrEstimate: estimated,
+          details: {
+            answered: answers.length,
+            total: QUESTIONS.length,
+            answers,
+          },
+        });
+        await logLearningEvent({
+          eventType: "diagnostic_taken",
+          level: estimated,
+          metadata: { score, answered: answers.length, total: QUESTIONS.length },
+        });
+      }
 
       setSelection(chosenLevel, finalTopic, { persist: false });
 
@@ -236,12 +338,12 @@ export default function Onboarding() {
               </div>
             </div>
             <ul className="space-y-2 text-sm sm:text-base">
-              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Wir schätzen kurz dein Niveau ein</li>
-              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Du wählst dein erstes Thema</li>
+              <li className="flex gap-2"><Compass className="h-5 w-5 text-accent shrink-0" /> Wir schauen kurz, was du willst und wo du stehst</li>
+              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Du wählst Interessen, Thema und dein Wochenziel</li>
               <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Du startest direkt mit deinem ersten Vokabelset</li>
             </ul>
             <p className="text-xs text-muted-foreground">
-              Das ist nur ein Startpunkt – du kannst Niveau und Thema jederzeit ändern.
+              Das ist nur ein Startpunkt – alles davon kannst du später ändern.
             </p>
             <Button
               type="button"
@@ -254,8 +356,82 @@ export default function Onboarding() {
             >
               Mit anderem Konto anmelden
             </Button>
-            <Button size="lg" className="w-full" onClick={() => setStage("check")}>
+            <Button size="lg" className="w-full" onClick={() => setStage("goal")}>
               Los geht's <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Card>
+        )}
+
+        {stage === "goal" && (
+          <Card className="p-6 sm:p-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-primary/15 p-3"><Target className="h-6 w-6 text-primary" /></div>
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl">Wofür willst du Englisch lernen?</h2>
+                <p className="text-sm text-muted-foreground">
+                  Damit wir dir die richtigen Inhalte zeigen.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              {GOALS.map((g) => (
+                <Button
+                  key={g.key}
+                  variant={goal === g.key ? "default" : "outline"}
+                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
+                  onClick={() => setGoal(g.key)}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">{g.label}</span>
+                    <span className="text-xs opacity-80">{g.helper}</span>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={!goal}
+              onClick={() => setStage("self")}
+            >
+              Weiter <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Card>
+        )}
+
+        {stage === "self" && (
+          <Card className="p-6 sm:p-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-accent/15 p-3"><Heart className="h-6 w-6 text-accent" /></div>
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl">Wie schätzt du dich selbst ein?</h2>
+                <p className="text-sm text-muted-foreground">
+                  Kein Test. Wir nehmen das nur als Ausgangspunkt.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              {SELF_ASSESS.map((s) => (
+                <Button
+                  key={s.key}
+                  variant={selfAssessment === s.key ? "default" : "outline"}
+                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
+                  onClick={() => setSelfAssessment(s.key)}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">{s.label}</span>
+                    <span className="text-xs opacity-80">{s.helper}</span>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={!selfAssessment}
+              onClick={() => setStage("check")}
+            >
+              Weiter zur kurzen Einschätzung <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Card>
         )}
@@ -314,9 +490,9 @@ export default function Onboarding() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Niveau anpassen</Label>
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Niveau anpassen (A1–B2)</Label>
               <div className="flex flex-wrap gap-2">
-                {LEVELS.map((l) => (
+                {LEVELS.filter((l) => ["A1","A2","B1","B2"].includes(l)).map((l) => (
                   <Button
                     key={l}
                     type="button"
@@ -329,6 +505,66 @@ export default function Onboarding() {
                   </Button>
                 ))}
               </div>
+            </div>
+            <Button size="lg" className="w-full" onClick={() => setStage("interests")}>
+              Weiter zu Interessen <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Card>
+        )}
+
+        {stage === "interests" && (
+          <Card className="p-6 sm:p-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-primary/15 p-3"><Heart className="h-6 w-6 text-primary" /></div>
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl">Was interessiert dich?</h2>
+                <p className="text-sm text-muted-foreground">
+                  Mehrfachauswahl. Wir nutzen das später für passende Inhalte.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {INTEREST_TAGS.map((t) => (
+                <Button
+                  key={t}
+                  type="button"
+                  size="sm"
+                  variant={interests.includes(t) ? "default" : "outline"}
+                  onClick={() => toggleInterest(t)}
+                >
+                  {t}
+                </Button>
+              ))}
+            </div>
+            <Button size="lg" className="w-full" onClick={() => setStage("minutes")}>
+              Weiter <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Card>
+        )}
+
+        {stage === "minutes" && (
+          <Card className="p-6 sm:p-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-accent/15 p-3"><Timer className="h-6 w-6 text-accent" /></div>
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl">Wie viel Zeit hast du pro Woche?</h2>
+                <p className="text-sm text-muted-foreground">
+                  Dein Wochenziel — nichts in Stein gemeißelt.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {MINUTE_GOALS.map((m) => (
+                <Button
+                  key={m}
+                  type="button"
+                  size="sm"
+                  variant={weeklyMinutes === m ? "default" : "outline"}
+                  onClick={() => setWeeklyMinutes(m)}
+                >
+                  {m} Min
+                </Button>
+              ))}
             </div>
             <Button size="lg" className="w-full" onClick={() => setStage("topic")}>
               Weiter zum Thema <ArrowRight className="h-4 w-4 ml-1" />
@@ -419,7 +655,7 @@ export default function Onboarding() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Niveau und Thema kannst du jederzeit oben im App-Header ändern.
+              Niveau, Thema und Wochenziel kannst du jederzeit in den Einstellungen ändern.
             </p>
           </Card>
         )}
