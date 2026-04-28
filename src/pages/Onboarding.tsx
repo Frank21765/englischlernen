@@ -338,11 +338,11 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-4 py-6 sm:py-10">
-      <div className="mx-auto w-full max-w-xl space-y-5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-3 sm:px-4 py-5 sm:py-10">
+      <div className="mx-auto w-full max-w-xl space-y-4 sm:space-y-5">
         <div className="flex items-center gap-3">
-          <img src={appIcon} alt="Hello!" className="h-9 w-9" />
-          <div className="flex-1">
+          <img src={appIcon} alt="Hello!" className="h-9 w-9 shrink-0" />
+          <div className="flex-1 min-w-0">
             <Progress value={progress} className="h-2" />
           </div>
         </div>
