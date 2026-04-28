@@ -128,33 +128,42 @@ export type Database = {
         Row: {
           created_at: string
           event_type: string
+          exercise_direction: string | null
           id: string
           level: string | null
           metadata: Json
           object_id: string | null
           object_type: string | null
+          source_language: string | null
+          target_language: string | null
           topic: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           event_type: string
+          exercise_direction?: string | null
           id?: string
           level?: string | null
           metadata?: Json
           object_id?: string | null
           object_type?: string | null
+          source_language?: string | null
+          target_language?: string | null
           topic?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           event_type?: string
+          exercise_direction?: string | null
           id?: string
           level?: string | null
           metadata?: Json
           object_id?: string | null
           object_type?: string | null
+          source_language?: string | null
+          target_language?: string | null
           topic?: string | null
           user_id?: string
         }
@@ -241,6 +250,8 @@ export type Database = {
           default_topic: string | null
           direction_mode: string
           display_name: string | null
+          exercise_direction: string
+          explanation_language: string
           id: string
           interests: string[]
           last_active_date: string | null
@@ -251,6 +262,8 @@ export type Database = {
           onboarding_completed: boolean
           recommended_level: string | null
           self_assessment: string | null
+          source_language: string
+          target_language: string
           updated_at: string
           user_id: string
           valid_until: string | null
@@ -265,6 +278,8 @@ export type Database = {
           default_topic?: string | null
           direction_mode?: string
           display_name?: string | null
+          exercise_direction?: string
+          explanation_language?: string
           id?: string
           interests?: string[]
           last_active_date?: string | null
@@ -275,6 +290,8 @@ export type Database = {
           onboarding_completed?: boolean
           recommended_level?: string | null
           self_assessment?: string | null
+          source_language?: string
+          target_language?: string
           updated_at?: string
           user_id: string
           valid_until?: string | null
@@ -289,6 +306,8 @@ export type Database = {
           default_topic?: string | null
           direction_mode?: string
           display_name?: string | null
+          exercise_direction?: string
+          explanation_language?: string
           id?: string
           interests?: string[]
           last_active_date?: string | null
@@ -299,6 +318,8 @@ export type Database = {
           onboarding_completed?: boolean
           recommended_level?: string | null
           self_assessment?: string | null
+          source_language?: string
+          target_language?: string
           updated_at?: string
           user_id?: string
           valid_until?: string | null
@@ -364,7 +385,9 @@ export type Database = {
           next_review_at: string | null
           ngsl_id: string | null
           source: string
+          source_language: string
           status: string
+          target_language: string
           topic: string
           updated_at: string
           user_id: string
@@ -384,7 +407,9 @@ export type Database = {
           next_review_at?: string | null
           ngsl_id?: string | null
           source?: string
+          source_language?: string
           status?: string
+          target_language?: string
           topic: string
           updated_at?: string
           user_id: string
@@ -404,7 +429,9 @@ export type Database = {
           next_review_at?: string | null
           ngsl_id?: string | null
           source?: string
+          source_language?: string
           status?: string
+          target_language?: string
           topic?: string
           updated_at?: string
           user_id?: string
