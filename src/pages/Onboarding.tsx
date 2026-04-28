@@ -367,19 +367,20 @@ export default function Onboarding() {
             <p className="text-xs text-muted-foreground">
               Das ist nur ein Startpunkt – alles davon kannst du später ändern.
             </p>
+            <Button size="lg" className="w-full" onClick={() => setStage("goal")}>
+              Los geht's <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
             <Button
               type="button"
               variant="ghost"
-              className="w-full"
+              size="sm"
+              className="w-full text-xs text-muted-foreground"
               onClick={async () => {
                 await supabase.auth.signOut();
                 navigate("/auth", { replace: true });
               }}
             >
               Mit anderem Konto anmelden
-            </Button>
-            <Button size="lg" className="w-full" onClick={() => setStage("goal")}>
-              Los geht's <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Card>
         )}
