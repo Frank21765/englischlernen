@@ -53,11 +53,11 @@ export async function saveDiagnosticResult(
   userId: string,
   result: DiagnosticResultInput,
 ): Promise<void> {
-  await supabase.from("diagnostic_results").insert({
+  await supabase.from("diagnostic_results").insert([{
     user_id: userId,
     area: result.area,
     score: result.score,
-    cefr_estimate: result.cefrEstimate ?? null,
-    details: result.details ?? null,
-  });
+    cefr_estimate: result.cefrEstimate ?? undefined,
+    details: (result.details ?? undefined) as never,
+  }]);
 }

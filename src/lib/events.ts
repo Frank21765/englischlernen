@@ -45,15 +45,15 @@ export async function logLearningEvent(input: LogEventInput): Promise<void> {
     const userId = userRes.user?.id;
     if (!userId) return; // Anonyme Sessions loggen wir (noch) nicht.
 
-    await supabase.from("learning_events").insert({
+    await supabase.from("learning_events").insert([{
       user_id: userId,
       event_type: input.eventType,
-      object_type: input.objectType ?? null,
-      object_id: input.objectId ?? null,
-      level: input.level ?? null,
-      topic: input.topic ?? null,
-      metadata: input.metadata ?? {},
-    });
+      object_type: input.objectType ?? undefined,
+      object_id: input.objectId ?? undefined,
+      level: input.level ?? undefined,
+      topic: input.topic ?? undefined,
+      metadata: (input.metadata ?? {}) as never,
+    }]);
   } catch (err) {
     // Niemals Lerninteraktion blockieren.
     console.warn("[events] failed to log", err);
