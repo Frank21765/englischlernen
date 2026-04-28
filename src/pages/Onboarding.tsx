@@ -228,7 +228,11 @@ export default function Onboarding() {
         recommended_level: estimated,
         weekly_minutes_goal: weeklyMinutes,
       });
-      if (!profileRes.ok) throw new Error(profileRes.error ?? "Profil-Update fehlgeschlagen");
+      if (!profileRes.ok) {
+        // Sichtbar machen, statt still weiterzulaufen.
+        toast.error(`Profil konnte nicht gespeichert werden: ${profileRes.error ?? "Unbekannter Fehler"}`);
+        throw new Error(profileRes.error ?? "Profil-Update fehlgeschlagen");
+      }
 
       // 2) Default-Level + Thema fürs Lernen setzen.
       const { error: upErr } = await supabase
@@ -238,12 +242,15 @@ export default function Onboarding() {
           default_topic: finalTopic,
         })
         .eq("user_id", user.id);
-      if (upErr) throw upErr;
+      if (upErr) {
+        toast.error(`Lernkontext konnte nicht gespeichert werden: ${upErr.message}`);
+        throw upErr;
+      }
 
       // 3) Diagnose-Ergebnis ablegen, wenn echte Antworten vorhanden sind.
       if (answers.length > 0) {
         const score = answers.reduce((sum, l) => sum + LEVEL_WEIGHT[l], 0);
-        await saveDiagnosticResult(user.id, {
+        const diag = await saveDiagnosticResult(user.id, {
           area: "vocab",
           score,
           cefrEstimate: estimated,
@@ -253,6 +260,11 @@ export default function Onboarding() {
             answers,
           },
         });
+        if (!diag.ok) {
+          // Diagnose darf den Flow nicht blockieren, aber wir loggen sichtbar.
+          console.error("[onboarding] diagnostic save failed", diag.error);
+          toast.message("Diagnose konnte nicht gespeichert werden, wir machen trotzdem weiter.");
+        }
         await logLearningEvent({
           eventType: "diagnostic_taken",
           level: estimated,
@@ -263,7 +275,7 @@ export default function Onboarding() {
       setSelection(chosenLevel, finalTopic, { persist: false });
 
       if (action === "quiz") {
-        // Generate first vocab set, then go to quiz
+        // Erstes Vokabelset generieren und als Onboarding-Pool markieren.
         const { data: existing } = await supabase
           .from("vocabulary").select("german")
           .eq("user_id", user.id).eq("level", chosenLevel).eq("topic", finalTopic);
@@ -282,13 +294,23 @@ export default function Onboarding() {
             german: p.german.trim(),
             english: p.english.trim(),
             grammar_note: p.grammar_note ?? null,
+            source: "onboarding",
           }));
-          await supabase
+          const { error: vErr } = await supabase
             .from("vocabulary")
             .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
-          toast.success(`${pairs.length} Vokabeln erzeugt – los geht's!`);
+          if (vErr) {
+            console.error("[onboarding] vocabulary upsert failed", vErr);
+            toast.error(`Vokabeln konnten nicht gespeichert werden: ${vErr.message}`);
+            throw vErr;
+          }
+          toast.success(`Dein erster Vokabelpool: ${pairs.length} Wörter, ${chosenLevel} · ${finalTopic}`);
         }
-        navigate("/training/quiz", { replace: true });
+        // Auto-Start: Quiz direkt mit Pool öffnen, Picker überspringen.
+        navigate(
+          `/training/quiz?level=${encodeURIComponent(chosenLevel)}&topic=${encodeURIComponent(finalTopic)}&autostart=1`,
+          { replace: true },
+        );
       } else {
         toast.success("Alles bereit – willkommen!");
         navigate("/start", { replace: true });
