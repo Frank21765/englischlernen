@@ -650,11 +650,14 @@ export default function Onboarding() {
 
         {stage === "start" && (
           <Card className="p-6 sm:p-8 space-y-5">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <h2 className="text-xl sm:text-2xl">Bereit? 🎉</h2>
               <p className="text-sm text-muted-foreground">
                 Wir starten mit deinem ersten Vokabelset für{" "}
                 <span className="font-mono text-primary">{chosenLevel}</span> · <span className="font-semibold">{finalTopic}</span>.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Du bekommst gleich <span className="font-semibold text-foreground">20 Wörter</span> – passend zu Niveau und Thema.
               </p>
             </div>
             <div className="grid gap-2">
