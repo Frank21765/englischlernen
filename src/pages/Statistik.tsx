@@ -147,13 +147,13 @@ export default function Statistik() {
   }, [sessions]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <header>
-        <h1 className="text-3xl">Dein Fortschritt</h1>
-        <p className="text-muted-foreground">Übersicht über alle Lernsessions.</p>
+        <h1 className="text-2xl sm:text-3xl">Dein Fortschritt</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Übersicht über alle Lernsessions.</p>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
         <Stat label="Antworten gesamt" value={totals.total} />
         <Stat label="Trefferquote" value={`${totals.pct}%`} accent />
         <Stat label="Streak" value={`${streak} 🔥`} />
