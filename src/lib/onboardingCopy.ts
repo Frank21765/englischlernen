@@ -79,7 +79,7 @@ export const onboardingCopy = {
       {
         id: "meaning_missed_train",
         kind: "Bedeutung verstehen",
-        prompt: „I missed the train.",
+        prompt: "„I missed the train.“",
         options: [
           { label: "Ich habe den Zug verpasst.", correct: true },
           { label: "Ich habe den Zug vermisst.", correct: false },
@@ -89,7 +89,7 @@ export const onboardingCopy = {
       {
         id: "grammar_doesnt",
         kind: "Grammatikform",
-        prompt: „She ___ work here.",
+        prompt: "„She ___ work here.“",
         options: [
           { label: "doesn't", correct: true },
           { label: "don't", correct: false },
@@ -99,7 +99,7 @@ export const onboardingCopy = {
       {
         id: "past_went",
         kind: "Vergangenheit",
-        prompt: „Yesterday we ___ to Berlin.",
+        prompt: "„Yesterday we ___ to Berlin.“",
         options: [
           { label: "went", correct: true },
           { label: "go", correct: false },
@@ -119,7 +119,7 @@ export const onboardingCopy = {
       {
         id: "prep_good_at",
         kind: "Präposition",
-        prompt: „I am good ___ English.",
+        prompt: "„I am good ___ English.“",
         options: [
           { label: "at", correct: true },
           { label: "in", correct: false },
