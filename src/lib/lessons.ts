@@ -557,8 +557,9 @@ const A2_LESSONS: Lesson[] = [
         { hint: "Hier passt ein kleines Wort (feste Wendung)", explain: "„look forward to“ = sich freuen auf." }),
       ord("t17", "Sätze richtig anordnen", ["can", "I", "call", "you", "back", "later"], "can I call you back later"),
       mc("t18", "„Termin absagen“ heißt …", [
-        "cancel the appointment", "off the meeting", "stop the date", "no the time",
-      ], "cancel the appointment"),
+        "cancel the appointment", "delete the appointment", "remove the appointment", "abandon the appointment",
+      ], "cancel the appointment",
+        { explain: "Der Standardausdruck ist „cancel an appointment“. „delete/remove“ klingen technisch (eher für Kalendereinträge), „abandon“ heißt eher aufgeben/verlassen." }),
     ],
   },
   {
