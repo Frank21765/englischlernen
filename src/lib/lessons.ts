@@ -967,9 +967,9 @@ const B1_LESSONS: Lesson[] = [
     tasks: [
       mc("t1", "„Mir ist etwas dazwischengekommen.“", [
         "Something's come up.",
-        "Thing come me.", "Come up some.", "Up come thing me.",
+        "Something has come between.", "Something came in between me.", "There came something to me.",
       ], "Something's come up.",
-        { explain: "„Something has come up.“ = Mir ist etwas dazwischengekommen." }),
+        { explain: "„Something has come up.“ = Mir ist etwas dazwischengekommen. Die anderen Optionen sind typische deutsche Direktübersetzungen, die im Englischen nicht idiomatisch sind." }),
       cz("t2", "Lücke füllen", "Let me ___ back to you on that.", "get",
         { hint: "Hier fehlt ein zusammengesetztes Verb", explain: "„get back to someone“ = sich wieder bei jemandem melden." }),
       cz("t3", "Lücke füllen", "Could we ___ the meeting to next week?", "move",
