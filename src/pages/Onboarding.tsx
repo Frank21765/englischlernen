@@ -409,23 +409,31 @@ export default function Onboarding() {
               </div>
             </div>
             <div className="grid gap-2">
-              {onboardingCopy.self.options.map((s) => (
-                <Button
-                  key={s.id}
-                  variant={self === s.id ? "default" : "outline"}
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setSelf(s.id)}
-                >
-                  <span className="font-semibold">{s.label}</span>
-                </Button>
-              ))}
+              {onboardingCopy.self.options.map((s) => {
+                const isPicked = self === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSelf(s.id)}
+                    className={`w-full text-left rounded-xl border-2 px-4 py-3 text-sm sm:text-base font-semibold leading-snug transition-bounce break-words ${
+                      isPicked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card hover:bg-muted"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setStage("goal")}>
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setStage("goal")} className="self-start">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Zurück
               </Button>
               <Button
                 size="lg"
+                className="w-full sm:w-auto sm:min-w-[14rem]"
                 disabled={!self}
                 onClick={() => setStage("check")}
               >
