@@ -987,8 +987,9 @@ const B1_LESSONS: Lesson[] = [
       ord("t10", "Sätze richtig anordnen", ["my", "phone", "battery", "is", "almost", "dead"], "my phone battery is almost dead"),
       mc("t11", "Welche höfliche Bitte passt am besten?", [
         "Would you mind opening the window?",
-        "Open window you do.", "You window open.", "Window do you?",
-      ], "Would you mind opening the window?"),
+        "Would you mind to open the window?", "Could you please to open the window?", "Do you can open the window?",
+      ], "Would you mind opening the window?",
+        { explain: "Nach „would you mind“ folgt die -ing-Form (opening), nicht „to open“. Auch „do you can …“ ist ein typischer deutscher Fehler — Modalverben brauchen kein „do“." }),
       cz("t12", "Lücke füllen", "I had ___ stand in line for ages.", "to",
         { hint: "Modalverb-Vergangenheit", explain: "„had to + Infinitiv“ = musste." }),
       cz("t13", "Lücke füllen", "I'm not really ___ to it today.", "up",
