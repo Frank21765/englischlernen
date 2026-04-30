@@ -41,8 +41,9 @@ export interface MiniCheckTask {
 
 export const onboardingCopy = {
   welcome: {
-    title: "Englisch wieder reinkommen",
-    line1: "In einer Minute finden wir deinen sinnvollen Startpunkt.",
+    // Sichtbare Nutzer-Headline (Beta-interner Fokus bleibt „Englisch wieder reinkommen").
+    title: "Finde deinen Englisch-Startpunkt",
+    line1: "In einer Minute finden wir einen sinnvollen Einstieg für dich.",
     line2: "Kein Teststress. Du kannst deinen Startpunkt später ändern.",
     cta: "Startpunkt finden",
   },
