@@ -130,9 +130,10 @@ export const onboardingCopy = {
     ] as MiniCheckTask[],
   },
   result: {
-    headlinePrefix: "Wir empfehlen dir:",
+    // Bewusst weicher: „Vorschlag" statt „Empfehlung", keine harte Einstufung.
+    headlinePrefix: "Unser Vorschlag für deinen Start:",
     firstStepLabel: "Dein erster Schritt:",
-    closingHint: "Du kannst deinen Startpunkt später ändern.",
+    closingHint: "Das ist nur ein Startpunkt. Du kannst ihn später jederzeit ändern.",
     primaryCta: "Mit dieser Lektion starten",
     secondaryCta: "Startpunkt ändern",
     busyLabel: "Speichere …",
