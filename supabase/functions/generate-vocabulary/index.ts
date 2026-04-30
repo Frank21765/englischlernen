@@ -178,7 +178,16 @@ Die Grammatiknotiz ist optional, kurz (max. 1 Satz, Deutsch). Nutze gängiges br
 
     const data = await aiResp.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("Keine strukturierte Antwort erhalten");
+    if (!toolCall) {
+      // Kein 500 mehr: strukturierte Antwort mit fallback-Signal, damit
+      // optionale Aufrufer (z. B. Onboarding-Bonus) nicht in einen sichtbaren
+      // Plattform-Error-Overlay laufen.
+      console.warn("AI returned no tool call");
+      return new Response(
+        JSON.stringify({ error: "AI_NO_STRUCTURED_RESPONSE", fallback: true, pairs: [] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     const args = JSON.parse(toolCall.function.arguments);
     const pairs = (args.pairs ?? []).slice(0, 20);
 
@@ -187,9 +196,16 @@ Die Grammatiknotiz ist optional, kurz (max. 1 Satz, Deutsch). Nutze gängiges br
     });
   } catch (e) {
     console.error("generate-vocabulary error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unbekannter Fehler" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Auch hier: 200 + fallback-Signal, damit unerwartete Fehler nicht als
+    // sichtbares Plattform-Error-Overlay beim Nutzer landen. Aufrufer prüfen
+    // `fallback: true` und sollten still degradieren.
+    return new Response(
+      JSON.stringify({
+        error: e instanceof Error ? e.message : "Unbekannter Fehler",
+        fallback: true,
+        pairs: [],
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 });
