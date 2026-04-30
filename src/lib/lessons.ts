@@ -1004,8 +1004,9 @@ const B1_LESSONS: Lesson[] = [
         { hint: "Indirektes Pronomen" }),
       ord("t17", "Sätze richtig anordnen", ["could", "you", "speak", "a", "bit", "more", "slowly"], "could you speak a bit more slowly"),
       mc("t18", "„Ich beeile mich.“ heißt …", [
-        "I'll be quick.", "I am fast.", "I run me.", "Quick me am.",
-      ], "I'll be quick."),
+        "I'll be quick.", "I hurry me.", "I make quick.", "I am in hurry.",
+      ], "I'll be quick.",
+        { explain: "„hurry“ braucht im Englischen kein Reflexivpronomen („me/myself“) — anders als das deutsche „sich beeilen“. Auch „I am in hurry“ ist ein typischer Fehler: korrekt wäre „I'm in a hurry“ mit Artikel." }),
     ],
   },
   {
