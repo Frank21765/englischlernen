@@ -521,8 +521,9 @@ const A2_LESSONS: Lesson[] = [
     emoji: "🌤️",
     tasks: [
       mc("t1", "„Ich nehme normalerweise den Bus.“", [
-        "I usually take the bus.", "I take usually bus.", "Bus I take normal.", "I am bus take.",
-      ], "I usually take the bus."),
+        "I usually take the bus.", "I take usually the bus.", "Normally I take bus.", "I take normally the bus.",
+      ], "I usually take the bus.",
+        { explain: "Im Englischen steht das Häufigkeitsadverb (usually, normally, often) typischerweise VOR dem Vollverb: „I usually take …“. Außerdem braucht „bus“ den Artikel „the“." }),
       cz("t2", "Lücke füllen", "My phone isn't ___.", "working",
         { hint: "Hier fehlt eine -ing-Form, die sagt, dass das Handy gerade nicht funktioniert.", explain: "„working“ bedeutet hier nicht „arbeiten“, sondern „funktionieren“. Mit „My phone isn't working“ sagt man, dass das Handy im Moment nicht richtig läuft. Diese Form kannst du auch für andere Geräte benutzen, zum Beispiel: „The printer isn't working." }),
       cz("t3", "Lücke füllen", "I have to ___ my parents tonight.", "call",
