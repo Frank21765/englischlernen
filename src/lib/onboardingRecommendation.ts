@@ -122,7 +122,7 @@ export function computeRecommendation(input: RecommendationInput): Recommendatio
 
   // Übergangs-Mapping: bestehende statische Lektionen aus `src/lib/lessons.ts`.
   // Slugs sind dort `<topic>-<level>` in Kleinbuchstaben.
-  const lessonByLevel: Record<typeof defaultLevel, string> = {
+  const lessonByLevel: Record<"A1" | "A2" | "B1" | "B2", string> = {
     A1: "alltag-a1",
     A2: "alltag-a2",
     B1: "alltag-b1",
