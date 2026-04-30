@@ -315,7 +315,7 @@ export default function Onboarding() {
   const cur = tasks[taskIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-3 sm:px-4 py-5 sm:py-10">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-gradient-to-br from-background via-muted/40 to-background px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-10 sm:pb-10">
       <div className="mx-auto w-full max-w-xl space-y-4 sm:space-y-5">
         {previewMode && (
           <div className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
@@ -323,7 +323,7 @@ export default function Onboarding() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <img src={appIcon} alt="Hello!" className="h-9 w-9 shrink-0" />
+          <img src={appIcon} alt="" className="h-9 w-9 shrink-0" />
           <div className="flex-1 min-w-0">
             <Progress value={progress} className="h-2" />
           </div>
