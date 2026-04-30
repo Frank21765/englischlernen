@@ -248,42 +248,17 @@ export default function Onboarding() {
         objectId: recommendation.recommendedLessonId,
       });
 
-      // 4) Bonus im Hintergrund: Onboarding-Vokabelpool erzeugen.
-      // Bewusst „fire & forget" — wenn die Edge-Function tot ist, soll der
-      // Sprung in die Lektion trotzdem klappen.
-      void (async () => {
-        try {
-          const level = recommendation.recommendedDefaultLevel;
-          const topic = recommendation.recommendedDefaultTopic;
-          const { data: existing } = await supabase
-            .from("vocabulary").select("german")
-            .eq("user_id", user.id).eq("level", level).eq("topic", topic);
-          const existingGerman = (existing ?? []).map((r) => r.german);
-          const { data, error } = await supabase.functions.invoke("generate-vocabulary", {
-            body: { level, topic, existing: existingGerman },
-          });
-          if (error || data?.error) {
-            console.warn("[onboarding] vocab pool skipped", error ?? data?.error);
-            return;
-          }
-          const pairs: Array<{ german: string; english: string; grammar_note?: string }> = data?.pairs ?? [];
-          if (!pairs.length) return;
-          const rows = pairs.map((p) => ({
-            user_id: user.id,
-            level,
-            topic,
-            german: p.german.trim(),
-            english: p.english.trim(),
-            grammar_note: p.grammar_note ?? null,
-            source: "onboarding",
-          }));
-          await supabase
-            .from("vocabulary")
-            .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
-        } catch (err) {
-          console.warn("[onboarding] vocab pool failed", err);
-        }
-      })();
+      // 4) Bonus-Vokabelpool BEWUSST DEAKTIVIERT für den Onboarding-Übergang.
+      //
+      // Hintergrund: Auch als „fire & forget" mit try/catch konnte die
+      // generate-vocabulary Edge Function bei einem 500-Status ein sichtbares
+      // Plattform-Error-Overlay im Lektionsscreen auslösen — direkt nach dem
+      // Klick auf „Mit dieser Lektion starten". Das ist für den allerersten
+      // Eindruck nach dem Onboarding inakzeptabel.
+      //
+      // Den Bonus-Pool generieren wir später bei Bedarf aus dem Start-Screen
+      // bzw. der Vokabel-Seite heraus — dort gibt es bereits robuste Aufrufe
+      // mit eigener Fehlerbehandlung. Phase 1a bleibt damit stabil.
 
       navigate(`/training/lektionen/${recommendation.recommendedLessonId}`, { replace: true });
     } catch (e) {
