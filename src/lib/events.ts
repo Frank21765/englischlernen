@@ -8,6 +8,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Phase-1a-Ergänzung: schlanke Aktivierungs-Events für Onboarding & erste Lektion.
+// Bestehende Event-Typen bleiben unverändert — nichts wird ersetzt.
 export type EventType =
   | "vocab_correct"
   | "vocab_wrong"
@@ -21,7 +23,13 @@ export type EventType =
   | "lesson_completed"
   | "review_done"
   | "diagnostic_taken"
-  | "session_started";
+  | "session_started"
+  // Onboarding v3 / Phase 1a:
+  | "onboarding_started"
+  | "onboarding_completed"
+  | "recommendation_shown"
+  | "first_lesson_started"
+  | "first_lesson_completed";
 
 export type ObjectType =
   | "vocabulary"
