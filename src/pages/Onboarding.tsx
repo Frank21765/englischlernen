@@ -370,16 +370,23 @@ export default function Onboarding() {
               </div>
             </div>
             <div className="grid gap-2">
-              {onboardingCopy.goal.options.map((g) => (
-                <Button
-                  key={g.id}
-                  variant={goal === g.id ? "default" : "outline"}
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setGoal(g.id)}
-                >
-                  <span className="font-semibold">{g.label}</span>
-                </Button>
-              ))}
+              {onboardingCopy.goal.options.map((g) => {
+                const isPicked = goal === g.id;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGoal(g.id)}
+                    className={`w-full text-left rounded-xl border-2 px-4 py-3 text-sm sm:text-base font-semibold leading-snug transition-bounce break-words ${
+                      isPicked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card hover:bg-muted"
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
             </div>
             <Button
               size="lg"
