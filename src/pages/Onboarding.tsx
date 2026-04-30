@@ -1,5 +1,19 @@
+// Onboarding v3 / Phase 1a — fünf Screens:
+//   welcome → goal → self → check → result.
+//
+// Bewusste Reduktion gegenüber v2 (9 Stages mit Interessen, Minutenziel, Topic-Picker).
+// Interessen-Tags und Wochenziel werden nicht mehr abgefragt; die Spalten in
+// `profiles` bleiben dafür einfach NULL (kein Code liest sie aktuell).
+//
+// Im Hintergrund (Phase-1-Nacharbeit) erzeugen wir beim Klick auf
+// „Mit dieser Lektion starten" zusätzlich einen Onboarding-Vokabelpool.
+// Das ist Bonus, blockiert aber nicht den Sprung in die Lektion.
+//
+// Admin-Preview-Modus (`?preview=1`) ist vorbereitet: alle Schreibzugriffe
+// werden geguarded. Die Admin-Preview-UI selbst kommt in Phase 1b.
+
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearning } from "@/hooks/useLearningContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,10 +22,7 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessGate from "@/components/AccessGate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
 import {
   saveOnboardingProfile,
   saveDiagnosticResult,
@@ -19,8 +30,16 @@ import {
   type SelfAssessment,
 } from "@/lib/onboarding";
 import { logLearningEvent } from "@/lib/events";
+import { onboardingCopy, type GoalId, type SelfId } from "@/lib/onboardingCopy";
+import {
+  computeRecommendation,
+  scoreMiniCheck,
+  type MiniCheckAnswer,
+  type Recommendation,
+} from "@/lib/onboardingRecommendation";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Compass,
@@ -29,149 +48,51 @@ import {
   Loader2,
   Sparkles,
   Target,
-  Timer,
-  Wand2,
 } from "lucide-react";
 import appIcon from "@/assets/app-icon.png";
 
-// Phase 1 Onboarding-Reihenfolge laut Leitplanke 1:
-// Ziel → Selbsteinschätzung → kurze Diagnose → Empfehlung → Interessen → Minutenziel → Thema → Start.
-type Stage =
-  | "welcome"
-  | "goal"
-  | "self"
-  | "check"
-  | "result"
-  | "interests"
-  | "minutes"
-  | "topic"
-  | "start";
+type Stage = "welcome" | "goal" | "self" | "check" | "result";
 
-interface Question {
-  prompt: string;
-  helper?: string;
-  options: { label: string; level: Level }[];
-}
+// Mapping vom v3-GoalId auf die bereits existierenden DB-Werte (LearningGoal).
+// So bleibt das DB-Schema unverändert — Phase 1a führt keine Migration aus.
+const GOAL_TO_DB: Record<GoalId, LearningGoal> = {
+  auffrischen: "frei",
+  grammatik: "frei",
+  beruf_alltag: "arbeit",
+  reisen_alltag: "reisen",
+  wortschatz: "frei",
+};
 
-// 6 lightweight, friendly questions. Each option maps to a CEFR level.
-const QUESTIONS: Question[] = [
-  {
-    prompt: "How would you describe your English right now?",
-    options: [
-      { label: "Just starting / a few words", level: "A1" },
-      { label: "I know basic phrases", level: "A2" },
-      { label: "I can have simple conversations", level: "B1" },
-      { label: "I'm fairly fluent", level: "B2" },
-    ],
-  },
-  {
-    prompt: 'Translate: "Ich gehe heute ins Kino."',
-    options: [
-      { label: "I go cinema today", level: "A1" },
-      { label: "I go to the cinema today", level: "A2" },
-      { label: "I'm going to the cinema today", level: "B1" },
-      { label: "I'm heading to the cinema tonight", level: "B2" },
-    ],
-  },
-  {
-    prompt: 'Choose the correct sentence:',
-    options: [
-      { label: "She have a dog.", level: "A1" },
-      { label: "She has a dog.", level: "A2" },
-      { label: "She has had a dog for years.", level: "B1" },
-      { label: "She's had her dog ever since she moved out.", level: "B2" },
-    ],
-  },
-  {
-    prompt: 'What does "I used to live in Berlin" mean?',
-    options: [
-      { label: "I don't understand", level: "A1" },
-      { label: "I live in Berlin now", level: "A2" },
-      { label: "I lived there before, not anymore", level: "B1" },
-      { label: "Berlin shaped who I am today", level: "B2" },
-    ],
-  },
-  {
-    prompt: "Pick the correct past form: \"Yesterday I ___ to a friend.\"",
-    options: [
-      { label: "speak", level: "A1" },
-      { label: "speaked", level: "A2" },
-      { label: "spoke", level: "B1" },
-      { label: "had spoken", level: "B2" },
-    ],
-  },
-  {
-    prompt: 'Which sounds most natural?',
-    options: [
-      { label: "I am here since two days.", level: "A1" },
-      { label: "I am here from two days.", level: "A2" },
-      { label: "I have been here for two days.", level: "B1" },
-      { label: "I've been here a couple of days now.", level: "B2" },
-    ],
-  },
-];
-
-const LEVEL_WEIGHT: Record<Level, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
-
-function computeLevel(answers: Level[]): Level {
-  if (!answers.length) return "A1";
-  const avg = answers.reduce((sum, l) => sum + LEVEL_WEIGHT[l], 0) / answers.length;
-  // Round to nearest, clamp A1..B2 (placement focus)
-  const rounded = Math.max(1, Math.min(4, Math.round(avg)));
-  return (Object.entries(LEVEL_WEIGHT).find(([, v]) => v === rounded)?.[0] as Level) ?? "A1";
-}
-
-const GOALS: { key: LearningGoal; label: string; helper: string }[] = [
-  { key: "alltag", label: "Alltag & Smalltalk", helper: "Locker reden, verstehen, einkaufen." },
-  { key: "reisen", label: "Reisen", helper: "Hotel, Restaurant, unterwegs." },
-  { key: "arbeit", label: "Beruf", helper: "Meetings, E-Mails, Fachbegriffe." },
-  { key: "pruefung", label: "Prüfung", helper: "Schule, Studium, Zertifikat." },
-  { key: "frei", label: "Einfach lernen", helper: "Aus Spaß und Neugier." },
-];
-
-const SELF_ASSESS: { key: SelfAssessment; label: string; helper: string }[] = [
-  { key: "anfaenger", label: "Anfänger:in", helper: "Kaum bis keine Vorkenntnisse." },
-  { key: "etwas_erfahrung", label: "Etwas Erfahrung", helper: "Schule lange her, Reste vorhanden." },
-  { key: "unsicher", label: "Unsicher", helper: "Ich kann viel verstehen, traue mich aber selten zu sprechen." },
-  { key: "fortgeschritten", label: "Fortgeschritten", helper: "Ich komme im Alltag gut klar, will den Feinschliff." },
-];
-
-const INTEREST_TAGS = [
-  "Reisen",
-  "Essen & Trinken",
-  "Sport",
-  "Technik",
-  "Musik",
-  "Filme & Serien",
-  "Natur",
-  "Familie",
-  "Beruf",
-  "Smalltalk",
-] as const;
-
-const MINUTE_GOALS = [10, 20, 30, 45] as const;
+// Mapping der v3-Selbsteinschätzungen auf bestehende DB-Werte.
+const SELF_TO_DB: Record<SelfId, SelfAssessment> = {
+  leichter_neustart: "anfaenger",
+  schulenglisch_rest: "etwas_erfahrung",
+  satzbau_unsicher: "unsicher",
+  alltag_zurecht: "fortgeschritten",
+};
 
 export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { setSelection } = useLearning();
   const access = useUserAccess();
+  const [searchParams] = useSearchParams();
+  const previewMode = searchParams.get("preview") === "1";
 
   const [stage, setStage] = useState<Stage>("welcome");
-  const [qIndex, setQIndex] = useState(0);
-  const [answers, setAnswers] = useState<Level[]>([]);
-  const [estimated, setEstimated] = useState<Level>("A1");
-  const [chosenLevel, setChosenLevel] = useState<Level>("A1");
-  const [chosenTopic, setChosenTopic] = useState<string>("Alltag");
-  const [customTopic, setCustomTopic] = useState("");
-  const [goal, setGoal] = useState<LearningGoal | null>(null);
-  const [selfAssessment, setSelfAssessment] = useState<SelfAssessment | null>(null);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [weeklyMinutes, setWeeklyMinutes] = useState<number>(20);
+  const [goal, setGoal] = useState<GoalId | null>(null);
+  const [self, setSelf] = useState<SelfId | null>(null);
+  const [taskIndex, setTaskIndex] = useState(0);
+  const [answers, setAnswers] = useState<MiniCheckAnswer[]>([]);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [startedLogged, setStartedLogged] = useState(false);
 
-  // Guard: if not logged in or already onboarded, redirect away.
+  const tasks = onboardingCopy.miniCheck.tasks;
+
+  // Guard: nicht eingeloggt → Auth. Schon onboardet → Start.
+  // Im previewMode überspringen wir die Onboarding-Completed-Weiterleitung.
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
@@ -181,65 +102,109 @@ export default function Onboarding() {
       } catch (error) {
         console.error("Onboarding profile sync failed", error);
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data?.onboarding_completed) {
-        navigate("/start", { replace: true });
-        return;
+      if (!previewMode) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data?.onboarding_completed) {
+          navigate("/start", { replace: true });
+          return;
+        }
       }
       setChecking(false);
     })();
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, previewMode]);
+
+  // onboarding_started genau einmal pro Sitzung loggen.
+  useEffect(() => {
+    if (checking || startedLogged || previewMode) return;
+    setStartedLogged(true);
+    void logLearningEvent({ eventType: "onboarding_started" });
+  }, [checking, startedLogged, previewMode]);
 
   const progress = useMemo(() => {
-    const total = QUESTIONS.length;
-    if (stage === "welcome") return 4;
-    if (stage === "goal") return 12;
-    if (stage === "self") return 22;
-    if (stage === "check") return 30 + (qIndex / total) * 35;
-    if (stage === "result") return 70;
-    if (stage === "interests") return 78;
-    if (stage === "minutes") return 86;
-    if (stage === "topic") return 92;
+    if (stage === "welcome") return 6;
+    if (stage === "goal") return 20;
+    if (stage === "self") return 38;
+    if (stage === "check") return 50 + (taskIndex / tasks.length) * 35;
     return 96;
-  }, [stage, qIndex]);
+  }, [stage, taskIndex, tasks.length]);
 
-  const finalTopic = chosenTopic === "__custom" ? customTopic.trim() : chosenTopic;
-
-  const toggleInterest = (tag: string) => {
-    setInterests((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
+  const finishMiniCheck = (allAnswers: MiniCheckAnswer[]) => {
+    const rec = computeRecommendation({
+      goalId: goal,
+      selfAssessmentId: self,
+      miniCheckAnswers: allAnswers,
+    });
+    setRecommendation(rec);
+    setStage("result");
+    if (!previewMode) {
+      void logLearningEvent({
+        eventType: "recommendation_shown",
+        level: rec.recommendedDefaultLevel,
+        topic: rec.recommendedDefaultTopic,
+        metadata: {
+          band: rec.recommendedBand,
+          entryCode: rec.recommendedEntryCode,
+          lessonId: rec.recommendedLessonId,
+          confidence: rec.confidenceBand,
+        },
+      });
+    }
   };
 
-  const completeAndStart = async (action: "quiz" | "lernen") => {
-    if (!user) return;
-    if (!finalTopic) { toast.error("Bitte ein Thema wählen"); return; }
+  const onPickMiniCheck = (selectedIndex: number | null) => {
+    const t = tasks[taskIndex];
+    const next: MiniCheckAnswer[] = [...answers, { taskId: t.id, selectedIndex }];
+    setAnswers(next);
+    if (taskIndex + 1 < tasks.length) {
+      setTaskIndex(taskIndex + 1);
+    } else {
+      finishMiniCheck(next);
+    }
+  };
+
+  const skipMiniCheck = () => {
+    // Übersprungen: alle restlichen Aufgaben als „nicht beantwortet" markieren.
+    const remaining: MiniCheckAnswer[] = [];
+    for (let i = taskIndex; i < tasks.length; i++) {
+      remaining.push({ taskId: tasks[i].id, selectedIndex: null });
+    }
+    finishMiniCheck([...answers, ...remaining]);
+  };
+
+  const startWithRecommendation = async () => {
+    if (!user || !recommendation) return;
     setBusy(true);
     try {
-      // 1) Onboarding-Profil sauber ablegen (alle Phase-1-Felder).
+      // Im previewMode wird NICHTS gespeichert — die Empfehlung wird nur angezeigt.
+      if (previewMode) {
+        toast.message("Testmodus — Empfehlung wurde nicht gespeichert.");
+        setBusy(false);
+        return;
+      }
+
+      const score = scoreMiniCheck(answers, tasks);
+
+      // 1) Onboarding-Profil ablegen (Phase-1-Felder, ohne Interessen/Minutenziel).
       const profileRes = await saveOnboardingProfile(user.id, {
-        learning_goal: goal ?? "frei",
-        self_assessment: selfAssessment ?? "anfaenger",
-        interests,
-        recommended_level: estimated,
-        weekly_minutes_goal: weeklyMinutes,
+        learning_goal: goal ? GOAL_TO_DB[goal] : "frei",
+        self_assessment: self ? SELF_TO_DB[self] : "anfaenger",
+        recommended_level: recommendation.recommendedDefaultLevel,
       });
       if (!profileRes.ok) {
-        // Sichtbar machen, statt still weiterzulaufen.
         toast.error(`Profil konnte nicht gespeichert werden: ${profileRes.error ?? "Unbekannter Fehler"}`);
         throw new Error(profileRes.error ?? "Profil-Update fehlgeschlagen");
       }
 
-      // 2) Default-Level + Thema fürs Lernen setzen.
+      // 2) Default-Level + Thema fürs Lernen setzen (existierende Spalten).
       const { error: upErr } = await supabase
         .from("profiles")
         .update({
-          default_level: chosenLevel,
-          default_topic: finalTopic,
+          default_level: recommendation.recommendedDefaultLevel,
+          default_topic: recommendation.recommendedDefaultTopic,
         })
         .eq("user_id", user.id);
       if (upErr) {
@@ -247,79 +212,92 @@ export default function Onboarding() {
         throw upErr;
       }
 
-      // 3) Diagnose-Ergebnis ablegen, wenn echte Antworten vorhanden sind.
-      if (answers.length > 0) {
-        const score = answers.reduce((sum, l) => sum + LEVEL_WEIGHT[l], 0);
+      // 3) Diagnose-Ergebnis ablegen, wenn überhaupt etwas beantwortet wurde.
+      if (score.answered > 0) {
         const diag = await saveDiagnosticResult(user.id, {
           area: "vocab",
-          score,
-          cefrEstimate: estimated,
+          score: score.correct,
+          cefrEstimate: recommendation.recommendedDefaultLevel,
           details: {
-            answered: answers.length,
-            total: QUESTIONS.length,
+            answered: score.answered,
+            total: score.total,
+            band: recommendation.recommendedBand,
+            entryCode: recommendation.recommendedEntryCode,
+            confidence: recommendation.confidenceBand,
             answers,
           },
         });
         if (!diag.ok) {
-          // Diagnose darf den Flow nicht blockieren, aber wir loggen sichtbar.
           console.error("[onboarding] diagnostic save failed", diag.error);
-          toast.message("Diagnose konnte nicht gespeichert werden, wir machen trotzdem weiter.");
         }
-        await logLearningEvent({
-          eventType: "diagnostic_taken",
-          level: estimated,
-          metadata: { score, answered: answers.length, total: QUESTIONS.length },
-        });
       }
 
-      setSelection(chosenLevel, finalTopic, { persist: false });
+      setSelection(recommendation.recommendedDefaultLevel, recommendation.recommendedDefaultTopic, { persist: false });
 
-      if (action === "quiz") {
-        // Erstes Vokabelset generieren und als Onboarding-Pool markieren.
-        const { data: existing } = await supabase
-          .from("vocabulary").select("german")
-          .eq("user_id", user.id).eq("level", chosenLevel).eq("topic", finalTopic);
-        const existingGerman = (existing ?? []).map((r) => r.german);
-        const { data, error } = await supabase.functions.invoke("generate-vocabulary", {
-          body: { level: chosenLevel, topic: finalTopic, existing: existingGerman },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        const pairs: Array<{ german: string; english: string; grammar_note?: string }> = data.pairs ?? [];
-        if (pairs.length) {
+      void logLearningEvent({
+        eventType: "onboarding_completed",
+        level: recommendation.recommendedDefaultLevel,
+        topic: recommendation.recommendedDefaultTopic,
+        metadata: { band: recommendation.recommendedBand, entryCode: recommendation.recommendedEntryCode },
+      });
+      void logLearningEvent({
+        eventType: "first_lesson_started",
+        level: recommendation.recommendedDefaultLevel,
+        topic: recommendation.recommendedDefaultTopic,
+        objectType: "lesson",
+        objectId: recommendation.recommendedLessonId,
+      });
+
+      // 4) Bonus im Hintergrund: Onboarding-Vokabelpool erzeugen.
+      // Bewusst „fire & forget" — wenn die Edge-Function tot ist, soll der
+      // Sprung in die Lektion trotzdem klappen.
+      void (async () => {
+        try {
+          const level = recommendation.recommendedDefaultLevel;
+          const topic = recommendation.recommendedDefaultTopic;
+          const { data: existing } = await supabase
+            .from("vocabulary").select("german")
+            .eq("user_id", user.id).eq("level", level).eq("topic", topic);
+          const existingGerman = (existing ?? []).map((r) => r.german);
+          const { data, error } = await supabase.functions.invoke("generate-vocabulary", {
+            body: { level, topic, existing: existingGerman },
+          });
+          if (error || data?.error) {
+            console.warn("[onboarding] vocab pool skipped", error ?? data?.error);
+            return;
+          }
+          const pairs: Array<{ german: string; english: string; grammar_note?: string }> = data?.pairs ?? [];
+          if (!pairs.length) return;
           const rows = pairs.map((p) => ({
             user_id: user.id,
-            level: chosenLevel,
-            topic: finalTopic,
+            level,
+            topic,
             german: p.german.trim(),
             english: p.english.trim(),
             grammar_note: p.grammar_note ?? null,
             source: "onboarding",
           }));
-          const { error: vErr } = await supabase
+          await supabase
             .from("vocabulary")
             .upsert(rows, { onConflict: "user_id,german,english", ignoreDuplicates: true });
-          if (vErr) {
-            console.error("[onboarding] vocabulary upsert failed", vErr);
-            toast.error(`Vokabeln konnten nicht gespeichert werden: ${vErr.message}`);
-            throw vErr;
-          }
-          toast.success(`Dein erster Vokabelpool: ${pairs.length} Wörter, ${chosenLevel} · ${finalTopic}`);
+        } catch (err) {
+          console.warn("[onboarding] vocab pool failed", err);
         }
-        // Auto-Start: Quiz direkt mit Pool öffnen, Picker überspringen.
-        navigate(
-          `/training/quiz?level=${encodeURIComponent(chosenLevel)}&topic=${encodeURIComponent(finalTopic)}&autostart=1`,
-          { replace: true },
-        );
-      } else {
-        toast.success("Alles bereit – willkommen!");
-        navigate("/start", { replace: true });
-      }
+      })();
+
+      navigate(`/training/lektionen/${recommendation.recommendedLessonId}`, { replace: true });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Etwas ist schiefgelaufen");
     } finally {
       setBusy(false);
     }
+  };
+
+  const changeStartingPoint = () => {
+    setStage("goal");
+    setTaskIndex(0);
+    setAnswers([]);
+    setRecommendation(null);
   };
 
   if (loading || checking) {
@@ -330,16 +308,20 @@ export default function Onboarding() {
     );
   }
 
-  // Wenn der Account noch nicht freigeschaltet (oder gesperrt/abgelaufen) ist,
-  // zeigen wir vor dem Onboarding den Wartebereich – sonst läuft die Person
-  // ins Leere, sobald sie das Onboarding abschließt.
   if (!access.loading && access.status !== "active") {
     return <AccessGate>{null}</AccessGate>;
   }
 
+  const cur = tasks[taskIndex];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-3 sm:px-4 py-5 sm:py-10">
       <div className="mx-auto w-full max-w-xl space-y-4 sm:space-y-5">
+        {previewMode && (
+          <div className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+            Testmodus — keine Speicherung. (Admin-Preview)
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <img src={appIcon} alt="Hello!" className="h-9 w-9 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -352,23 +334,16 @@ export default function Onboarding() {
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Sparkles className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
-                <h1 className="text-2xl sm:text-3xl">Welcome zu Hello! 👋</h1>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Hello! hilft dir, Englisch entspannt im Alltag zu lernen –
-                  mit eigenen Vokabelsets, kleinen Übungen und Coach Ellie an deiner Seite.
-                </p>
+                <h1 className="text-2xl sm:text-3xl">{onboardingCopy.welcome.title}</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">{onboardingCopy.welcome.line1}</p>
               </div>
             </div>
-            <ul className="space-y-2 text-sm sm:text-base">
-              <li className="flex gap-2"><Compass className="h-5 w-5 text-accent shrink-0" /> Wir schauen kurz, was du willst und wo du stehst</li>
-              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Du wählst Interessen, Thema und dein Wochenziel</li>
-              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Du startest direkt mit deinem ersten Vokabelset</li>
+            <ul className="space-y-2 text-sm sm:text-base text-muted-foreground">
+              <li className="flex gap-2"><Compass className="h-5 w-5 text-accent shrink-0" /> {onboardingCopy.welcome.line2}</li>
+              <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-accent shrink-0" /> Wir empfehlen dir am Ende einen ersten Schritt — kein Test, keine Note.</li>
             </ul>
-            <p className="text-xs text-muted-foreground">
-              Das ist nur ein Startpunkt – alles davon kannst du später ändern.
-            </p>
             <Button size="lg" className="w-full" onClick={() => setStage("goal")}>
-              Los geht's <ArrowRight className="h-4 w-4 ml-1" />
+              {onboardingCopy.welcome.cta} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
             <Button
               type="button"
@@ -390,24 +365,19 @@ export default function Onboarding() {
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary/15 p-3"><Target className="h-6 w-6 text-primary" /></div>
               <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Wofür willst du Englisch lernen?</h2>
-                <p className="text-sm text-muted-foreground">
-                  Damit wir dir die richtigen Inhalte zeigen.
-                </p>
+                <h2 className="text-xl sm:text-2xl">{onboardingCopy.goal.title}</h2>
+                <p className="text-sm text-muted-foreground">{onboardingCopy.goal.helper}</p>
               </div>
             </div>
             <div className="grid gap-2">
-              {GOALS.map((g) => (
+              {onboardingCopy.goal.options.map((g) => (
                 <Button
-                  key={g.key}
-                  variant={goal === g.key ? "default" : "outline"}
+                  key={g.id}
+                  variant={goal === g.id ? "default" : "outline"}
                   className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setGoal(g.key)}
+                  onClick={() => setGoal(g.id)}
                 >
-                  <div className="flex flex-col items-start">
-                    <span className="font-semibold">{g.label}</span>
-                    <span className="text-xs opacity-80">{g.helper}</span>
-                  </div>
+                  <span className="font-semibold">{g.label}</span>
                 </Button>
               ))}
             </div>
@@ -417,7 +387,7 @@ export default function Onboarding() {
               disabled={!goal}
               onClick={() => setStage("self")}
             >
-              Weiter <ArrowRight className="h-4 w-4 ml-1" />
+              {onboardingCopy.goal.cta} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Card>
         )}
@@ -427,237 +397,89 @@ export default function Onboarding() {
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-accent/15 p-3"><Heart className="h-6 w-6 text-accent" /></div>
               <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Wie schätzt du dich selbst ein?</h2>
-                <p className="text-sm text-muted-foreground">
-                  Kein Test. Wir nehmen das nur als Ausgangspunkt.
-                </p>
+                <h2 className="text-xl sm:text-2xl">{onboardingCopy.self.title}</h2>
+                <p className="text-sm text-muted-foreground">{onboardingCopy.self.helper}</p>
               </div>
             </div>
             <div className="grid gap-2">
-              {SELF_ASSESS.map((s) => (
+              {onboardingCopy.self.options.map((s) => (
                 <Button
-                  key={s.key}
-                  variant={selfAssessment === s.key ? "default" : "outline"}
+                  key={s.id}
+                  variant={self === s.id ? "default" : "outline"}
                   className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setSelfAssessment(s.key)}
+                  onClick={() => setSelf(s.id)}
                 >
-                  <div className="flex flex-col items-start">
-                    <span className="font-semibold">{s.label}</span>
-                    <span className="text-xs opacity-80">{s.helper}</span>
-                  </div>
+                  <span className="font-semibold">{s.label}</span>
                 </Button>
               ))}
             </div>
-            <Button
-              size="lg"
-              className="w-full"
-              disabled={!selfAssessment}
-              onClick={() => setStage("check")}
-            >
-              Weiter zur kurzen Einschätzung <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setStage("goal")}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Zurück
+              </Button>
+              <Button
+                size="lg"
+                disabled={!self}
+                onClick={() => setStage("check")}
+              >
+                {onboardingCopy.self.cta} <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </Card>
         )}
 
-        {stage === "check" && (
+        {stage === "check" && cur && (
           <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-semibold uppercase tracking-wide">Frage {qIndex + 1} / {QUESTIONS.length}</span>
+              <span className="font-semibold uppercase tracking-wide">
+                {onboardingCopy.miniCheck.progressLabel(taskIndex + 1, tasks.length)}
+              </span>
               <button
                 type="button"
                 className="hover:text-foreground transition-smooth underline-offset-2 hover:underline"
-                onClick={() => { setEstimated("A1"); setChosenLevel("A1"); setStage("result"); }}
+                onClick={skipMiniCheck}
               >
-                Überspringen
+                {onboardingCopy.miniCheck.skipLabel}
               </button>
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold">{QUESTIONS[qIndex].prompt}</h2>
+            <p className="text-xs uppercase tracking-wide text-accent">{cur.kind}</p>
+            <h2 className="text-lg sm:text-xl font-semibold">{cur.prompt}</h2>
             <div className="grid gap-2">
-              {QUESTIONS[qIndex].options.map((opt) => (
+              {cur.options.map((opt, idx) => (
                 <Button
                   key={opt.label}
                   variant="outline"
                   className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => {
-                    const next = [...answers, opt.level];
-                    setAnswers(next);
-                    if (qIndex + 1 < QUESTIONS.length) {
-                      setQIndex(qIndex + 1);
-                    } else {
-                      const lvl = computeLevel(next);
-                      setEstimated(lvl);
-                      setChosenLevel(lvl);
-                      setStage("result");
-                    }
-                  }}
+                  onClick={() => onPickMiniCheck(idx)}
                 >
                   {opt.label}
                 </Button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Kein Stress – das ist nur eine kurze Orientierung, kein Test.
-            </p>
+            <p className="text-xs text-muted-foreground">{onboardingCopy.miniCheck.helper}</p>
           </Card>
         )}
 
-        {stage === "result" && (
+        {stage === "result" && recommendation && (
           <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-accent/15 p-3"><GraduationCap className="h-6 w-6 text-accent" /></div>
               <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Dein Startniveau: <span className="font-mono text-primary">{estimated}</span></h2>
-                <p className="text-sm text-muted-foreground">
-                  Das ist nur ein Startpunkt. Du kannst dein Niveau jederzeit ändern.
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {onboardingCopy.result.headlinePrefix}
                 </p>
+                <h2 className="text-xl sm:text-2xl">{recommendation.headline}</h2>
+                <p className="text-sm text-muted-foreground">{recommendation.shortReason}</p>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Niveau anpassen (A1–B2)</Label>
-              <div className="flex flex-wrap gap-2">
-                {LEVELS.filter((l) => ["A1","A2","B1","B2"].includes(l)).map((l) => (
-                  <Button
-                    key={l}
-                    type="button"
-                    size="sm"
-                    variant={chosenLevel === l ? "default" : "outline"}
-                    onClick={() => setChosenLevel(l)}
-                    className="font-mono"
-                  >
-                    {l}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <Button size="lg" className="w-full" onClick={() => setStage("interests")}>
-              Weiter zu Interessen <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Card>
-        )}
-
-        {stage === "interests" && (
-          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/15 p-3"><Heart className="h-6 w-6 text-primary" /></div>
-              <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Was interessiert dich?</h2>
-                <p className="text-sm text-muted-foreground">
-                  Mehrfachauswahl. Wir nutzen das später für passende Inhalte.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {INTEREST_TAGS.map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  size="sm"
-                  variant={interests.includes(t) ? "default" : "outline"}
-                  onClick={() => toggleInterest(t)}
-                >
-                  {t}
-                </Button>
-              ))}
-            </div>
-            <Button size="lg" className="w-full" onClick={() => setStage("minutes")}>
-              Weiter <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Card>
-        )}
-
-        {stage === "minutes" && (
-          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-accent/15 p-3"><Timer className="h-6 w-6 text-accent" /></div>
-              <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Wie viel Zeit hast du pro Woche?</h2>
-                <p className="text-sm text-muted-foreground">
-                  Dein Wochenziel — nichts in Stein gemeißelt.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {MINUTE_GOALS.map((m) => (
-                <Button
-                  key={m}
-                  type="button"
-                  size="sm"
-                  variant={weeklyMinutes === m ? "default" : "outline"}
-                  onClick={() => setWeeklyMinutes(m)}
-                >
-                  {m} Min
-                </Button>
-              ))}
-            </div>
-            <Button size="lg" className="w-full" onClick={() => setStage("topic")}>
-              Weiter zum Thema <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Card>
-        )}
-
-        {stage === "topic" && (
-          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-primary/15 p-3"><Target className="h-6 w-6 text-primary" /></div>
-              <div className="space-y-1">
-                <h2 className="text-xl sm:text-2xl">Womit möchtest du starten?</h2>
-                <p className="text-sm text-muted-foreground">Wähle ein Thema oder gib ein eigenes ein.</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_TOPICS.map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  size="sm"
-                  variant={chosenTopic === t ? "default" : "outline"}
-                  onClick={() => { setChosenTopic(t); setCustomTopic(""); }}
-                >
-                  {t}
-                </Button>
-              ))}
-              <Button
-                type="button"
-                size="sm"
-                variant={chosenTopic === "__custom" ? "default" : "outline"}
-                onClick={() => setChosenTopic("__custom")}
-              >
-                Eigenes Thema
-              </Button>
-            </div>
-            {chosenTopic === "__custom" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="custom-topic">Dein Thema</Label>
-                <Input
-                  id="custom-topic"
-                  placeholder="z. B. Bewerbung, Smalltalk, Reise nach London"
-                  value={customTopic}
-                  onChange={(e) => setCustomTopic(e.target.value)}
-                  maxLength={60}
-                />
-              </div>
-            )}
-            <Button
-              size="lg"
-              className="w-full"
-              disabled={!finalTopic}
-              onClick={() => setStage("start")}
-            >
-              Weiter <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Card>
-        )}
-
-        {stage === "start" && (
-          <Card className="p-5 sm:p-7 space-y-4 sm:space-y-5">
-            <div className="space-y-2">
-              <h2 className="text-xl sm:text-2xl">Bereit? 🎉</h2>
-              <p className="text-sm text-muted-foreground">
-                Wir starten mit deinem ersten Vokabelset für{" "}
-                <span className="font-mono text-primary">{chosenLevel}</span> · <span className="font-semibold">{finalTopic}</span>.
+            <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {onboardingCopy.result.firstStepLabel}
               </p>
+              <p className="font-semibold">{recommendation.firstStepTitle}</p>
               <p className="text-xs text-muted-foreground">
-                Du bekommst gleich <span className="font-semibold text-foreground">20 Wörter</span> – passend zu Niveau und Thema.
+                Lektion: <span className="font-mono">{recommendation.recommendedLessonId}</span> ·
+                {" "}{recommendation.recommendedDefaultLevel} · {recommendation.recommendedDefaultTopic}
               </p>
             </div>
             <div className="grid gap-2">
@@ -665,23 +487,26 @@ export default function Onboarding() {
                 size="lg"
                 className="w-full"
                 disabled={busy}
-                onClick={() => completeAndStart("quiz")}
+                onClick={startWithRecommendation}
               >
-                {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                Erstes Vokabelset erzeugen & starten
+                {busy ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{onboardingCopy.result.busyLabel}</>
+                ) : (
+                  <>{onboardingCopy.result.primaryCta} <ArrowRight className="h-4 w-4 ml-1" /></>
+                )}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="w-full"
                 disabled={busy}
-                onClick={() => completeAndStart("lernen")}
+                onClick={changeStartingPoint}
               >
-                Später – zum Lern-Hub
+                {onboardingCopy.result.secondaryCta}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Niveau, Thema und Wochenziel kannst du jederzeit in den Einstellungen ändern.
+              {onboardingCopy.result.closingHint}
             </p>
           </Card>
         )}
