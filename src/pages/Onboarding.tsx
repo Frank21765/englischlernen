@@ -315,7 +315,7 @@ export default function Onboarding() {
   const cur = tasks[taskIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background px-3 sm:px-4 py-5 sm:py-10">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-gradient-to-br from-background via-muted/40 to-background px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-10 sm:pb-10">
       <div className="mx-auto w-full max-w-xl space-y-4 sm:space-y-5">
         {previewMode && (
           <div className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
@@ -323,7 +323,7 @@ export default function Onboarding() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <img src={appIcon} alt="Hello!" className="h-9 w-9 shrink-0" />
+          <img src={appIcon} alt="" className="h-9 w-9 shrink-0" />
           <div className="flex-1 min-w-0">
             <Progress value={progress} className="h-2" />
           </div>
@@ -370,16 +370,23 @@ export default function Onboarding() {
               </div>
             </div>
             <div className="grid gap-2">
-              {onboardingCopy.goal.options.map((g) => (
-                <Button
-                  key={g.id}
-                  variant={goal === g.id ? "default" : "outline"}
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setGoal(g.id)}
-                >
-                  <span className="font-semibold">{g.label}</span>
-                </Button>
-              ))}
+              {onboardingCopy.goal.options.map((g) => {
+                const isPicked = goal === g.id;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGoal(g.id)}
+                    className={`w-full text-left rounded-xl border-2 px-4 py-3 text-sm sm:text-base font-semibold leading-snug transition-bounce break-words ${
+                      isPicked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card hover:bg-muted"
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
             </div>
             <Button
               size="lg"
@@ -402,23 +409,31 @@ export default function Onboarding() {
               </div>
             </div>
             <div className="grid gap-2">
-              {onboardingCopy.self.options.map((s) => (
-                <Button
-                  key={s.id}
-                  variant={self === s.id ? "default" : "outline"}
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                  onClick={() => setSelf(s.id)}
-                >
-                  <span className="font-semibold">{s.label}</span>
-                </Button>
-              ))}
+              {onboardingCopy.self.options.map((s) => {
+                const isPicked = self === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSelf(s.id)}
+                    className={`w-full text-left rounded-xl border-2 px-4 py-3 text-sm sm:text-base font-semibold leading-snug transition-bounce break-words ${
+                      isPicked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card hover:bg-muted"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setStage("goal")}>
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setStage("goal")} className="self-start">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Zurück
               </Button>
               <Button
                 size="lg"
+                className="w-full sm:w-auto sm:min-w-[14rem]"
                 disabled={!self}
                 onClick={() => setStage("check")}
               >
@@ -446,14 +461,14 @@ export default function Onboarding() {
             <h2 className="text-lg sm:text-xl font-semibold">{cur.prompt}</h2>
             <div className="grid gap-2">
               {cur.options.map((opt, idx) => (
-                <Button
+                <button
                   key={opt.label}
-                  variant="outline"
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
+                  type="button"
                   onClick={() => onPickMiniCheck(idx)}
+                  className="w-full text-left rounded-xl border-2 border-border bg-card hover:bg-muted px-4 py-3 text-sm sm:text-base font-medium leading-snug break-words transition-bounce"
                 >
                   {opt.label}
-                </Button>
+                </button>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">{onboardingCopy.miniCheck.helper}</p>
@@ -476,10 +491,9 @@ export default function Onboarding() {
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 {onboardingCopy.result.firstStepLabel}
               </p>
-              <p className="font-semibold">{recommendation.firstStepTitle}</p>
+              <p className="font-semibold leading-snug break-words">{recommendation.firstStepTitle}</p>
               <p className="text-xs text-muted-foreground">
-                Lektion: <span className="font-mono">{recommendation.recommendedLessonId}</span> ·
-                {" "}{recommendation.recommendedDefaultLevel} · {recommendation.recommendedDefaultTopic}
+                Niveau {recommendation.recommendedDefaultLevel} · {recommendation.recommendedDefaultTopic}
               </p>
             </div>
             <div className="grid gap-2">

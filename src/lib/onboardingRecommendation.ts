@@ -78,36 +78,44 @@ export function computeRecommendation(input: RecommendationInput): Recommendatio
     satzbau_unsicher: 2,
     alltag_zurecht: 3,
   };
-  const base = selfAssessmentId ? selfScore[selfAssessmentId] : 2;
+  const base = selfAssessmentId ? selfScore[selfAssessmentId] : 1.5;
 
   // Mini-Check-Score in 0..1, gewichtet auf die tatsächlich beantworteten Aufgaben.
   const checkRatio = score.answered === 0 ? 0.5 : score.correct / score.answered;
-  // Mappe Ratio auf Verschiebung -1..+1.
+  // Mappe Ratio auf Verschiebung — bewusst vorsichtig. Der Mini-Check ist kein
+  // belastbarer Test, sondern ein kleiner Stupser. Er darf nur LEICHT nach oben
+  // schieben, aber etwas stärker nach unten korrigieren.
   const checkShift =
-    checkRatio >= 0.85 ? 1 :
-    checkRatio >= 0.6 ? 0.5 :
+    checkRatio >= 0.9 ? 0.5 :
+    checkRatio >= 0.6 ? 0.25 :
     checkRatio >= 0.4 ? 0 :
     checkRatio >= 0.2 ? -0.5 : -1;
 
-  const combined = base + checkShift; // 0..4
-  // Band-Mapping bewusst konservativ — wir bleiben im Wiedereinstiegs-Korridor.
+  const combined = base + checkShift; // ca. 0 .. 3.5
+  // Band-Mapping: B1 nur, wenn Selbsteinschätzung UND Mini-Check zusammen
+  // klar darauf hinweisen. Der Mini-Check allein darf nie auf B1/B2 hochstufen.
   let band: RecommendedBand;
   let defaultLevel: "A1" | "A2" | "B1" | "B2";
-  if (combined <= 1) {
+  if (combined < 1) {
     band = "A1/A2";
     defaultLevel = "A2";
-  } else if (combined <= 2) {
+  } else if (combined < 2.25) {
     band = "A2/B1";
     defaultLevel = "A2";
-  } else if (combined <= 3) {
+  } else if (combined < 3.25) {
     band = "A2/B1";
     defaultLevel = "B1";
-  } else if (combined <= 3.5) {
+  } else {
     band = "B1";
     defaultLevel = "B1";
-  } else {
-    band = "B1/B2";
-    defaultLevel = "B1";
+  }
+
+  // Sicherheitsnetz: Ohne Selbsteinschätzung „alltag_zurecht" gibt es kein B1.
+  // Damit kann der Mini-Check niemals allein bis B1 hochstufen, auch wenn er
+  // perfekt war.
+  if (defaultLevel === "B1" && selfAssessmentId !== "alltag_zurecht") {
+    defaultLevel = "A2";
+    band = "A2/B1";
   }
 
   // Topic primär aus dem Ziel ableiten — bleibt im Beta-Fokus „Alltag/Wiedereinstieg".
@@ -121,27 +129,23 @@ export function computeRecommendation(input: RecommendationInput): Recommendatio
   const topic = goalId ? topicByGoal[goalId] : "Alltag";
 
   // Übergangs-Mapping: bestehende statische Lektionen aus `src/lib/lessons.ts`.
-  // Slugs sind dort `<topic>-<level>` in Kleinbuchstaben.
   const lessonByLevel: Record<"A1" | "A2" | "B1" | "B2", string> = {
     A1: "alltag-a1",
     A2: "alltag-a2",
     B1: "alltag-b1",
-    B2: "alltag-b1", // B2-Wiedereinstieg landet bewusst auf B1-Alltag (Phase 3 ersetzt das).
+    B2: "alltag-b1",
   };
-  // Beruf wäre `arbeit-a1/a2/b1`, Reisen `reisen-a1/a2`. Wir bleiben für Phase 1a
-  // bewusst beim sicheren Fundament „Alltag", weil der Beta-Pfad in Phase 3
-  // ohnehin auf Wiedereinstieg/Alltag zentriert.
   const recommendedLessonId = lessonByLevel[defaultLevel];
 
-  // Headline + Reason nach Selbsteinschätzung & Score formulieren.
+  // Headline weich formulieren — kein „Du bist B1" / „Niveau B1".
   const headlineBand = band === "A1/A2" ? "Leichter Wiedereinstieg" :
                        band === "A2/B1" ? "Wiedereinstieg A2/B1" :
                        band === "B1"    ? "Wiedereinstieg B1" :
-                                          "Auffrischen B1/B2";
+                                          "Wiedereinstieg B1/B2";
 
   const reasonByCheck =
     checkRatio >= 0.85
-      ? "Du erkennst Struktur und Verbformen schon sicher. Wir setzen auf einer ruhigen Wiedereinstiegs-Stufe an, damit es flüssig sitzt."
+      ? "Du hast einiges erkannt. Der Mini-Check ist kurz — wir starten trotzdem ruhig, damit es nicht zu schwer wird."
     : checkRatio >= 0.6
       ? "Du verstehst einfache Sätze gut. Bei Satzbau und Verbformen lohnt sich ein kurzer Neustart."
     : checkRatio >= 0.4
@@ -155,10 +159,11 @@ export function computeRecommendation(input: RecommendationInput): Recommendatio
     defaultLevel === "B1" ? "Alltag & Satzbau festigen" :
                             "Alltag — entspannt wieder reinkommen";
 
-  // Confidence: hoch nur, wenn mind. 4/5 beantwortet UND Selbsteinschätzung gesetzt.
+  // Confidence: bei nur 5 einfachen Aufgaben NIE „high".
+  // Das Ergebnis ist eine Startempfehlung, kein belastbarer Test.
   const confidenceBand: ConfidenceBand =
     !selfAssessmentId || score.answered < 3 ? "low" :
-    score.answered >= 4 ? "high" : "medium";
+    score.answered >= 4 ? "medium" : "low";
 
   return {
     recommendedBand: band,
