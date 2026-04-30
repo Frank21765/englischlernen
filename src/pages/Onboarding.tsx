@@ -461,14 +461,14 @@ export default function Onboarding() {
             <h2 className="text-lg sm:text-xl font-semibold">{cur.prompt}</h2>
             <div className="grid gap-2">
               {cur.options.map((opt, idx) => (
-                <Button
+                <button
                   key={opt.label}
-                  variant="outline"
-                  className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
+                  type="button"
                   onClick={() => onPickMiniCheck(idx)}
+                  className="w-full text-left rounded-xl border-2 border-border bg-card hover:bg-muted px-4 py-3 text-sm sm:text-base font-medium leading-snug break-words transition-bounce"
                 >
                   {opt.label}
-                </Button>
+                </button>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">{onboardingCopy.miniCheck.helper}</p>
