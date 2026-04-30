@@ -550,8 +550,9 @@ const A2_LESSONS: Lesson[] = [
         { hint: "Hier fehlt ein kleines Partikelwort (in/out/on/off/up/down/through …), das die Bedeutung des Verbs verändert", explain: "„turn down“ = leiser machen." }),
       ord("t14", "Sätze richtig anordnen", ["I'll", "be", "there", "in", "ten", "minutes"], "I'll be there in ten minutes"),
       mc("t15", "Welche Aussage drückt eine Routine aus?", [
-        "I usually have lunch at one.", "I am have lunch one.", "Lunch is to me at one.", "One I lunch.",
-      ], "I usually have lunch at one."),
+        "I usually have lunch at one.", "I am having lunch at one.", "I have lunch at one yesterday.", "I will have lunch at one every day.",
+      ], "I usually have lunch at one.",
+        { explain: "Routinen drückt man im Englischen mit dem Simple Present + Häufigkeitsadverb aus („usually“). „I am having …“ ist gerade jetzt; „yesterday“ + Present passt nicht; „will … every day“ mischt Zukunft mit Routine." }),
       cz("t16", "Lücke füllen", "I'm looking ___ to the weekend.", "forward",
         { hint: "Hier passt ein kleines Wort (feste Wendung)", explain: "„look forward to“ = sich freuen auf." }),
       ord("t17", "Sätze richtig anordnen", ["can", "I", "call", "you", "back", "later"], "can I call you back later"),
