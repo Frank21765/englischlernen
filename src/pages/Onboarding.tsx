@@ -491,10 +491,9 @@ export default function Onboarding() {
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 {onboardingCopy.result.firstStepLabel}
               </p>
-              <p className="font-semibold">{recommendation.firstStepTitle}</p>
+              <p className="font-semibold leading-snug break-words">{recommendation.firstStepTitle}</p>
               <p className="text-xs text-muted-foreground">
-                Lektion: <span className="font-mono">{recommendation.recommendedLessonId}</span> ·
-                {" "}{recommendation.recommendedDefaultLevel} · {recommendation.recommendedDefaultTopic}
+                Niveau {recommendation.recommendedDefaultLevel} · {recommendation.recommendedDefaultTopic}
               </p>
             </div>
             <div className="grid gap-2">
