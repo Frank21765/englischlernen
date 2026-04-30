@@ -533,8 +533,9 @@ const A2_LESSONS: Lesson[] = [
       ord("t5", "Sätze richtig anordnen", ["I", "always", "have", "coffee", "in", "the", "morning"], "I always have coffee in the morning"),
       ord("t6", "Sätze richtig anordnen", ["could", "you", "help", "me", "for", "a", "minute"], "could you help me for a minute"),
       mc("t7", "„Termin vereinbaren“ heißt …", [
-        "make an appointment", "do a date", "give a meet", "set a time talk",
-      ], "make an appointment"),
+        "make an appointment", "do an appointment", "take an appointment", "fix a date",
+      ], "make an appointment",
+        { explain: "Im Englischen „macht“ man einen Termin: „make an appointment“. „take an appointment“ klingt nach Französisch/Deutsch und ist falsch; „fix a date“ heißt eher ein Datum festlegen." }),
       cz("t8", "Lücke füllen", "I forgot ___ buy bread.", "to",
         { hint: "Nach „forget“ folgt oft ein kleines Brückenwort vor dem nächsten Verb (forget ___ do …)", explain: "Nach „forget“ steht meist „to + Infinitiv“." }),
       cz("t9", "Lücke füllen", "Sorry, I'm ___ a hurry.", "in",
