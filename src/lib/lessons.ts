@@ -997,8 +997,9 @@ const B1_LESSONS: Lesson[] = [
       ord("t14", "Sätze richtig anordnen", ["I", "completely", "forgot", "to", "buy", "milk"], "I completely forgot to buy milk"),
       mc("t15", "„Mir geht's so la-la.“ — locker …", [
         "I'm not too bad, I guess.",
-        "Me so so.", "I am la la.", "I middle today.",
-      ], "I'm not too bad, I guess."),
+        "I'm so so today.", "It goes so so.", "I'm middle good.",
+      ], "I'm not too bad, I guess.",
+        { explain: "Englischsprachige sagen typischerweise „not too bad“ oder „can't complain“. „so so“ versteht man, klingt aber sehr deutsch übersetzt; „it goes …“ ist eine 1:1-Übersetzung von „es geht …“ und funktioniert im Englischen nicht." }),
       cz("t16", "Lücke füllen", "Sorry, I didn't catch ___ you said.", "what",
         { hint: "Indirektes Pronomen" }),
       ord("t17", "Sätze richtig anordnen", ["could", "you", "speak", "a", "bit", "more", "slowly"], "could you speak a bit more slowly"),
