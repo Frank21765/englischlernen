@@ -168,22 +168,7 @@ export default function Lueckentext() {
 
   const next = () => {
     if (idx + 1 >= items.length) {
-      toast.success(`Runde fertig! ${stats.correct}/${stats.total} richtig`);
-      // Record session at the end of a finished round
-      if (user && stats.total > 0) {
-        supabase
-          .from("learning_sessions")
-          .insert({
-            user_id: user.id,
-            mode: "cloze",
-            level,
-            topic,
-            total_answers: stats.total,
-            correct_answers: stats.correct,
-          })
-          .then(() => undefined);
-      }
-      setItems([]);
+      finishRound(stats, wrongItems);
       return;
     }
     setIdx(idx + 1);
@@ -199,27 +184,16 @@ export default function Lueckentext() {
       next();
       return;
     }
-    setStats((s) => ({ correct: s.correct, total: s.total + 1 }));
+    const newTotal = stats.total + 1;
+    const newStats = { correct: stats.correct, total: newTotal };
+    const newWrong = [...wrongItems, current];
+    setStats(newStats);
     setCombo(0);
     if (idx + 1 >= items.length) {
-      // Finishing the round via skip — record the session like in next().
-      if (user && stats.total + 1 > 0) {
-        supabase
-          .from("learning_sessions")
-          .insert({
-            user_id: user.id,
-            mode: "cloze",
-            level,
-            topic,
-            total_answers: stats.total + 1,
-            correct_answers: stats.correct,
-          })
-          .then(() => undefined);
-      }
-      toast.message(`Runde fertig! ${stats.correct}/${stats.total + 1} richtig`);
-      setItems([]);
+      finishRound(newStats, newWrong);
       return;
     }
+    setWrongItems(newWrong);
     setIdx(idx + 1);
     setAnswer("");
     setRevealed(null);
