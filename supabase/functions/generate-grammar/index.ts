@@ -73,7 +73,14 @@ Deno.serve(async (req) => {
       const systemPrompt = `Du erstellst Englisch-Grammatik-Quizfragen für deutschsprachige Lernende.
 ${cefrGuide}
 Erzeuge GENAU 8 Multiple-Choice-Fragen passend zu Niveau ${level}.${topicHint}
-Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort. Eine kurze Erklärung auf Deutsch (1 Satz).`;
+Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
+
+EXPLANATION-REGELN (sehr wichtig — keine generischen Floskeln!):
+- KEINE Sätze wie "Diese Antwort passt am besten" oder "Nur diese Option ist richtig". Solche Erklärungen sind verboten.
+- Erkläre IMMER konkret: (1) die Regel/Struktur, (2) warum gerade diese Form, (3) wenn relevant: typischer deutscher Denkfehler ("Im Deutschen sagt man X, im Englischen aber Y").
+- 1–2 kurze Sätze auf Deutsch. Klar, merkbar, lehrreich. Keine Fachjargon-Lawine.
+- Beispiel gut: "‚is getting warmer‘ beschreibt eine Veränderung, die gerade passiert. Englisch nutzt für Veränderungen oft ‚is getting + Adjektiv‘ — Deutsche denken hier oft an ‚becomes‘, das klingt aber unnatürlich."
+- Beispiel schlecht: "Diese Antwort ist grammatikalisch korrekt."`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
