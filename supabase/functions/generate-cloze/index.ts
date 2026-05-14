@@ -66,12 +66,23 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Du erstellst Lückentext-Übungen auf Englisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.
 
-HINT-REGELN (wichtig — keine Floskeln!):
-- Der "hint" ist eine Mini-Lernhilfe auf Deutsch, NICHT nur "Verb" oder "Nomen einsetzen".
-- Erkläre kurz die Lernregel oder den deutschen Denkfehler: z.B. "Veränderung → 'is getting + Adjektiv', nicht 'becomes'." oder "Past Simple, weil abgeschlossene Handlung in der Vergangenheit." oder "Im Deutschen 'seit 3 Jahren', im Englischen Present Perfect: 'for 3 years'."
-- 1 kurzer Satz, konkret, merkbar.`;
+"hint" = kurzer Richtungshinweis VOR der Antwort, max. 4 Wörter, gibt die Antwort NICHT preis.
+Beispiele für gute hints: "Verlaufsform", "Past Simple", "Gerundium", "Modalverb + Infinitiv", "Komparativ".
+KEIN hint der die Lösung erklärt — nur die grammatische Kategorie benennen.
 
-    const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch. Jeder Eintrag braucht: full_sentence (kompletter englischer Satz mit dem Zielwort), missing_word (das eine Wort, das fehlen soll – exakt wie im Satz), translation (deutsche Übersetzung), hint (Mini-Lernhilfe nach den HINT-REGELN — KEINE Floskel wie "Verb einsetzen").${vocabBlock}`;
+"explanation" = typisierte Erklärung NACH der Antwort. Wähle den passenden Typ:
+- "contrast": Wenn Deutsch und Englisch sich unterscheiden (z.B. seit→for, Perfekt→Present Perfect).
+- "pattern": Wenn eine Form erklärt und verallgemeinert wird (z.B. enjoy + -ing → immer Gerundium).
+- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
+- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
+- "register": Wenn die falsche Form unnatürlich klingt.
+- "mnemonic": Wenn eine Eselsbrücke hilft.
+
+Wortlimit für explanation.short: A1=25, A2=35, B1=50, B2=70 Wörter (Niveau: ${level}).
+VERBOTEN: "Diese Antwort ist korrekt", "passt am besten", Wiederholung des missing_word als Erklärung.
+PFLICHT: Form benennen + Funktion oder deutschen Kontrast nennen.`;
+
+    const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch für Niveau ${level}, Thema "${topic}". Befolge die Regeln für "hint" und "explanation" aus dem System-Prompt.${vocabBlock}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -93,20 +104,39 @@ HINT-REGELN (wichtig — keine Floskeln!):
             parameters: {
               type: "object",
               properties: {
-                items: {
-                  type: "array",
                   items: {
-                    type: "object",
-                    properties: {
-                      full_sentence: { type: "string" },
-                      missing_word: { type: "string" },
-                      translation: { type: "string" },
-                      hint: { type: "string" },
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        full_sentence: { type: "string" },
+                        missing_word: { type: "string" },
+                        translation: { type: "string" },
+                        hint: {
+                          type: "string",
+                          description: "Max. 4 Wörter. Nur grammatische Kategorie, keine Erklärung.",
+                        },
+                        explanation: {
+                          type: "object",
+                          description: "Typisierte Erklärung nach der Antwort.",
+                          properties: {
+                            type: {
+                              type: "string",
+                              enum: ["pattern", "function", "contrast", "trap", "chunk", "register", "mnemonic"],
+                            },
+                            short: { type: "string", description: "1–2 Sätze, konkrete Regel, KEIN Floskel." },
+                            contrastDE: { type: "string", description: "Optional: DE-EN Kontrast." },
+                            trapNote: { type: "string", description: "Optional: typische Deutsche Falle." },
+                            generalization: { type: "string", description: "Optional: Lernanker mit neuem Beispiel." },
+                          },
+                          required: ["type", "short"],
+                          additionalProperties: false,
+                        },
+                      },
+                      required: ["full_sentence", "missing_word", "translation", "hint", "explanation"],
+                      additionalProperties: false,
                     },
-                    required: ["full_sentence", "missing_word", "translation", "hint"],
-                    additionalProperties: false,
                   },
-                },
               },
               required: ["items"],
               additionalProperties: false,
