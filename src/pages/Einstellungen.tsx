@@ -20,6 +20,7 @@ import { PRODUCT_LEVELS } from "@/lib/cefrPolicy";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, BookOpen, Loader2, ShieldAlert } from "lucide-react";
+import { useLearning } from "@/hooks/useLearningContext";
 
 type DeleteKind = null | "stats" | "vocab" | "account";
 
@@ -62,6 +63,7 @@ const KIND_META: Record<Exclude<DeleteKind, null>, {
 
 export default function Einstellungen() {
   const { user, signOut } = useAuth();
+  const { setSelection } = useLearning();
   const navigate = useNavigate();
   const [defaultLevel, setDefaultLevel] = useState("A1");
   const [defaultTopic, setDefaultTopic] = useState("Alltag");
@@ -91,17 +93,21 @@ export default function Einstellungen() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
+    const nextTopic = defaultTopic.trim() || "Alltag";
     const { error } = await supabase
       .from("profiles")
       .update({
         default_level: defaultLevel,
-        default_topic: defaultTopic.trim() || "Alltag",
+        default_topic: nextTopic,
         direction_mode: direction,
       })
       .eq("user_id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
-    else toast.success("Gespeichert");
+    else {
+      setSelection(defaultLevel as typeof PRODUCT_LEVELS[number], nextTopic, { persist: true });
+      toast.success("Gespeichert");
+    }
   };
 
   const openDelete = (kind: Exclude<DeleteKind, null>) => {
