@@ -119,7 +119,8 @@ export default function Grammar() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.lesson) throw new Error("Keine Lektion erhalten");
-      setLesson(data.lesson as Lesson);
+      const raw = data.lesson as Lesson;
+      setLesson({ ...raw, explanation: coerceToTyped(raw.explanation) });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
     } finally {
