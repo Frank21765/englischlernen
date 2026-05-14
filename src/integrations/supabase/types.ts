@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      cefr_vocab_master: {
+        Row: {
+          cefr_confidence: string | null
+          cefr_level_app: string | null
+          cefr_level_source_original: string | null
+          cefr_pos_source_original: string | null
+          cefr_reason: string | null
+          cefr_source: string | null
+          common_mistakes_json: string | null
+          core_collocations_json: string | null
+          curriculum_stage: string | null
+          display_word: string | null
+          entry_key: string
+          example_1_de: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_en: string | null
+          german_alternatives_json: string | null
+          german_translation_primary: string | null
+          gloss_en_simple: string | null
+          handling_note: string | null
+          learner_relevance: string | null
+          lemma: string | null
+          meaning_note_de: string | null
+          part_of_speech: string | null
+          register_json: string | null
+          review_reason: string | null
+          review_status: string | null
+          sensitivity_labels_json: string | null
+          source_dataset: string | null
+          source_lemma: string | null
+          source_pos: string | null
+          teaching_priority: string | null
+          theme_tags_json: string | null
+          usage_tags_json: string | null
+          variant_labels_json: string | null
+        }
+        Insert: {
+          cefr_confidence?: string | null
+          cefr_level_app?: string | null
+          cefr_level_source_original?: string | null
+          cefr_pos_source_original?: string | null
+          cefr_reason?: string | null
+          cefr_source?: string | null
+          common_mistakes_json?: string | null
+          core_collocations_json?: string | null
+          curriculum_stage?: string | null
+          display_word?: string | null
+          entry_key: string
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          german_alternatives_json?: string | null
+          german_translation_primary?: string | null
+          gloss_en_simple?: string | null
+          handling_note?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: string | null
+          review_reason?: string | null
+          review_status?: string | null
+          sensitivity_labels_json?: string | null
+          source_dataset?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          teaching_priority?: string | null
+          theme_tags_json?: string | null
+          usage_tags_json?: string | null
+          variant_labels_json?: string | null
+        }
+        Update: {
+          cefr_confidence?: string | null
+          cefr_level_app?: string | null
+          cefr_level_source_original?: string | null
+          cefr_pos_source_original?: string | null
+          cefr_reason?: string | null
+          cefr_source?: string | null
+          common_mistakes_json?: string | null
+          core_collocations_json?: string | null
+          curriculum_stage?: string | null
+          display_word?: string | null
+          entry_key?: string
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          german_alternatives_json?: string | null
+          german_translation_primary?: string | null
+          gloss_en_simple?: string | null
+          handling_note?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: string | null
+          review_reason?: string | null
+          review_status?: string | null
+          sensitivity_labels_json?: string | null
+          source_dataset?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          teaching_priority?: string | null
+          theme_tags_json?: string | null
+          usage_tags_json?: string | null
+          variant_labels_json?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -196,6 +313,177 @@ export type Database = {
         }
         Relationships: []
       }
+      false_friends_master: {
+        Row: {
+          app_section: string | null
+          audio_text_en: string | null
+          audio_text_slow_en: string | null
+          category: string
+          cefr_level: string
+          cloze_answer: string | null
+          cloze_prompt: string | null
+          correct_english_alternatives: Json | null
+          correct_english_primary: string
+          evp_sense_id: string | null
+          example_correct_en: string | null
+          example_de: string | null
+          example_wrong_en: string | null
+          explanation_de: string
+          explanation_en_simple: string | null
+          feedback_if_correct_de: string | null
+          feedback_if_wrong_de: string | null
+          formality_level: string | null
+          frequency_score: number
+          german_meaning: string | null
+          german_trigger_word_or_phrase: string | null
+          grammar_tags: Json | null
+          humor_potential: number | null
+          id: string
+          ipa_optional: string | null
+          l1_interference_strength: number | null
+          learner_trap_type: string | null
+          lesson_priority: number | null
+          linked_cefr_unit: string | null
+          linked_idiom: string | null
+          linked_irregular_verb: string | null
+          linked_ngsl_word: string | null
+          literal_back_translation: string | null
+          memory_hook_de: string | null
+          mini_dialogue_correct: string | null
+          mini_dialogue_wrong: string | null
+          minimal_pair_or_confusable_word: string | null
+          needs_human_review: boolean
+          notes_for_content_team: string | null
+          preferred_exercise_types: Json | null
+          pronunciation_note_de: string | null
+          quiz_correct_answer: string | null
+          quiz_options: Json | null
+          quiz_question: string | null
+          review_priority: number | null
+          severity_score: number
+          source_confidence: number
+          srs_difficulty: number | null
+          subcategory: string
+          teacher_note_compact: string | null
+          topic_tags: Json | null
+          vocabulary_tags: Json | null
+          why_germans_make_this_mistake: string | null
+          wrong_english: string
+        }
+        Insert: {
+          app_section?: string | null
+          audio_text_en?: string | null
+          audio_text_slow_en?: string | null
+          category: string
+          cefr_level: string
+          cloze_answer?: string | null
+          cloze_prompt?: string | null
+          correct_english_alternatives?: Json | null
+          correct_english_primary: string
+          evp_sense_id?: string | null
+          example_correct_en?: string | null
+          example_de?: string | null
+          example_wrong_en?: string | null
+          explanation_de: string
+          explanation_en_simple?: string | null
+          feedback_if_correct_de?: string | null
+          feedback_if_wrong_de?: string | null
+          formality_level?: string | null
+          frequency_score: number
+          german_meaning?: string | null
+          german_trigger_word_or_phrase?: string | null
+          grammar_tags?: Json | null
+          humor_potential?: number | null
+          id: string
+          ipa_optional?: string | null
+          l1_interference_strength?: number | null
+          learner_trap_type?: string | null
+          lesson_priority?: number | null
+          linked_cefr_unit?: string | null
+          linked_idiom?: string | null
+          linked_irregular_verb?: string | null
+          linked_ngsl_word?: string | null
+          literal_back_translation?: string | null
+          memory_hook_de?: string | null
+          mini_dialogue_correct?: string | null
+          mini_dialogue_wrong?: string | null
+          minimal_pair_or_confusable_word?: string | null
+          needs_human_review: boolean
+          notes_for_content_team?: string | null
+          preferred_exercise_types?: Json | null
+          pronunciation_note_de?: string | null
+          quiz_correct_answer?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          review_priority?: number | null
+          severity_score: number
+          source_confidence: number
+          srs_difficulty?: number | null
+          subcategory: string
+          teacher_note_compact?: string | null
+          topic_tags?: Json | null
+          vocabulary_tags?: Json | null
+          why_germans_make_this_mistake?: string | null
+          wrong_english: string
+        }
+        Update: {
+          app_section?: string | null
+          audio_text_en?: string | null
+          audio_text_slow_en?: string | null
+          category?: string
+          cefr_level?: string
+          cloze_answer?: string | null
+          cloze_prompt?: string | null
+          correct_english_alternatives?: Json | null
+          correct_english_primary?: string
+          evp_sense_id?: string | null
+          example_correct_en?: string | null
+          example_de?: string | null
+          example_wrong_en?: string | null
+          explanation_de?: string
+          explanation_en_simple?: string | null
+          feedback_if_correct_de?: string | null
+          feedback_if_wrong_de?: string | null
+          formality_level?: string | null
+          frequency_score?: number
+          german_meaning?: string | null
+          german_trigger_word_or_phrase?: string | null
+          grammar_tags?: Json | null
+          humor_potential?: number | null
+          id?: string
+          ipa_optional?: string | null
+          l1_interference_strength?: number | null
+          learner_trap_type?: string | null
+          lesson_priority?: number | null
+          linked_cefr_unit?: string | null
+          linked_idiom?: string | null
+          linked_irregular_verb?: string | null
+          linked_ngsl_word?: string | null
+          literal_back_translation?: string | null
+          memory_hook_de?: string | null
+          mini_dialogue_correct?: string | null
+          mini_dialogue_wrong?: string | null
+          minimal_pair_or_confusable_word?: string | null
+          needs_human_review?: boolean
+          notes_for_content_team?: string | null
+          preferred_exercise_types?: Json | null
+          pronunciation_note_de?: string | null
+          quiz_correct_answer?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          review_priority?: number | null
+          severity_score?: number
+          source_confidence?: number
+          srs_difficulty?: number | null
+          subcategory?: string
+          teacher_note_compact?: string | null
+          topic_tags?: Json | null
+          vocabulary_tags?: Json | null
+          why_germans_make_this_mistake?: string | null
+          wrong_english?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           created_at: string
@@ -214,6 +502,266 @@ export type Database = {
           id?: string
           message?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      idiom_topics: {
+        Row: {
+          id: string
+          label_de: string
+          label_en: string
+          sort_order: number | null
+        }
+        Insert: {
+          id: string
+          label_de: string
+          label_en: string
+          sort_order?: number | null
+        }
+        Update: {
+          id?: string
+          label_de?: string
+          label_en?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      idioms_master: {
+        Row: {
+          audio_url_1: string | null
+          audio_url_2: string | null
+          audio_url_3: string | null
+          beta_priority: string | null
+          cefr_level: string
+          confusing_with_json: Json | null
+          created_at: string | null
+          display_phrase: string
+          distractors_json: Json | null
+          example_1_de: string | null
+          example_1_de_partial: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_de_partial: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_de_partial: string | null
+          example_3_en: string | null
+          false_friend_warning: string | null
+          frequency_band: string | null
+          frequency_rank: number | null
+          grammar_pattern: string | null
+          id: string
+          learner_relevance: string | null
+          lemma: string
+          linked_irregular_verb: string | null
+          linked_vocab: string | null
+          literal_meaning_de: string | null
+          meaning_note_de: string
+          register_json: Json | null
+          related_idioms_json: Json | null
+          review_reason: string | null
+          review_status: string | null
+          reviewed: boolean | null
+          source: string | null
+          topic_id: string | null
+          type: string
+          updated_at: string | null
+          usage_tags_json: Json | null
+          variants_json: Json | null
+        }
+        Insert: {
+          audio_url_1?: string | null
+          audio_url_2?: string | null
+          audio_url_3?: string | null
+          beta_priority?: string | null
+          cefr_level: string
+          confusing_with_json?: Json | null
+          created_at?: string | null
+          display_phrase: string
+          distractors_json?: Json | null
+          example_1_de?: string | null
+          example_1_de_partial?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_de_partial?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_de_partial?: string | null
+          example_3_en?: string | null
+          false_friend_warning?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          grammar_pattern?: string | null
+          id: string
+          learner_relevance?: string | null
+          lemma: string
+          linked_irregular_verb?: string | null
+          linked_vocab?: string | null
+          literal_meaning_de?: string | null
+          meaning_note_de: string
+          register_json?: Json | null
+          related_idioms_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+          topic_id?: string | null
+          type: string
+          updated_at?: string | null
+          usage_tags_json?: Json | null
+          variants_json?: Json | null
+        }
+        Update: {
+          audio_url_1?: string | null
+          audio_url_2?: string | null
+          audio_url_3?: string | null
+          beta_priority?: string | null
+          cefr_level?: string
+          confusing_with_json?: Json | null
+          created_at?: string | null
+          display_phrase?: string
+          distractors_json?: Json | null
+          example_1_de?: string | null
+          example_1_de_partial?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_de_partial?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_de_partial?: string | null
+          example_3_en?: string | null
+          false_friend_warning?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          grammar_pattern?: string | null
+          id?: string
+          learner_relevance?: string | null
+          lemma?: string
+          linked_irregular_verb?: string | null
+          linked_vocab?: string | null
+          literal_meaning_de?: string | null
+          meaning_note_de?: string
+          register_json?: Json | null
+          related_idioms_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+          topic_id?: string | null
+          type?: string
+          updated_at?: string | null
+          usage_tags_json?: Json | null
+          variants_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idioms_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "idiom_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      irregular_verbs_master: {
+        Row: {
+          beta_priority: string | null
+          cefr_level: string | null
+          common_mistakes_de: string | null
+          confusing_with_json: Json | null
+          english_hint: string | null
+          example_1_de: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_en: string | null
+          frequency_band: string | null
+          german_alternatives_json: Json | null
+          german_translation_primary: string | null
+          id: string
+          infinitive_display: string | null
+          learner_relevance: string | null
+          lemma: string | null
+          meaning_note_de: string | null
+          past_participle_primary: string | null
+          past_participle_variants_json: Json | null
+          pronunciation_note_de: string | null
+          register_json: Json | null
+          review_reason: string | null
+          review_status: string | null
+          simple_past_primary: string | null
+          simple_past_variants_json: Json | null
+          source_row_lemma: string | null
+          split_recommendation: string | null
+          usage_tags_json: Json | null
+          variant_note_de: string | null
+        }
+        Insert: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          common_mistakes_de?: string | null
+          confusing_with_json?: Json | null
+          english_hint?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id: string
+          infinitive_display?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          past_participle_primary?: string | null
+          past_participle_variants_json?: Json | null
+          pronunciation_note_de?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          simple_past_primary?: string | null
+          simple_past_variants_json?: Json | null
+          source_row_lemma?: string | null
+          split_recommendation?: string | null
+          usage_tags_json?: Json | null
+          variant_note_de?: string | null
+        }
+        Update: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          common_mistakes_de?: string | null
+          confusing_with_json?: Json | null
+          english_hint?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id?: string
+          infinitive_display?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          past_participle_primary?: string | null
+          past_participle_variants_json?: Json | null
+          pronunciation_note_de?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          simple_past_primary?: string | null
+          simple_past_variants_json?: Json | null
+          source_row_lemma?: string | null
+          split_recommendation?: string | null
+          usage_tags_json?: Json | null
+          variant_note_de?: string | null
         }
         Relationships: []
       }

@@ -1,0 +1,43 @@
+CREATE TABLE IF NOT EXISTS public.cefr_vocab_master (
+  entry_key                   text NOT NULL,
+  lemma                       text,
+  display_word                text,
+  part_of_speech              text,
+  german_translation_primary  text,
+  german_alternatives_json    text,
+  meaning_note_de             text,
+  gloss_en_simple             text,
+  cefr_level_app              text,
+  cefr_level_source_original  text,
+  cefr_pos_source_original    text,
+  cefr_source                 text,
+  cefr_confidence             text,
+  cefr_reason                 text,
+  example_1_en                text,
+  example_1_de                text,
+  example_2_en                text,
+  example_2_de                text,
+  example_3_en                text,
+  example_3_de                text,
+  learner_relevance           text,
+  teaching_priority           text,
+  curriculum_stage            text,
+  register_json               text,
+  usage_tags_json             text,
+  theme_tags_json             text,
+  variant_labels_json         text,
+  sensitivity_labels_json     text,
+  handling_note               text,
+  common_mistakes_json        text,
+  core_collocations_json      text,
+  review_status               text,
+  review_reason               text,
+  source_dataset              text,
+  source_lemma                text,
+  source_pos                  text,
+  CONSTRAINT curated_vocabulary_cefr_pkey PRIMARY KEY (entry_key)
+);
+
+ALTER TABLE public.cefr_vocab_master ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS read_curated_vocabulary_cefr ON public.cefr_vocab_master;
+CREATE POLICY read_curated_vocabulary_cefr ON public.cefr_vocab_master FOR SELECT TO authenticated USING (true);
