@@ -124,17 +124,17 @@ export default function Quiz() {
   const [emptyReview, setEmptyReview] = useState(false);
   const [autoStartTried, setAutoStartTried] = useState(false);
 
-  // sync URL deep links
+  // URL deep links (?level=…&topic=…) sind ephemere Session-Overrides für
+  // genau diesen Quiz-Lauf. Sie dürfen NICHT die globale Auswahl im Profil
+  // überschreiben (das war der A2-Spring-Bug: alter Onboarding-Link
+  // `?level=A2&topic=Alltag` hat das gewählte B1 jedes Mal zurückgesetzt).
   useEffect(() => {
     if (!ctxReady) return;
-    const urlLevel = params.get("level");
+    const urlLevel = params.get("level") as Level | null;
     const urlTopic = params.get("topic");
-    if ((urlLevel && urlLevel !== ctxLevel) || (urlTopic && urlTopic !== ctxTopic)) {
-      setSelection((urlLevel ?? ctxLevel) as Level, urlTopic ?? ctxTopic);
-    }
-    setLevel(ctxLevel);
-    setTopic(ctxTopic);
-  }, [ctxReady, ctxLevel, ctxTopic, params, setSelection]);
+    setLevel((urlLevel ?? ctxLevel) as Level);
+    setTopic(urlTopic ?? ctxTopic);
+  }, [ctxReady, ctxLevel, ctxTopic, params]);
 
   // Restore a quiz session that was paused for "Frag Ellie".
   // Runs once on mount; reads from window.location so we don't depend on
