@@ -375,6 +375,108 @@ export type Database = {
           },
         ]
       }
+      irregular_verbs_master: {
+        Row: {
+          beta_priority: string | null
+          cefr_level: string | null
+          common_mistakes_de: string | null
+          confusing_with_json: Json | null
+          english_hint: string | null
+          example_1_de: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_en: string | null
+          frequency_band: string | null
+          german_alternatives_json: Json | null
+          german_translation_primary: string | null
+          id: string
+          infinitive_display: string | null
+          learner_relevance: string | null
+          lemma: string | null
+          meaning_note_de: string | null
+          past_participle_primary: string | null
+          past_participle_variants_json: Json | null
+          pronunciation_note_de: string | null
+          register_json: Json | null
+          review_reason: string | null
+          review_status: string | null
+          simple_past_primary: string | null
+          simple_past_variants_json: Json | null
+          source_row_lemma: string | null
+          split_recommendation: string | null
+          usage_tags_json: Json | null
+          variant_note_de: string | null
+        }
+        Insert: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          common_mistakes_de?: string | null
+          confusing_with_json?: Json | null
+          english_hint?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id: string
+          infinitive_display?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          past_participle_primary?: string | null
+          past_participle_variants_json?: Json | null
+          pronunciation_note_de?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          simple_past_primary?: string | null
+          simple_past_variants_json?: Json | null
+          source_row_lemma?: string | null
+          split_recommendation?: string | null
+          usage_tags_json?: Json | null
+          variant_note_de?: string | null
+        }
+        Update: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          common_mistakes_de?: string | null
+          confusing_with_json?: Json | null
+          english_hint?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id?: string
+          infinitive_display?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          past_participle_primary?: string | null
+          past_participle_variants_json?: Json | null
+          pronunciation_note_de?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          simple_past_primary?: string | null
+          simple_past_variants_json?: Json | null
+          source_row_lemma?: string | null
+          split_recommendation?: string | null
+          usage_tags_json?: Json | null
+          variant_note_de?: string | null
+        }
+        Relationships: []
+      }
       learning_events: {
         Row: {
           created_at: string
