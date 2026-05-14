@@ -68,7 +68,7 @@ export default function Grammar() {
     const url = buildEllieUrl({
       prefill: ellieExplainGrammarLessonPrompt({
         title: lesson.title,
-        explanation: lesson.explanation,
+        explanation: lesson.explanation.short,
         level,
         topic: hasSelection ? topic : undefined,
       }),
