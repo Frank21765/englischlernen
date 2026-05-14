@@ -15,7 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LEVELS, QUICK_TOPICS, DirectionMode, directionLabel } from "@/lib/learning";
+import { QUICK_TOPICS, DirectionMode, directionLabel } from "@/lib/learning";
+import { PRODUCT_LEVELS } from "@/lib/cefrPolicy";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, BookOpen, Loader2, ShieldAlert } from "lucide-react";
