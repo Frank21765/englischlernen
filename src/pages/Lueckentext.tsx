@@ -13,12 +13,14 @@ import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, Sparkles, SkipForward, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst, toSentenceCase } from "@/lib/text";
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
 
 interface ClozeItem {
   full_sentence: string;
   missing_word: string;
   translation: string;
   hint: string;
+  explanation: TypedExplanation;
 }
 
 function maskSentence(sentence: string, word: string): { before: string; after: string } {
@@ -100,7 +102,12 @@ export default function Lueckentext() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setItems(data.items ?? []);
+      const rawItems = (data.items ?? []) as Array<Omit<ClozeItem, "explanation"> & { explanation?: unknown }>;
+      const safeItems: ClozeItem[] = rawItems.map((item) => ({
+        ...item,
+        explanation: coerceToTyped(item.explanation),
+      }));
+      setItems(safeItems);
       setIdx(0);
       setAnswer("");
       setRevealed(null);
@@ -310,24 +317,32 @@ export default function Lueckentext() {
 
       {/* Mini-Erklärung von Ellie — auch bei richtiger Antwort, parallel zu Lektionen.
           Zeigt Übersetzung + Hint kompakt formatiert, damit Frank versteht WARUM. */}
-      {revealed !== null && (
-        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2">
-          <div className="flex items-start gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
-              <EllieIcon size={18} />
-            </span>
-            <div className="min-w-0 flex-1 space-y-1.5 text-xs sm:text-sm leading-relaxed">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
-              <p className="text-foreground/90">
-                <span className="font-semibold text-foreground">{capitalizeFirst(current.missing_word)}</span>
-                {" — "}
-                {current.hint}
-              </p>
-              <p className="text-muted-foreground italic">„{toSentenceCase(current.full_sentence)}"</p>
+      {revealed !== null && (() => {
+        const exp = current.explanation;
+        const label = EXPLANATION_TYPE_LABELS[exp.type] ?? "Erklärung";
+        return (
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">{label}</span>
+              <span className="text-xs text-muted-foreground font-semibold">
+                {capitalizeFirst(current.missing_word)}
+                {current.hint ? <span className="font-normal"> — {current.hint}</span> : null}
+              </span>
             </div>
+            <p className="leading-snug text-foreground/90">{exp.short}</p>
+            {exp.contrastDE && (
+              <p className="text-xs text-muted-foreground leading-snug">🇩🇪 {exp.contrastDE}</p>
+            )}
+            {exp.trapNote && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 leading-snug">⚠️ {exp.trapNote}</p>
+            )}
+            {exp.generalization && (
+              <p className="text-xs text-muted-foreground italic leading-snug">💡 {exp.generalization}</p>
+            )}
+            <p className="text-xs text-muted-foreground italic mt-1">„{toSentenceCase(current.full_sentence)}"</p>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {revealed !== null && (
         <div className="flex justify-center">
