@@ -43,6 +43,8 @@ export default function Lueckentext() {
   const [revealed, setRevealed] = useState<null | boolean>(null);
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [combo, setCombo] = useState(0);
+  const [wrongItems, setWrongItems] = useState<ClozeItem[]>([]);
+  const [done, setDone] = useState<{ correct: number; total: number; wrong: ClozeItem[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
