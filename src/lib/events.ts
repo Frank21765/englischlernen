@@ -29,14 +29,17 @@ export type EventType =
   | "onboarding_completed"
   | "recommendation_shown"
   | "first_lesson_started"
-  | "first_lesson_completed";
+  | "first_lesson_completed"
+  | "false_friend_correct"
+  | "false_friend_wrong";
 
 export type ObjectType =
   | "vocabulary"
   | "grammar_pattern"
   | "lesson"
   | "micro_goal"
-  | "ngsl_word";
+  | "ngsl_word"
+  | "false_friend";
 
 export interface LogEventInput {
   eventType: EventType;
