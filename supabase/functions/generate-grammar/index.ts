@@ -107,7 +107,7 @@ EXPLANATION-REGELN (sehr wichtig — keine generischen Floskeln!):
                         prompt: { type: "string", description: "Die Frage oder der Satz mit Lücke (Englisch)." },
                         options: { type: "array", items: { type: "string" }, description: "Genau 4 Antwortoptionen." },
                         correct: { type: "string", description: "Die richtige Option (exakt wie in options)." },
-                        explanation: { type: "string", description: "Kurze Erklärung auf Deutsch (1 Satz)." },
+                        explanation: { type: "string", description: "Pädagogische Erklärung auf Deutsch (1–2 Sätze): konkrete Regel + ggf. typischer deutscher Denkfehler. KEINE Floskeln wie 'Diese Antwort passt am besten'." },
                       },
                       required: ["prompt", "options", "correct", "explanation"],
                       additionalProperties: false,
