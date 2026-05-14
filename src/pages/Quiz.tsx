@@ -688,9 +688,22 @@ export default function Quiz() {
       )}
 
       {picked && current.kind === "grammar" && (
-        <Card className="p-3 sm:p-4 bg-muted/40 text-sm">
-          <span className="font-semibold">💡 </span>
-          {current.explanation || "Diese Form passt zur Regel im Beispielsatz."}
+        <Card className="p-3 sm:p-4 bg-muted/40 text-sm space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+              {EXPLANATION_TYPE_LABELS[current.explanation.type] ?? "Erklärung"}
+            </span>
+          </div>
+          <p className="leading-relaxed">{current.explanation.short}</p>
+          {current.explanation.contrastDE && (
+            <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground/80">DE↔EN: </span>{current.explanation.contrastDE}</p>
+          )}
+          {current.explanation.trapNote && (
+            <p className="text-xs text-destructive/90"><span className="font-semibold">Typische Falle: </span>{current.explanation.trapNote}</p>
+          )}
+          {current.explanation.generalization && (
+            <p className="text-xs text-muted-foreground italic"><span className="font-semibold not-italic text-foreground/80">Merke: </span>{current.explanation.generalization}</p>
+          )}
         </Card>
       )}
 
