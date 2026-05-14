@@ -34,7 +34,7 @@ type QuizMode = "vocab" | "grammar";
 type VocabSource = "review" | "fresh";
 
 interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
-import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, validateExplanation, type TypedExplanation } from "@/lib/explanations";
 
 interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: TypedExplanation }
 type QuizItem = VocabQ | GrammarQ;
@@ -294,13 +294,20 @@ export default function Quiz() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const qs: GrammarQ[] = (data?.questions ?? []).map((q: { prompt: string; options: string[]; correct: string; explanation: unknown }) => ({
-        kind: "grammar" as const,
-        prompt: q.prompt,
-        options: shuffle(q.options),
-        correct: q.correct,
-        explanation: coerceToTyped(q.explanation),
-      }));
+      const qs: GrammarQ[] = (data?.questions ?? []).map((q: { prompt: string; options: string[]; correct: string; explanation: unknown }) => {
+        const explanation = coerceToTyped(q.explanation);
+        const validationErrors = validateExplanation(explanation, ctxLevel);
+        if (validationErrors.length > 0) {
+          console.warn("[grammar] explanation validation failed:", validationErrors, explanation);
+        }
+        return {
+          kind: "grammar" as const,
+          prompt: q.prompt,
+          options: shuffle(q.options),
+          correct: q.correct,
+          explanation,
+        };
+      });
       if (!qs.length) throw new Error("Keine Fragen erhalten");
       setQueue(qs);
       setIdx(0); setPicked(null); setStats({ correct: 0, total: 0 }); setCombo(0);
