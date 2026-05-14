@@ -15,7 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LEVELS, QUICK_TOPICS, DirectionMode, directionLabel } from "@/lib/learning";
+import { QUICK_TOPICS, DirectionMode, directionLabel } from "@/lib/learning";
+import { PRODUCT_LEVELS } from "@/lib/cefrPolicy";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, BookOpen, Loader2, ShieldAlert } from "lucide-react";
@@ -174,7 +175,7 @@ export default function Einstellungen() {
         <div>
           <Label className="text-base font-semibold mb-2 block">Standard-Niveau</Label>
           <div className="flex flex-wrap gap-1.5">
-            {LEVELS.map((l) => (
+            {PRODUCT_LEVELS.map((l) => (
               <button
                 key={l}
                 onClick={() => setDefaultLevel(l)}

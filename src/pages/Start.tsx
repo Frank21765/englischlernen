@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
+import { QUICK_TOPICS, Level } from "@/lib/learning";
+import { PRODUCT_LEVELS } from "@/lib/cefrPolicy";
 import { getProfileUsername } from "@/lib/profile";
 import { ellieAskWordPrompt } from "@/lib/ellie";
 import { EllieButton } from "@/components/EllieButton";
@@ -226,7 +227,7 @@ export default function Start() {
               <div>
                 <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
                 <div className="flex flex-wrap gap-2">
-                  {LEVELS.map((l) => (
+                  {PRODUCT_LEVELS.map((l) => (
                     <button
                       key={l}
                       type="button"
