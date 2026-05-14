@@ -17,6 +17,7 @@ import Vokabeln from "./pages/Vokabeln";
 import Statistik from "./pages/Statistik";
 import Einstellungen from "./pages/Einstellungen";
 import Admin from "./pages/Admin";
+import MasterPreview from "./pages/MasterPreview";
 import Training from "./pages/Training";
 import Lektionen from "./pages/Lektionen";
 import Lektion from "./pages/Lektion";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/statistik" element={<LegacyRedirect to="/profil/statistik" />} />
               <Route path="/einstellungen" element={<LegacyRedirect to="/profil/einstellungen" />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/master-preview" element={<MasterPreview />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
