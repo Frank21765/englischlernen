@@ -149,6 +149,7 @@ export default function Lueckentext() {
     if (!current || revealed !== null) return;
     const isCorrect = answer.trim().toLowerCase() === current.missing_word.toLowerCase();
     setRevealed(isCorrect);
+    if (!isCorrect) setWrongItems((prev) => [...prev, current]);
     const newStats = { correct: stats.correct + (isCorrect ? 1 : 0), total: stats.total + 1 };
     setStats(newStats);
     const newCombo = isCorrect ? combo + 1 : 0;
