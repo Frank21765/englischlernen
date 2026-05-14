@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Pencil, Target } from "lucide-react";
 import { useLearning } from "@/hooks/useLearningContext";
-import { LEVELS, QUICK_TOPICS, Level } from "@/lib/learning";
+import { QUICK_TOPICS, Level } from "@/lib/learning";
+import { PRODUCT_LEVELS } from "@/lib/cefrPolicy";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
