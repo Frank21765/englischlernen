@@ -103,14 +103,16 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, [user]);
 
-  const setSelection = useCallback((nextLevel: Level, nextTopic: string, _opts?: { persist?: boolean }) => {
+  const setSelection = useCallback((nextLevel: Level, nextTopic: string, opts?: { persist?: boolean }) => {
     setLevel(nextLevel);
     setTopic(nextTopic);
     setHasSelection(true);
-    if (user) {
+    // Honor persist:false strictly — used by transient overrides (URL deep links,
+    // onboarding pre-set) that must NOT overwrite the user's saved focus.
+    const shouldPersist = opts?.persist !== false;
+    if (user && shouldPersist) {
       writeCache(user.id, { level: nextLevel, topic: nextTopic });
-      // Always persist to server — no silent local-only writes for important
-      // account state. Empty topic is treated as transient (typing in input).
+      // Empty topic is transient (typing in input) — never persist that.
       if (nextTopic.trim().length > 0) {
         supabase.from("profiles")
           .update({ default_level: nextLevel, default_topic: nextTopic })
