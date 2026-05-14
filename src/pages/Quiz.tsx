@@ -99,7 +99,7 @@ function buildOptions(target: Vocab, pool: Vocab[], direction: CardDirection): s
 
 export default function Quiz() {
   const { user } = useAuth();
-  const { level: ctxLevel, topic: ctxTopic, ready: ctxReady, hasSelection, setSelection } = useLearning();
+  const { level: ctxLevel, topic: ctxTopic, ready: ctxReady, hasSelection } = useLearning();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [mode, setMode] = useState<QuizMode>("vocab");
