@@ -72,17 +72,35 @@ Deno.serve(async (req) => {
 NIVEAU-CHECK vor jeder Frage: "Würde ein A2-Lerner das schon können?" Wenn JA und du baust für B1/B2 → verwerfen und schwierigere Variante wählen.`;
 
     if (isQuiz) {
+      const wordLimit = level === "A1" ? 25 : level === "A2" ? 35 : level === "B1" ? 50 : 70;
       const systemPrompt = `Du erstellst Englisch-Grammatik-Quizfragen für deutschsprachige Lernende.
 ${cefrGuide}
 Erzeuge GENAU 8 Multiple-Choice-Fragen passend zu Niveau ${level}.${topicHint}
 Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
-EXPLANATION-REGELN (sehr wichtig — keine generischen Floskeln!):
-- KEINE Sätze wie "Diese Antwort passt am besten" oder "Nur diese Option ist richtig". Solche Erklärungen sind verboten.
-- Erkläre IMMER konkret: (1) die Regel/Struktur, (2) warum gerade diese Form, (3) wenn relevant: typischer deutscher Denkfehler ("Im Deutschen sagt man X, im Englischen aber Y").
-- 1–2 kurze Sätze auf Deutsch. Klar, merkbar, lehrreich. Keine Fachjargon-Lawine.
-- Beispiel gut: "‚is getting warmer‘ beschreibt eine Veränderung, die gerade passiert. Englisch nutzt für Veränderungen oft ‚is getting + Adjektiv‘ — Deutsche denken hier oft an ‚becomes‘, das klingt aber unnatürlich."
-- Beispiel schlecht: "Diese Antwort ist grammatikalisch korrekt."`;
+Für ${level} bedeutet das konkret:
+${level === "B1" ? "- Mindestens 5 von 8 Fragen sollen Present Perfect vs Simple Past, since/for, already/yet/just, 1st Conditional, Reported Speech (Aussagen), Passiv (basic), Gerund vs Infinitiv, Phrasal Verbs im Kontext, oder state-vs-process abdecken.\n- VERBOTEN als alleinige Frage: einfaches go/went, can/could, einfaches going to ohne Kontrast." : ""}
+${level === "B2" ? "- Mindestens 5 von 8 Fragen sollen Present Perfect Continuous, Past Perfect, 2nd/3rd Conditional, Reported Speech (Fragen), Passiv (komplexe Zeiten), Modal Perfect (must have / could have / should have), wish/if only, Causative, oder nuancierte Tempus-Wahl prüfen.\n- VERBOTEN: A1/A2-Niveau-Fragen." : ""}
+
+EXPLANATION-REGELN (Typed Explanation — PFLICHT):
+Jede Erklärung ist ein OBJEKT mit:
+- type: einer von ["pattern","function","contrast","trap","chunk","register","mnemonic"]
+  · pattern = grammatische Struktur/Muster ("are going to + Infinitiv für geplante Absicht")
+  · function = wofür man die Form benutzt
+  · contrast = DE↔EN Unterschied
+  · trap = typischer deutscher Denkfehler
+  · chunk = feste Wendung
+  · register = Natürlichkeit/Stil
+  · mnemonic = Eselsbrücke
+- short: 1–2 Sätze auf Deutsch (max ${wordLimit} Wörter), die KONKRETE Regel/Funktion. KEINE Floskeln.
+- contrastDE (optional): wenn type≠contrast aber ein DE-Bezug hilft.
+- trapNote (optional): typische deutsche Falle, falls relevant.
+- generalization (optional): wiederverwendbarer Lernanker ("Bei Zeitmarkern wie 'yesterday' immer Simple Past").
+
+VERBOTENE Phrasen in short: "Diese Antwort passt am besten", "ist korrekt, weil", "passt zur Regel", "ist die einzig richtige", "spiegelt … wider", "die richtige Antwort ist". Solche Sätze werden abgelehnt.
+
+Gut: { type: "contrast", short: "'is getting warmer' beschreibt eine Veränderung im Verlauf. Englisch nutzt 'is getting + Adjektiv' — 'becomes' klingt unnatürlich.", trapNote: "Deutsche denken hier oft an 'wird' = 'becomes'." }
+Schlecht: { type: "function", short: "Diese Antwort ist grammatikalisch korrekt." }`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -97,7 +115,7 @@ EXPLANATION-REGELN (sehr wichtig — keine generischen Floskeln!):
             type: "function",
             function: {
               name: "grammar_quiz",
-              description: "8 Grammatik-Quizfragen",
+              description: "8 Grammatik-Quizfragen mit typed explanations",
               parameters: {
                 type: "object",
                 properties: {
@@ -109,7 +127,19 @@ EXPLANATION-REGELN (sehr wichtig — keine generischen Floskeln!):
                         prompt: { type: "string", description: "Die Frage oder der Satz mit Lücke (Englisch)." },
                         options: { type: "array", items: { type: "string" }, description: "Genau 4 Antwortoptionen." },
                         correct: { type: "string", description: "Die richtige Option (exakt wie in options)." },
-                        explanation: { type: "string", description: "Pädagogische Erklärung auf Deutsch (1–2 Sätze): konkrete Regel + ggf. typischer deutscher Denkfehler. KEINE Floskeln wie 'Diese Antwort passt am besten'." },
+                        explanation: {
+                          type: "object",
+                          description: "Typed pedagogical explanation. KEINE Floskeln.",
+                          properties: {
+                            type: { type: "string", enum: ["pattern","function","contrast","trap","chunk","register","mnemonic"] },
+                            short: { type: "string", description: `1–2 Sätze auf Deutsch (max ${wordLimit} Wörter), konkrete Regel/Funktion.` },
+                            contrastDE: { type: "string", description: "Optional: DE↔EN Unterschied." },
+                            trapNote: { type: "string", description: "Optional: typische deutsche Falle." },
+                            generalization: { type: "string", description: "Optional: wiederverwendbarer Lernanker." },
+                          },
+                          required: ["type", "short"],
+                          additionalProperties: false,
+                        },
                       },
                       required: ["prompt", "options", "correct", "explanation"],
                       additionalProperties: false,
