@@ -34,7 +34,9 @@ type QuizMode = "vocab" | "grammar";
 type VocabSource = "review" | "fresh";
 
 interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
-interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: string }
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
+
+interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: TypedExplanation }
 type QuizItem = VocabQ | GrammarQ;
 
 function buildEllieChatTitle(item: QuizItem): string {
