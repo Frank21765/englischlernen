@@ -232,7 +232,19 @@ Halte die Erklärung freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`
               type: "object",
               properties: {
                 title: { type: "string", description: "Name des Grammatikthemas auf Deutsch, z.B. 'Present Perfect vs Simple Past'." },
-                explanation: { type: "string", description: "Kurze Erklärung auf Deutsch (max 4 Sätze)." },
+                explanation: {
+                  type: "object",
+                  description: "Typisierte Erklärung auf Deutsch",
+                  properties: {
+                    type: { type: "string", enum: ["pattern", "function", "contrast", "trap", "chunk", "register", "mnemonic"] },
+                    short: { type: "string" },
+                    contrastDE: { type: "string" },
+                    trapNote: { type: "string" },
+                    generalization: { type: "string" },
+                  },
+                  required: ["type", "short"],
+                  additionalProperties: false,
+                },
                 examples: {
                   type: "array",
                   items: {
