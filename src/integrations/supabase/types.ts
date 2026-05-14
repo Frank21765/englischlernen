@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      cefr_vocab_master: {
+        Row: {
+          cefr_confidence: string | null
+          cefr_level_app: string | null
+          cefr_level_source_original: string | null
+          cefr_pos_source_original: string | null
+          cefr_reason: string | null
+          cefr_source: string | null
+          common_mistakes_json: string | null
+          core_collocations_json: string | null
+          curriculum_stage: string | null
+          display_word: string | null
+          entry_key: string
+          example_1_de: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_en: string | null
+          german_alternatives_json: string | null
+          german_translation_primary: string | null
+          gloss_en_simple: string | null
+          handling_note: string | null
+          learner_relevance: string | null
+          lemma: string | null
+          meaning_note_de: string | null
+          part_of_speech: string | null
+          register_json: string | null
+          review_reason: string | null
+          review_status: string | null
+          sensitivity_labels_json: string | null
+          source_dataset: string | null
+          source_lemma: string | null
+          source_pos: string | null
+          teaching_priority: string | null
+          theme_tags_json: string | null
+          usage_tags_json: string | null
+          variant_labels_json: string | null
+        }
+        Insert: {
+          cefr_confidence?: string | null
+          cefr_level_app?: string | null
+          cefr_level_source_original?: string | null
+          cefr_pos_source_original?: string | null
+          cefr_reason?: string | null
+          cefr_source?: string | null
+          common_mistakes_json?: string | null
+          core_collocations_json?: string | null
+          curriculum_stage?: string | null
+          display_word?: string | null
+          entry_key: string
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          german_alternatives_json?: string | null
+          german_translation_primary?: string | null
+          gloss_en_simple?: string | null
+          handling_note?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: string | null
+          review_reason?: string | null
+          review_status?: string | null
+          sensitivity_labels_json?: string | null
+          source_dataset?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          teaching_priority?: string | null
+          theme_tags_json?: string | null
+          usage_tags_json?: string | null
+          variant_labels_json?: string | null
+        }
+        Update: {
+          cefr_confidence?: string | null
+          cefr_level_app?: string | null
+          cefr_level_source_original?: string | null
+          cefr_pos_source_original?: string | null
+          cefr_reason?: string | null
+          cefr_source?: string | null
+          common_mistakes_json?: string | null
+          core_collocations_json?: string | null
+          curriculum_stage?: string | null
+          display_word?: string | null
+          entry_key?: string
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          german_alternatives_json?: string | null
+          german_translation_primary?: string | null
+          gloss_en_simple?: string | null
+          handling_note?: string | null
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: string | null
+          review_reason?: string | null
+          review_status?: string | null
+          sensitivity_labels_json?: string | null
+          source_dataset?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          teaching_priority?: string | null
+          theme_tags_json?: string | null
+          usage_tags_json?: string | null
+          variant_labels_json?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
