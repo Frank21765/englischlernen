@@ -34,7 +34,7 @@ type QuizMode = "vocab" | "grammar";
 type VocabSource = "review" | "fresh";
 
 interface VocabQ { kind: "vocab"; vocab: Vocab; direction: CardDirection; options: string[] }
-import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, validateExplanation, type TypedExplanation } from "@/lib/explanations";
 
 interface GrammarQ { kind: "grammar"; prompt: string; options: string[]; correct: string; explanation: TypedExplanation }
 type QuizItem = VocabQ | GrammarQ;
