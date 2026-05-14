@@ -61,13 +61,15 @@ Deno.serve(async (req) => {
     const isQuiz = mode === "quiz";
     const topicHint = topic ? ` Wenn es sinnvoll ist, beziehe Beispiele lose auf das Thema "${topic}".` : "";
 
-    const cefrGuide = `CEFR-Leitfaden (welche Grammatik passt):
+    const cefrGuide = `CEFR-Leitfaden (welche Grammatik passt — STRENG einhalten, KEIN Material aus tieferen Stufen mischen):
 - A1: be/have, Pronomen, Artikel, simple present, einfache Fragen, Plural, einfache Präpositionen.
-- A2: simple past (regulär/irregulär), can/must, going to, Possessivpronomen, einfache Komparative.
-- B1: present perfect vs past simple, will vs going to, Modalverben, 1st conditional, Relativsätze (who/which/that), Passiv basic.
-- B2: present perfect continuous, past perfect, 2nd/3rd conditional, reported speech, Passiv (alle Zeiten), Gerund vs Infinitiv.
+- A2: simple past (regulär/irregulär), was/were, can/must/should, going to, einfache Komparative, some/any, Häufigkeitsadverbien.
+- B1: Present Perfect vs Simple Past, since/for, already/yet/just, Past Continuous vs Simple Past, 1st Conditional, will vs going to, Relativsätze (who/which/that), Passiv (Present/Past Simple), used to, Reported Speech (Aussagen), Gerund vs Infinitiv (Basics), Phrasal Verbs in Kontext, state vs process verbs ("is getting"). NIEMALS A1/A2-Niveau wie bloßes "go/went/gone" oder "can/could" als Hauptfrage — nur in kontrastiver/anspruchsvoller Form (z.B. Present Perfect mit Zeitmarker).
+- B2: Present Perfect Continuous, Past Perfect, 2nd/3rd Conditional, Mixed Conditionals (Einstieg), Reported Speech (Fragen/Befehle), Passiv (alle Zeiten), Modalverben der Vergangenheit (must have / could have / should have), wish/if only, Causative (have sth done), nuanciertes Tempus, Diskursmarker (although/however/despite), defining vs non-defining Relativsätze, idiomatische Grammatik.
 - C1: inversion, mixed conditionals, advanced linking words, cleft sentences, nuancierter Modalgebrauch, formelle Strukturen.
-- C2: stilistische Inversion, advanced collocations, fortgeschrittene formelle vs informelle Register, idiomatische Strukturen.`;
+- C2: stilistische Inversion, advanced collocations, fortgeschrittene formelle vs informelle Register, idiomatische Strukturen.
+
+NIVEAU-CHECK vor jeder Frage: "Würde ein A2-Lerner das schon können?" Wenn JA und du baust für B1/B2 → verwerfen und schwierigere Variante wählen.`;
 
     if (isQuiz) {
       const systemPrompt = `Du erstellst Englisch-Grammatik-Quizfragen für deutschsprachige Lernende.
