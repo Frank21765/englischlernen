@@ -205,7 +205,21 @@ export default function Grammar() {
                 <RefreshCw className="h-3.5 w-3.5" /> Neu
               </Button>
             </div>
-            <p className="text-sm leading-relaxed">{lesson.explanation}</p>
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {EXPLANATION_TYPE_LABELS[lesson.explanation.type]}
+              </span>
+              <p className="text-sm leading-relaxed">{lesson.explanation.short}</p>
+              {lesson.explanation.contrastDE && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">DE↔EN:</span> {lesson.explanation.contrastDE}</p>
+              )}
+              {lesson.explanation.trapNote && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">Falle:</span> {lesson.explanation.trapNote}</p>
+              )}
+              {lesson.explanation.generalization && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">Merke:</span> {lesson.explanation.generalization}</p>
+              )}
+            </div>
             <div className="flex justify-end">
               <Button
                 size="sm"
