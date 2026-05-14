@@ -629,6 +629,33 @@ export default function Quiz() {
         })}
       </div>
 
+      {/* Status-Zeile mit klarem Richtig/Falsch + Lösung. */}
+      {picked && (() => {
+        const isWrong = picked !== correctAnswer;
+        return (
+          <div
+            className={`rounded-xl border p-3 text-sm ${
+              isWrong
+                ? "bg-destructive/10 border-destructive/30 text-foreground"
+                : "bg-success/10 border-success/30 text-foreground"
+            }`}
+          >
+            <div className="font-bold mb-0.5">
+              {isWrong ? "❌ Leider falsch" : "✅ Richtig!"}
+            </div>
+            {isWrong ? (
+              <div className="text-xs sm:text-sm">
+                Richtige Antwort: <span className="font-semibold">{correctAnswer}</span>
+              </div>
+            ) : (
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                Gut gemacht — diese Antwort passt zur Bedeutung und zum Beispielsatz.
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Mini-Ellie-Erklärung für Vokabel-Quiz — parallel zu Lektion / Lückentext.
           Greift sowohl bei richtig als auch bei falsch und zeigt das Wortpaar
           + ggf. Grammatik-Note kompakt an, damit der Lerner versteht WAS er
@@ -660,7 +687,8 @@ export default function Quiz() {
 
       {picked && current.kind === "grammar" && (
         <Card className="p-3 sm:p-4 bg-muted/40 text-sm">
-          <span className="font-semibold">💡 </span>{current.explanation}
+          <span className="font-semibold">💡 </span>
+          {current.explanation || "Diese Form passt zur Regel im Beispielsatz."}
         </Card>
       )}
 
@@ -714,7 +742,7 @@ export default function Quiz() {
         );
       })()}
 
-      {picked && !(current.kind === "vocab" && picked === correctAnswer) && (
+      {picked && (
         <div className="flex justify-center">
           <Button
             variant="hero"
@@ -722,7 +750,9 @@ export default function Quiz() {
             onClick={() => advance(picked === correctAnswer)}
             className="rounded-full px-8"
           >
-            Weiter
+            {idx + 1 >= queue.length && picked === correctAnswer
+              ? "Ergebnis anzeigen"
+              : "Weiter"}
           </Button>
         </div>
       )}
