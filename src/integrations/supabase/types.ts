@@ -73,6 +73,99 @@ export type Database = {
         }
         Relationships: []
       }
+      core_vocab_master: {
+        Row: {
+          beta_priority: string | null
+          cefr_level: string | null
+          cefrj_level_original: string | null
+          cefrj_pos_original: string | null
+          confusing_with_json: Json | null
+          display_word: string | null
+          example_1_de: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_en: string | null
+          frequency_band: string | null
+          frequency_rank: number | null
+          german_alternatives_json: Json | null
+          german_translation_primary: string | null
+          id: string
+          learner_relevance: string | null
+          lemma: string | null
+          meaning_note_de: string | null
+          part_of_speech: string | null
+          register_json: Json | null
+          review_reason: string | null
+          review_status: string | null
+          source: string | null
+          source_lemma: string | null
+          source_pos: string | null
+          usage_tags_json: Json | null
+        }
+        Insert: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          cefrj_level_original?: string | null
+          cefrj_pos_original?: string | null
+          confusing_with_json?: Json | null
+          display_word?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id: string
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          source?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          usage_tags_json?: Json | null
+        }
+        Update: {
+          beta_priority?: string | null
+          cefr_level?: string | null
+          cefrj_level_original?: string | null
+          cefrj_pos_original?: string | null
+          confusing_with_json?: Json | null
+          display_word?: string | null
+          example_1_de?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_en?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          german_alternatives_json?: Json | null
+          german_translation_primary?: string | null
+          id?: string
+          learner_relevance?: string | null
+          lemma?: string | null
+          meaning_note_de?: string | null
+          part_of_speech?: string | null
+          register_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          source?: string | null
+          source_lemma?: string | null
+          source_pos?: string | null
+          usage_tags_json?: Json | null
+        }
+        Relationships: []
+      }
       diagnostic_results: {
         Row: {
           area: string
