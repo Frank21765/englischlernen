@@ -175,7 +175,7 @@ export default function Einstellungen() {
         <div>
           <Label className="text-base font-semibold mb-2 block">Standard-Niveau</Label>
           <div className="flex flex-wrap gap-1.5">
-            {LEVELS.map((l) => (
+            {PRODUCT_LEVELS.map((l) => (
               <button
                 key={l}
                 onClick={() => setDefaultLevel(l)}
