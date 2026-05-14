@@ -67,6 +67,7 @@ const App = () => (
                 <Route path="quiz" element={<Quiz />} />
                 <Route path="grammatik" element={<Grammar />} />
                 <Route path="lueckentext" element={<Lueckentext />} />
+                <Route path="false-friends" element={<FalseFriends />} />
               </Route>
               <Route path="/profil" element={<Profil />}>
                 <Route path="erfolge" element={<Erfolge />} />
