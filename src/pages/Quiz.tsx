@@ -723,7 +723,7 @@ export default function Quiz() {
           : ellieExplainGrammarPrompt({
               prompt: current.prompt,
               correctAnswer: current.correct,
-              explanation: current.explanation,
+              explanation: [current.explanation.short, current.explanation.contrastDE, current.explanation.trapNote].filter(Boolean).join(" "),
               level: ctxLevel,
               topic: ctxTopic,
             });
