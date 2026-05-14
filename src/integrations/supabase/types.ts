@@ -217,6 +217,27 @@ export type Database = {
         }
         Relationships: []
       }
+      idiom_topics: {
+        Row: {
+          id: string
+          label_de: string
+          label_en: string
+          sort_order: number | null
+        }
+        Insert: {
+          id: string
+          label_de: string
+          label_en: string
+          sort_order?: number | null
+        }
+        Update: {
+          id?: string
+          label_de?: string
+          label_en?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       learning_events: {
         Row: {
           created_at: string
