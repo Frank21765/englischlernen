@@ -64,9 +64,14 @@ Deno.serve(async (req) => {
       ? `\n\nNutze möglichst diese Vokabeln:\n${vocabList.map((v) => `- ${v.english} (${v.german})`).join("\n")}`
       : "";
 
-    const systemPrompt = `Du erstellst Lückentext-Übungen auf Englisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.`;
+    const systemPrompt = `Du erstellst Lückentext-Übungen auf Englisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.
 
-    const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch. Jeder Eintrag braucht: full_sentence (kompletter englischer Satz mit dem Zielwort), missing_word (das eine Wort, das fehlen soll – exakt wie im Satz), translation (deutsche Übersetzung), hint (kurze Hilfe auf Deutsch, z.B. Wortart oder Zeitform).${vocabBlock}`;
+HINT-REGELN (wichtig — keine Floskeln!):
+- Der "hint" ist eine Mini-Lernhilfe auf Deutsch, NICHT nur "Verb" oder "Nomen einsetzen".
+- Erkläre kurz die Lernregel oder den deutschen Denkfehler: z.B. "Veränderung → 'is getting + Adjektiv', nicht 'becomes'." oder "Past Simple, weil abgeschlossene Handlung in der Vergangenheit." oder "Im Deutschen 'seit 3 Jahren', im Englischen Present Perfect: 'for 3 years'."
+- 1 kurzer Satz, konkret, merkbar.`;
+
+    const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch. Jeder Eintrag braucht: full_sentence (kompletter englischer Satz mit dem Zielwort), missing_word (das eine Wort, das fehlen soll – exakt wie im Satz), translation (deutsche Übersetzung), hint (Mini-Lernhilfe nach den HINT-REGELN — KEINE Floskel wie "Verb einsetzen").${vocabBlock}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
