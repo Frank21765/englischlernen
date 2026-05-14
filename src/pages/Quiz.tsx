@@ -542,12 +542,8 @@ export default function Quiz() {
       }
     }
 
-    // Auto-advance only on correct vocab answers (snappy flow).
-    // For wrong answers and ALL grammar questions, wait for the user to press
-    // "Weiter" so the explanation and "Frag Ellie" button stay usable.
-    if (current.kind === "vocab" && isCorrect) {
-      setTimeout(() => { advance(isCorrect); }, 900);
-    }
+    // Kein Auto-Advance mehr — auch bei richtigen Antworten soll der Lerner
+    // die Erklärung sehen und bewusst auf "Weiter" tippen. Lernen vor Tempo.
   };
 
   const advance = (wasCorrect: boolean) => {
