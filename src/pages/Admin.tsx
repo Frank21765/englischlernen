@@ -133,9 +133,14 @@ export default function Admin() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <header>
-        <h1 className="text-3xl flex items-center gap-2"><Shield className="h-7 w-7 text-primary" /> Admin</h1>
-        <p className="text-muted-foreground">Nutzer verwalten · {users.length} registriert · {pendingUsers.length} wartend</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl flex items-center gap-2"><Shield className="h-7 w-7 text-primary" /> Admin</h1>
+          <p className="text-muted-foreground">Nutzer verwalten · {users.length} registriert · {pendingUsers.length} wartend</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/admin/master-preview">📚 Master-Preview</Link>
+        </Button>
       </header>
 
       <Tabs defaultValue="users">
