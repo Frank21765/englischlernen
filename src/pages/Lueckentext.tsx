@@ -115,11 +115,32 @@ export default function Lueckentext() {
       setRevealed(null);
       setStats({ correct: 0, total: 0 });
       setCombo(0);
+      setWrongItems([]);
+      setDone(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Generieren");
     } finally {
       setBusy(false);
     }
+  };
+
+  const finishRound = (finalStats: { correct: number; total: number }, finalWrong: ClozeItem[]) => {
+    if (user && finalStats.total > 0) {
+      supabase
+        .from("learning_sessions")
+        .insert({
+          user_id: user.id,
+          mode: "cloze",
+          level,
+          topic,
+          total_answers: finalStats.total,
+          correct_answers: finalStats.correct,
+        })
+        .then(() => undefined);
+    }
+    if (finalStats.correct === finalStats.total) fireConfetti(true);
+    else if (finalStats.correct >= Math.ceil(finalStats.total * 0.7)) fireConfetti(false);
+    setDone({ correct: finalStats.correct, total: finalStats.total, wrong: finalWrong });
   };
 
   const current = items[idx];
