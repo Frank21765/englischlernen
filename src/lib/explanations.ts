@@ -1,46 +1,76 @@
-// Mini-Taxonomie für pädagogische Erklärungen.
-// Ziel: Erklärungen sollen mehr leisten als "richtig/falsch" — sie sollen
-// Lernregeln, deutsche Denkfehler und natürliches Englisch sichtbar machen.
-//
-// Aktuell wird das Schema noch nicht erzwungen (kein DB-Refactor). Es dient
-// als Leitplanke für Edge-Function-Prompts und für künftige Felder in den
-// Master-Tabellen (z.B. cefr_vocab_master.common_mistakes_json).
-//
-// Die Reihenfolge entspricht der didaktischen Priorität:
-// 1. Was ist die Regel? (grammar_rule)
-// 2. Wie denkt ein Deutscher hier falsch? (german_bridge / common_german_mistake)
-// 3. Wie klingt es natürlich auf Englisch? (natural_english_usage)
-// 4. Wie merke ich es mir? (memory_rule)
+// Typed explanations for pedagogical feedback.
+// Schema co-developed with Alex — used as guardrail for Edge Function prompts
+// and as a future contract for typed explanation fields in master tables.
 
-export type ExplanationType =
-  | "grammar_rule"            // Die zugrunde liegende Regel
-  | "german_bridge"           // Brücke aus dem deutschen Denken
-  | "common_german_mistake"   // Typischer Fehler deutscher Lerner
-  | "state_vs_process"        // Zustand vs. Veränderung (be vs. get)
-  | "natural_english_usage"   // Was klingt für Muttersprachler natürlich
-  | "memory_rule"             // Eselsbrücke / Merksatz
-  | "beginner_rule"           // Vereinfachte Faustregel für Anfänger
-  | "native_speaker_feel";    // Sprachgefühl-Hinweis
+export const EXPLANATION_TYPES = [
+  "pattern",
+  "function",
+  "contrast",
+  "trap",
+  "chunk",
+  "register",
+  "mnemonic",
+] as const;
 
-export interface ExplanationFragment {
-  type: ExplanationType;
-  text: string;
-}
+export type ExplanationType = typeof EXPLANATION_TYPES[number];
 
-export const explanationLabels: Record<ExplanationType, string> = {
-  grammar_rule: "Regel",
-  german_bridge: "Deutsche Brücke",
-  common_german_mistake: "Typischer Fehler",
-  state_vs_process: "Zustand vs. Veränderung",
-  natural_english_usage: "Natürliches Englisch",
-  memory_rule: "Eselsbrücke",
-  beginner_rule: "Faustregel",
-  native_speaker_feel: "Sprachgefühl",
+export const EXPLANATION_TYPE_LABELS: Record<ExplanationType, string> = {
+  pattern:   "Muster",
+  function:  "Verwendung",
+  contrast:  "DE↔EN Unterschied",
+  trap:      "Typischer Fehler",
+  chunk:     "Feste Wendung",
+  register:  "Natürlichkeit",
+  mnemonic:  "Eselsbrücke",
 };
 
-// Heuristische Floskel-Filter — wenn eine KI-Erklärung nur das hier sagt,
-// markieren wir sie als "schwach" und können später eine Re-Prompt-Schleife
-// triggern. Aktuell nur fürs Logging gedacht.
+export interface TypedExplanation {
+  type: ExplanationType;
+  short: string;
+  contrastDE?: string;
+  trapNote?: string;
+  generalization?: string;
+}
+
+export const EXPLANATION_WORD_LIMITS: Record<string, number> = {
+  A1: 25, A2: 35, B1: 50, B2: 70,
+};
+
+export function validateExplanation(e: TypedExplanation, cefr: string): string[] {
+  const errors: string[] = [];
+  const limit = EXPLANATION_WORD_LIMITS[cefr] ?? 70;
+  const wordCount = e.short.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount > limit) errors.push(`Zu lang: ${wordCount}/${limit} Wörter für ${cefr}`);
+
+  const BANNED: RegExp[] = [
+    /correctly reflects/i,
+    /best fits/i,
+    /this option is correct/i,
+    /ist korrekt, weil/i,
+    /spiegelt.*richtig.*wider/i,
+    /die richtige Antwort ist/i,
+    /passt am besten/i,
+    /ist die einzig/i,
+  ];
+  for (const p of BANNED) {
+    if (p.test(e.short)) errors.push("Validation-Sprache erkannt");
+  }
+  return errors;
+}
+
+export function coerceToTyped(raw: unknown): TypedExplanation {
+  if (raw && typeof raw === "object" && "type" in raw && "short" in raw) {
+    return raw as TypedExplanation;
+  }
+  return {
+    type: "function",
+    short: typeof raw === "string" ? raw : "Keine Erklärung verfügbar.",
+  };
+}
+
+// --- Legacy heuristic, kept for backwards compatibility with any callers
+// that still import isWeakExplanation from this module. New code should use
+// validateExplanation() above.
 const WEAK_PHRASES = [
   /diese antwort passt am besten/i,
   /diese antwort ist (?:grammatikalisch )?korrekt/i,
