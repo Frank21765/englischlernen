@@ -22,6 +22,7 @@ import Training from "./pages/Training";
 import Lektionen from "./pages/Lektionen";
 import Lektion from "./pages/Lektion";
 import Wortpuzzle from "./pages/Wortpuzzle";
+import FalseFriends from "./pages/FalseFriends";
 import Profil from "./pages/Profil";
 import Unterstuetzen from "./pages/Unterstuetzen";
 import Index from "./pages/Index.tsx";
