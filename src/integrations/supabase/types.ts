@@ -238,6 +238,143 @@ export type Database = {
         }
         Relationships: []
       }
+      idioms_master: {
+        Row: {
+          audio_url_1: string | null
+          audio_url_2: string | null
+          audio_url_3: string | null
+          beta_priority: string | null
+          cefr_level: string
+          confusing_with_json: Json | null
+          created_at: string | null
+          display_phrase: string
+          distractors_json: Json | null
+          example_1_de: string | null
+          example_1_de_partial: string | null
+          example_1_en: string | null
+          example_2_de: string | null
+          example_2_de_partial: string | null
+          example_2_en: string | null
+          example_3_de: string | null
+          example_3_de_partial: string | null
+          example_3_en: string | null
+          false_friend_warning: string | null
+          frequency_band: string | null
+          frequency_rank: number | null
+          grammar_pattern: string | null
+          id: string
+          learner_relevance: string | null
+          lemma: string
+          linked_irregular_verb: string | null
+          linked_vocab: string | null
+          literal_meaning_de: string | null
+          meaning_note_de: string
+          register_json: Json | null
+          related_idioms_json: Json | null
+          review_reason: string | null
+          review_status: string | null
+          reviewed: boolean | null
+          source: string | null
+          topic_id: string | null
+          type: string
+          updated_at: string | null
+          usage_tags_json: Json | null
+          variants_json: Json | null
+        }
+        Insert: {
+          audio_url_1?: string | null
+          audio_url_2?: string | null
+          audio_url_3?: string | null
+          beta_priority?: string | null
+          cefr_level: string
+          confusing_with_json?: Json | null
+          created_at?: string | null
+          display_phrase: string
+          distractors_json?: Json | null
+          example_1_de?: string | null
+          example_1_de_partial?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_de_partial?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_de_partial?: string | null
+          example_3_en?: string | null
+          false_friend_warning?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          grammar_pattern?: string | null
+          id: string
+          learner_relevance?: string | null
+          lemma: string
+          linked_irregular_verb?: string | null
+          linked_vocab?: string | null
+          literal_meaning_de?: string | null
+          meaning_note_de: string
+          register_json?: Json | null
+          related_idioms_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+          topic_id?: string | null
+          type: string
+          updated_at?: string | null
+          usage_tags_json?: Json | null
+          variants_json?: Json | null
+        }
+        Update: {
+          audio_url_1?: string | null
+          audio_url_2?: string | null
+          audio_url_3?: string | null
+          beta_priority?: string | null
+          cefr_level?: string
+          confusing_with_json?: Json | null
+          created_at?: string | null
+          display_phrase?: string
+          distractors_json?: Json | null
+          example_1_de?: string | null
+          example_1_de_partial?: string | null
+          example_1_en?: string | null
+          example_2_de?: string | null
+          example_2_de_partial?: string | null
+          example_2_en?: string | null
+          example_3_de?: string | null
+          example_3_de_partial?: string | null
+          example_3_en?: string | null
+          false_friend_warning?: string | null
+          frequency_band?: string | null
+          frequency_rank?: number | null
+          grammar_pattern?: string | null
+          id?: string
+          learner_relevance?: string | null
+          lemma?: string
+          linked_irregular_verb?: string | null
+          linked_vocab?: string | null
+          literal_meaning_de?: string | null
+          meaning_note_de?: string
+          register_json?: Json | null
+          related_idioms_json?: Json | null
+          review_reason?: string | null
+          review_status?: string | null
+          reviewed?: boolean | null
+          source?: string | null
+          topic_id?: string | null
+          type?: string
+          updated_at?: string | null
+          usage_tags_json?: Json | null
+          variants_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idioms_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "idiom_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_events: {
         Row: {
           created_at: string
