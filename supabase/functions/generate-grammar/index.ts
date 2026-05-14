@@ -78,29 +78,19 @@ ${cefrGuide}
 Erzeuge GENAU 8 Multiple-Choice-Fragen passend zu Niveau ${level}.${topicHint}
 Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
-Für ${level} bedeutet das konkret:
-${level === "B1" ? "- Mindestens 5 von 8 Fragen sollen Present Perfect vs Simple Past, since/for, already/yet/just, 1st Conditional, Reported Speech (Aussagen), Passiv (basic), Gerund vs Infinitiv, Phrasal Verbs im Kontext, oder state-vs-process abdecken.\n- VERBOTEN als alleinige Frage: einfaches go/went, can/could, einfaches going to ohne Kontrast." : ""}
-${level === "B2" ? "- Mindestens 5 von 8 Fragen sollen Present Perfect Continuous, Past Perfect, 2nd/3rd Conditional, Reported Speech (Fragen), Passiv (komplexe Zeiten), Modal Perfect (must have / could have / should have), wish/if only, Causative, oder nuancierte Tempus-Wahl prüfen.\n- VERBOTEN: A1/A2-Niveau-Fragen." : ""}
+Für die Erklärung wähle den passenden Typ:
+- "contrast": Wenn Deutsch und Englisch sich unterscheiden (z.B. Present Perfect vs. Perfekt, since vs. seit).
+- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
+- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
+- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
+- "register": Wenn die falsche Form unnatürlich klingt und eine bessere Alternative erklärt wird.
+- "mnemonic": Wenn eine Eselsbrücke hilft.
 
-EXPLANATION-REGELN (Typed Explanation — PFLICHT):
-Jede Erklärung ist ein OBJEKT mit:
-- type: einer von ["pattern","function","contrast","trap","chunk","register","mnemonic"]
-  · pattern = grammatische Struktur/Muster ("are going to + Infinitiv für geplante Absicht")
-  · function = wofür man die Form benutzt
-  · contrast = DE↔EN Unterschied
-  · trap = typischer deutscher Denkfehler
-  · chunk = feste Wendung
-  · register = Natürlichkeit/Stil
-  · mnemonic = Eselsbrücke
-- short: 1–2 Sätze auf Deutsch (max ${wordLimit} Wörter), die KONKRETE Regel/Funktion. KEINE Floskeln.
-- contrastDE (optional): wenn type≠contrast aber ein DE-Bezug hilft.
-- trapNote (optional): typische deutsche Falle, falls relevant.
-- generalization (optional): wiederverwendbarer Lernanker ("Bei Zeitmarkern wie 'yesterday' immer Simple Past").
+Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.
 
-VERBOTENE Phrasen in short: "Diese Antwort passt am besten", "ist korrekt, weil", "passt zur Regel", "ist die einzig richtige", "spiegelt … wider", "die richtige Antwort ist". Solche Sätze werden abgelehnt.
+VERBOTEN in "short": "Diese Option ist korrekt", "spiegelt die Grammatikregel wider", "passt am besten", "ist die richtige Wahl", Wiederholung der richtigen Antwort.
 
-Gut: { type: "contrast", short: "'is getting warmer' beschreibt eine Veränderung im Verlauf. Englisch nutzt 'is getting + Adjektiv' — 'becomes' klingt unnatürlich.", trapNote: "Deutsche denken hier oft an 'wird' = 'becomes'." }
-Schlecht: { type: "function", short: "Diese Antwort ist grammatikalisch korrekt." }`;
+PFLICHT in "short": Die grammatische Form benennen UND Funktion oder deutschen Kontrast nennen.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
