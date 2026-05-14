@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, Navigate } from "react-router-dom";
-import { BookOpen, GraduationCap, Library, PenLine, Puzzle, Sparkles } from "lucide-react";
+import { BookOpen, GraduationCap, Library, PenLine, Puzzle, Sparkles, AlertTriangle } from "lucide-react";
 
 const subNav = [
   { to: "/training/lektionen", label: "Lektionen", icon: Sparkles, match: "/training/lektionen" },
@@ -7,6 +7,7 @@ const subNav = [
   { to: "/training/quiz", label: "Quiz", icon: GraduationCap, match: "/training/quiz" },
   { to: "/training/lueckentext", label: "Lückentext", icon: PenLine, match: "/training/lueckentext" },
   { to: "/training/grammatik", label: "Grammatik", icon: Library, match: "/training/grammatik" },
+  { to: "/training/false-friends", label: "False Friends", icon: AlertTriangle, match: "/training/false-friends" },
   { to: "/vokabeln", label: "Vokabeln", icon: BookOpen, match: "/vokabeln" },
 ];
 
