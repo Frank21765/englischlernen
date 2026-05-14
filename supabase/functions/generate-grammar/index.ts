@@ -208,11 +208,25 @@ PFLICHT in "short": Die grammatische Form benennen UND Funktion oder deutschen K
     const pool = topicsByLevel[level] ?? topicsByLevel.A2;
     const focus = pool[Math.floor(Math.random() * pool.length)];
 
+    const lessonWordLimit = level === "A1" ? 25 : level === "A2" ? 35 : level === "B1" ? 50 : 70;
     const systemPrompt = `Du bist ein freundlicher Englischlehrer für deutschsprachige Lernende.
 ${cefrGuide}
 WICHTIG: Behandle in dieser Lektion GENAU dieses Grammatikthema: "${focus}" (Niveau ${level}). Wähle KEIN anderes Thema.${topicHint}
-Liefere eine kurze, klare Lektion: knappe Erklärung (auf Deutsch), 3 Beispielsätze (Englisch + deutsche Übersetzung), 1 typischer Fehler mit Korrektur, 3 kleine Übungssätze (Englisch mit einer Lücke __, plus richtiger Antwort und kurzer Hinweis).
-Halte die Erklärung freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
+Liefere eine kurze, klare Lektion: typisierte Erklärung (Objekt), 3 Beispielsätze (Englisch + deutsche Übersetzung), 1 typischer Fehler mit Korrektur, 3 kleine Übungssätze (Englisch mit einer Lücke __, plus richtiger Antwort und kurzer Hinweis).
+
+Für die "explanation" wähle den passenden Typ:
+- "contrast": Wenn Deutsch und Englisch sich unterscheiden.
+- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
+- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
+- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
+- "register": Wenn die falsche Form unnatürlich klingt.
+- "mnemonic": Wenn eine Eselsbrücke hilft.
+
+"short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Benenne die grammatische Form UND Funktion oder deutschen Kontrast.
+VERBOTEN in "short": "Diese Option ist korrekt", "passt am besten", "ist die richtige Wahl", reine Floskeln.
+Optional: contrastDE, trapNote, generalization — nur wenn sie echten Mehrwert bringen.
+
+Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -232,7 +246,19 @@ Halte die Erklärung freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`
               type: "object",
               properties: {
                 title: { type: "string", description: "Name des Grammatikthemas auf Deutsch, z.B. 'Present Perfect vs Simple Past'." },
-                explanation: { type: "string", description: "Kurze Erklärung auf Deutsch (max 4 Sätze)." },
+                explanation: {
+                  type: "object",
+                  description: "Typisierte Erklärung auf Deutsch",
+                  properties: {
+                    type: { type: "string", enum: ["pattern", "function", "contrast", "trap", "chunk", "register", "mnemonic"] },
+                    short: { type: "string" },
+                    contrastDE: { type: "string" },
+                    trapNote: { type: "string" },
+                    generalization: { type: "string" },
+                  },
+                  required: ["type", "short"],
+                  additionalProperties: false,
+                },
                 examples: {
                   type: "array",
                   items: {

@@ -14,12 +14,14 @@ import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward,
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst } from "@/lib/text";
 
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
+
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
 interface Practice { sentence: string; answer: string; hint: string }
 interface Lesson {
   title: string;
-  explanation: string;
+  explanation: TypedExplanation;
   examples: Example[];
   common_mistake: Mistake;
   practice: Practice[];
@@ -66,7 +68,7 @@ export default function Grammar() {
     const url = buildEllieUrl({
       prefill: ellieExplainGrammarLessonPrompt({
         title: lesson.title,
-        explanation: lesson.explanation,
+        explanation: lesson.explanation.short,
         level,
         topic: hasSelection ? topic : undefined,
       }),
@@ -117,7 +119,8 @@ export default function Grammar() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.lesson) throw new Error("Keine Lektion erhalten");
-      setLesson(data.lesson as Lesson);
+      const raw = data.lesson as Lesson;
+      setLesson({ ...raw, explanation: coerceToTyped(raw.explanation) });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler beim Laden");
     } finally {
@@ -202,7 +205,21 @@ export default function Grammar() {
                 <RefreshCw className="h-3.5 w-3.5" /> Neu
               </Button>
             </div>
-            <p className="text-sm leading-relaxed">{lesson.explanation}</p>
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {EXPLANATION_TYPE_LABELS[lesson.explanation.type]}
+              </span>
+              <p className="text-sm leading-relaxed">{lesson.explanation.short}</p>
+              {lesson.explanation.contrastDE && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">DE↔EN:</span> {lesson.explanation.contrastDE}</p>
+              )}
+              {lesson.explanation.trapNote && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">Falle:</span> {lesson.explanation.trapNote}</p>
+              )}
+              {lesson.explanation.generalization && (
+                <p className="text-xs text-muted-foreground"><span className="font-semibold">Merke:</span> {lesson.explanation.generalization}</p>
+              )}
+            </div>
             <div className="flex justify-end">
               <Button
                 size="sm"
