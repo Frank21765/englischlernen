@@ -294,12 +294,12 @@ export default function Quiz() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const qs: GrammarQ[] = (data?.questions ?? []).map((q: { prompt: string; options: string[]; correct: string; explanation: string }) => ({
+      const qs: GrammarQ[] = (data?.questions ?? []).map((q: { prompt: string; options: string[]; correct: string; explanation: unknown }) => ({
         kind: "grammar" as const,
         prompt: q.prompt,
         options: shuffle(q.options),
         correct: q.correct,
-        explanation: q.explanation,
+        explanation: coerceToTyped(q.explanation),
       }));
       if (!qs.length) throw new Error("Keine Fragen erhalten");
       setQueue(qs);
