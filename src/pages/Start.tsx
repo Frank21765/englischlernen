@@ -227,7 +227,7 @@ export default function Start() {
               <div>
                 <Label className="mb-2 block text-sm font-semibold">Niveau</Label>
                 <div className="flex flex-wrap gap-2">
-                  {LEVELS.map((l) => (
+                  {PRODUCT_LEVELS.map((l) => (
                     <button
                       key={l}
                       type="button"
