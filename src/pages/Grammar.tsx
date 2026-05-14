@@ -14,12 +14,14 @@ import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward,
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst } from "@/lib/text";
 
+import { coerceToTyped, EXPLANATION_TYPE_LABELS, type TypedExplanation } from "@/lib/explanations";
+
 interface Example { en: string; de: string }
 interface Mistake { wrong: string; correct: string; why: string }
 interface Practice { sentence: string; answer: string; hint: string }
 interface Lesson {
   title: string;
-  explanation: string;
+  explanation: TypedExplanation;
   examples: Example[];
   common_mistake: Mistake;
   practice: Practice[];
