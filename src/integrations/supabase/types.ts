@@ -313,6 +313,177 @@ export type Database = {
         }
         Relationships: []
       }
+      false_friends_master: {
+        Row: {
+          app_section: string | null
+          audio_text_en: string | null
+          audio_text_slow_en: string | null
+          category: string
+          cefr_level: string
+          cloze_answer: string | null
+          cloze_prompt: string | null
+          correct_english_alternatives: Json | null
+          correct_english_primary: string
+          evp_sense_id: string | null
+          example_correct_en: string | null
+          example_de: string | null
+          example_wrong_en: string | null
+          explanation_de: string
+          explanation_en_simple: string | null
+          feedback_if_correct_de: string | null
+          feedback_if_wrong_de: string | null
+          formality_level: string | null
+          frequency_score: number
+          german_meaning: string | null
+          german_trigger_word_or_phrase: string | null
+          grammar_tags: Json | null
+          humor_potential: number | null
+          id: string
+          ipa_optional: string | null
+          l1_interference_strength: number | null
+          learner_trap_type: string | null
+          lesson_priority: number | null
+          linked_cefr_unit: string | null
+          linked_idiom: string | null
+          linked_irregular_verb: string | null
+          linked_ngsl_word: string | null
+          literal_back_translation: string | null
+          memory_hook_de: string | null
+          mini_dialogue_correct: string | null
+          mini_dialogue_wrong: string | null
+          minimal_pair_or_confusable_word: string | null
+          needs_human_review: boolean
+          notes_for_content_team: string | null
+          preferred_exercise_types: Json | null
+          pronunciation_note_de: string | null
+          quiz_correct_answer: string | null
+          quiz_options: Json | null
+          quiz_question: string | null
+          review_priority: number | null
+          severity_score: number
+          source_confidence: number
+          srs_difficulty: number | null
+          subcategory: string
+          teacher_note_compact: string | null
+          topic_tags: Json | null
+          vocabulary_tags: Json | null
+          why_germans_make_this_mistake: string | null
+          wrong_english: string
+        }
+        Insert: {
+          app_section?: string | null
+          audio_text_en?: string | null
+          audio_text_slow_en?: string | null
+          category: string
+          cefr_level: string
+          cloze_answer?: string | null
+          cloze_prompt?: string | null
+          correct_english_alternatives?: Json | null
+          correct_english_primary: string
+          evp_sense_id?: string | null
+          example_correct_en?: string | null
+          example_de?: string | null
+          example_wrong_en?: string | null
+          explanation_de: string
+          explanation_en_simple?: string | null
+          feedback_if_correct_de?: string | null
+          feedback_if_wrong_de?: string | null
+          formality_level?: string | null
+          frequency_score: number
+          german_meaning?: string | null
+          german_trigger_word_or_phrase?: string | null
+          grammar_tags?: Json | null
+          humor_potential?: number | null
+          id: string
+          ipa_optional?: string | null
+          l1_interference_strength?: number | null
+          learner_trap_type?: string | null
+          lesson_priority?: number | null
+          linked_cefr_unit?: string | null
+          linked_idiom?: string | null
+          linked_irregular_verb?: string | null
+          linked_ngsl_word?: string | null
+          literal_back_translation?: string | null
+          memory_hook_de?: string | null
+          mini_dialogue_correct?: string | null
+          mini_dialogue_wrong?: string | null
+          minimal_pair_or_confusable_word?: string | null
+          needs_human_review: boolean
+          notes_for_content_team?: string | null
+          preferred_exercise_types?: Json | null
+          pronunciation_note_de?: string | null
+          quiz_correct_answer?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          review_priority?: number | null
+          severity_score: number
+          source_confidence: number
+          srs_difficulty?: number | null
+          subcategory: string
+          teacher_note_compact?: string | null
+          topic_tags?: Json | null
+          vocabulary_tags?: Json | null
+          why_germans_make_this_mistake?: string | null
+          wrong_english: string
+        }
+        Update: {
+          app_section?: string | null
+          audio_text_en?: string | null
+          audio_text_slow_en?: string | null
+          category?: string
+          cefr_level?: string
+          cloze_answer?: string | null
+          cloze_prompt?: string | null
+          correct_english_alternatives?: Json | null
+          correct_english_primary?: string
+          evp_sense_id?: string | null
+          example_correct_en?: string | null
+          example_de?: string | null
+          example_wrong_en?: string | null
+          explanation_de?: string
+          explanation_en_simple?: string | null
+          feedback_if_correct_de?: string | null
+          feedback_if_wrong_de?: string | null
+          formality_level?: string | null
+          frequency_score?: number
+          german_meaning?: string | null
+          german_trigger_word_or_phrase?: string | null
+          grammar_tags?: Json | null
+          humor_potential?: number | null
+          id?: string
+          ipa_optional?: string | null
+          l1_interference_strength?: number | null
+          learner_trap_type?: string | null
+          lesson_priority?: number | null
+          linked_cefr_unit?: string | null
+          linked_idiom?: string | null
+          linked_irregular_verb?: string | null
+          linked_ngsl_word?: string | null
+          literal_back_translation?: string | null
+          memory_hook_de?: string | null
+          mini_dialogue_correct?: string | null
+          mini_dialogue_wrong?: string | null
+          minimal_pair_or_confusable_word?: string | null
+          needs_human_review?: boolean
+          notes_for_content_team?: string | null
+          preferred_exercise_types?: Json | null
+          pronunciation_note_de?: string | null
+          quiz_correct_answer?: string | null
+          quiz_options?: Json | null
+          quiz_question?: string | null
+          review_priority?: number | null
+          severity_score?: number
+          source_confidence?: number
+          srs_difficulty?: number | null
+          subcategory?: string
+          teacher_note_compact?: string | null
+          topic_tags?: Json | null
+          vocabulary_tags?: Json | null
+          why_germans_make_this_mistake?: string | null
+          wrong_english?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           created_at: string
