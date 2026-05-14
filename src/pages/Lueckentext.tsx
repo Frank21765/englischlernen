@@ -199,6 +199,102 @@ export default function Lueckentext() {
     setRevealed(null);
   };
 
+  if (done) {
+    const { correct, total, wrong } = done;
+    const pct = total > 0 ? correct / total : 0;
+    const message =
+      pct === 1
+        ? "Perfekt! Kein einziger Fehler — das ist echter Lernfortschritt."
+        : pct >= 0.8
+        ? "Sehr gut! Fast fehlerlos — das Gehirn arbeitet."
+        : pct >= 0.6
+        ? "Solide! Die meisten Lücken richtig — noch etwas Luft nach oben."
+        : pct >= 0.4
+        ? "Weiter so. Jeder Fehler ist ein Lernmoment."
+        : "Dieser Stoff war neu — beim nächsten Mal wird es besser.";
+    return (
+      <div className="space-y-5 max-w-2xl mx-auto">
+        <Card className="p-6 sm:p-8 space-y-5 bg-gradient-card shadow-card">
+          <div className="text-center space-y-2">
+            <div className="text-3xl sm:text-4xl font-display font-bold">
+              {correct} <span className="text-muted-foreground text-xl font-normal">/ {total}</span>
+            </div>
+            <div className="text-xs font-bold uppercase tracking-widest text-primary">Lückentext abgeschlossen</div>
+            <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+          </div>
+          {wrong.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                {wrong.length === 1 ? "1 Fehler" : `${wrong.length} Fehler`}
+              </div>
+              <div className="space-y-1.5">
+                {wrong.map((item, i) => (
+                  <div key={i} className="rounded-xl bg-destructive/5 border border-destructive/20 px-3 py-2 text-sm flex items-start gap-2">
+                    <X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
+                    <span>
+                      <span className="font-semibold">{capitalizeFirst(item.missing_word)}</span>
+                      <span className="text-muted-foreground"> — {item.translation}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            {wrong.length > 0 && (
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full"
+                onClick={() => {
+                  setItems(wrong);
+                  setIdx(0);
+                  setAnswer("");
+                  setRevealed(null);
+                  setStats({ correct: 0, total: 0 });
+                  setCombo(0);
+                  setWrongItems([]);
+                  setDone(null);
+                }}
+              >
+                <RefreshCw className="h-4 w-4" /> Fehler wiederholen ({wrong.length})
+              </Button>
+            )}
+            <Button variant="soft" size="lg" className="w-full" onClick={() => { setDone(null); generate(); }}>
+              <Sparkles className="h-4 w-4" /> Neue Runde starten
+            </Button>
+            {wrong.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full rounded-full"
+                onClick={() => {
+                  const mistakeList = wrong
+                    .map((item) => `- "${capitalizeFirst(item.missing_word)}" (${item.translation}): ${item.full_sentence}`)
+                    .join("\n");
+                  const prompt = `Ich habe gerade eine Lückentext-Übung auf Englisch (Niveau ${level}, Thema: ${topic}) gemacht und diese Wörter falsch:\n${mistakeList}\n\nKannst du mir kurz erklären, warum diese Wörter schwierig sind und wie ich sie mir besser merken kann?`;
+                  const url = buildEllieUrl({
+                    prefill: prompt,
+                    auto: true,
+                    title: "Lückentext-Fehler",
+                    returnTo: "/training/lueckentext",
+                    returnLabel: "Zurück zum Lückentext",
+                  });
+                  navigate(url);
+                }}
+              >
+                <EllieIcon size={16} alt="" /> Frag Ellie über die Fehler
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" className="w-full" onClick={() => navigate("/start")}>
+              <ArrowLeft className="h-4 w-4" /> Zurück zum Training
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (!items.length) {
     return (
       <div className="space-y-5 max-w-2xl mx-auto">
