@@ -59,7 +59,7 @@ export function FocusChip({ className = "" }: Props) {
           <div>
             <Label className="mb-2 block text-xs font-semibold">Niveau</Label>
             <div className="flex flex-wrap gap-1.5">
-              {LEVELS.map((l) => (
+              {PRODUCT_LEVELS.map((l) => (
                 <button
                   key={l}
                   type="button"
