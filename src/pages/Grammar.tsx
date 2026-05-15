@@ -202,7 +202,13 @@ export default function Grammar() {
     <div className="space-y-5 max-w-2xl mx-auto">
       <header className="space-y-2">
         <h1 className="text-2xl sm:text-3xl">Grammatik 📚</h1>
-        <FocusChip />
+        {lesson ? (
+          <div className="text-xs text-muted-foreground">
+            {level} · {topic} · Schritt {step + 1} / 5
+          </div>
+        ) : (
+          <FocusChip />
+        )}
       </header>
 
       <Card className="hover-lift p-4 sm:p-5 space-y-3 bg-gradient-card shadow-card">
