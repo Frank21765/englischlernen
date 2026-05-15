@@ -302,7 +302,7 @@ export default function Grammar() {
         </div>
       )}
 
-      {lesson && step === 3 && (() => {
+      {lesson && phase === "practice" && (() => {
         const i = practiceIdx;
         const p = lesson.practice[i];
         const parts = p.sentence.split("__");
