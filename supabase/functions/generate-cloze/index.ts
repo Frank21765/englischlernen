@@ -90,9 +90,13 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `Du erstellst Lückentext-Übungen auf Englisch für deutschsprachige Lernende. Niveau ${level}, Thema "${topic}". Markiere in jedem Satz GENAU EIN Wort als Lücke (das wichtige Zielwort, idealerweise eine Vokabel oder ein konjugiertes Verb). Gib zur Hilfe immer die deutsche Übersetzung des ganzen Satzes mit.
 
-"hint" = kurzer Richtungshinweis VOR der Antwort, max. 4 Wörter, gibt die Antwort NICHT preis.
-Beispiele für gute hints: "Verlaufsform", "Past Simple", "Gerundium", "Modalverb + Infinitiv", "Komparativ".
-KEIN hint der die Lösung erklärt — nur die grammatische Kategorie benennen.
+"hint" = kurzer Richtungshinweis VOR der Antwort (max. 8 Wörter), gibt die Antwort NICHT preis.
+Wähle EINES dieser vier Muster (mit Beispielen):
+- DE-Kontrast: "🇩🇪 'seit 3 Jahren' → 'for 3 years'"
+- Trigger-Signal: "'yesterday' → Simple Past"
+- Formenkürzel: "I/he/she → am/is/are"
+- Fallen-Hinweis: "'I have hunger' → 'I'm hungry'"
+KEINE generischen Floskeln wie "Verlaufsform" oder "Past Simple" allein. Immer Trigger oder Kontrast nennen.
 
 ${EXPLANATION_RECIPE}
 
@@ -130,7 +134,7 @@ Wortlimit für explanation.short: A1=25, A2=35, B1=50, B2=70 Wörter (Niveau: ${
                         translation: { type: "string" },
                         hint: {
                           type: "string",
-                          description: "Max. 4 Wörter. Nur grammatische Kategorie, keine Erklärung.",
+                          description: "Max. 8 Wörter. Konkreter Trigger, DE-Kontrast, Formenkürzel oder Fallen-Hinweis (siehe System-Prompt).",
                         },
                         explanation: {
                           type: "object",

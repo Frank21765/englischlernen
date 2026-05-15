@@ -119,6 +119,11 @@ Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
 ${EXPLANATION_RECIPE}
 
+ELLIE-FORMAT (Audit Welle 1) — Fokus der Erklärung:
+- Erkläre primär: "Warum war die falsche Antwort verlockend (deutscher Reflex)?", NICHT "Warum ist richtig richtig?"
+- contrastDE: nutze 🇩🇪-Anker, z.B. "🇩🇪 'seit 2010' verleitet zu 'since 2010' im Simple Past — englisch braucht aber Present Perfect."
+- trapNote: nutze ✗ falsch / ✓ richtig mit kurzem Kontrast, z.B. "✗ I have hunger  ✓ I'm hungry — DE 'Hunger haben' ≠ EN."
+
 Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -247,6 +252,14 @@ ${EXPLANATION_RECIPE}
 
 "short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Halte das Wortlimit ein.
 
+ELLIE-FORMAT für common_mistake.why (5-Schritte-Pflicht, alle in einem kurzen Absatz):
+1. Richtige Form + DE-Bedeutung   2. Falsche Form + warum sie verlockend ist (DE-Reflex)
+3. Beispielsatz (richtig)         4. Kontrastsatz (falsch → richtig mit Pfeil)
+5. "Der Unterschied ist …" — eine Zeile, was sich der Lerner merken soll.
+
+practice[].hint: KEIN abstrakter Regelbegriff. Nenne den konkreten Trigger im Satz, z.B.
+"'yesterday' → Simple Past", "'since 2010' → Present Perfect", "Pronomen 'he/she' → Endung -s".
+
 Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -310,7 +323,7 @@ Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
                     properties: {
                       sentence: { type: "string", description: "Englischer Satz mit '__' für die Lücke." },
                       answer: { type: "string", description: "Das Wort/die Wörter, die in die Lücke gehören." },
-                      hint: { type: "string", description: "Kurzer Hinweis auf Deutsch." },
+                      hint: { type: "string", description: "Konkreter Trigger im Satz, z.B. \"'yesterday' → Simple Past\". Keine abstrakten Regelbegriffe." },
                     },
                     required: ["sentence", "answer", "hint"],
                     additionalProperties: false,
