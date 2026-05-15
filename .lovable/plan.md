@@ -1,33 +1,47 @@
-## Ziel
 
-Den bestehenden `systemPrompt` für den Quiz-Modus in `supabase/functions/generate-grammar/index.ts` durch deine geschärfte Version ersetzen. Sonst nichts.
+## Package 7 Fix — Grammar: 3 Phasen statt 5 Steps
 
-## Was sich ändert
+Nur `src/pages/Grammar.tsx`. Keine anderen Dateien, keine Edge Functions, keine DB.
 
-**Datei:** `supabase/functions/generate-grammar/index.ts`
+### State-Änderungen
+- `step: 0|1|2|3|4` → `phase: "lesson" | "practice" | "done"`
+- `practiceIdx`, `practiceStats`, `answers`, `revealed` bleiben
+- `generate()` setzt `phase` auf `"lesson"`, restliche Resets bleiben
 
-Im `if (isQuiz)`-Block wird der aktuelle, lange `systemPrompt` (mit den B1/B2-„Mindestens 5 von 8…"-Vorgaben und dem ausführlichen Explanation-Block) ersetzt durch deinen kompakteren Prompt:
+### Phase 1 — `"lesson"` (Erklärung + Beispiele + Typischer Fehler)
+Eine zusammenhängende Card-Gruppe, gerendert wenn `phase === "lesson"`:
+1. Lesson-Card: Titel, „Neu"-Button, TypedExplanation-Block (short + contrastDE + trapNote + generalization), `Frag Ellie`-Button (askEllieAboutLesson)
+2. Beispiele-Card: 3 Beispiele (en/de) — bisheriger Step-1-Inhalt
+3. Kompakter „Typischer Fehler"-Abschnitt direkt darunter (kein eigener Step) — bisheriger Step-2-Inhalt, gleiche Optik (rote Border + ✗/✓ + why)
+4. CTA `Zu den Übungen` → `setPhase("practice")`
 
-- Klare Typ-Definitionen (contrast / pattern / trap / function / register / mnemonic) als Auswahlhilfe für das Modell.
-- Wortlimit pro Niveau direkt im Prompt.
-- Verbotene Floskeln explizit gelistet.
-- Pflicht: grammatische Form + Funktion ODER deutscher Kontrast.
+### Phase 2 — `"practice"` (3 Übungen einzeln)
+Praktisch unverändert vom alten Step 3, aber:
+- läuft direkt unter `phase === "practice"`
+- nach Check oder Skip (`isRevealed`): Lösungs-/Hint-Block + **`Frag Ellie`-Button** (askEllieAboutPractice) + `Weiter`-Button
+- Bug-Check: aktuell ist der Ellie-Button im Step-3 schon vorhanden, aber prüfen, dass er nicht durch `isRevealed`-Pfade verloren geht (Skip setzt revealed=true → Ellie muss erscheinen, was er bereits tut). Sicherstellen, dass die Ellie-Zeile nicht hinter Conditionals verschwindet
+- `advancePractice()` bleibt; am Ende `setPhase("done")` statt `setStep(4)`
 
-Der `cefrGuide` (Niveau-Definitionen A1–B2) und das Tool-Schema (`grammar_quiz` mit `explanation: { type, short, contrastDE?, trapNote?, generalization? }`) bleiben **unverändert** — sie sind die strukturelle Grundlage, der neue Prompt ist die didaktische Anweisung obendrauf.
+### Phase 3 — `"done"` (Abschluss)
+Bisherige Step-4-Card mit Ergebnis `X / 3`, Niveau/Thema, Button „Neue Lektion".
+Zusätzlich optionaler Button `Nochmal üben`, sichtbar wenn `practiceStats.correct < practiceStats.total` — setzt `answers={}`, `revealed={}`, `practiceIdx=0`, `practiceStats={correct:0,total:0}`, `phase="practice"` (Lektion bleibt geladen).
 
-## Was NICHT geändert wird
+### Header-Label
+Statt `Schritt {step+1} / 5`:
+```ts
+const headerSuffix =
+  phase === "lesson"   ? "Erklärung" :
+  phase === "practice" ? `Übung ${practiceIdx + 1} / ${lesson.practice.length}` :
+                         "abgeschlossen";
+```
+Anzeige: `{level} · {topic} · {headerSuffix}`
 
-- Lesson-Modus (Nicht-Quiz) bleibt unangetastet.
-- Tool-Schema bleibt identisch.
-- Frontend (`Quiz.tsx`, `explanations.ts`) bleibt unangetastet.
-- Andere Edge Functions (`generate-cloze`, etc.) bleiben unangetastet.
-- Wortlimit-Konstante (`wordLimit`) im Code bleibt — sie wird im Prompt-Template weiterhin als `${wordLimit}` für die Schema-Description gebraucht.
+### Was NICHT geändert wird
+- Resume-Logik (`grammar-resume-*`) bleibt; nutzt weiterhin `lesson/answers/revealed` (kein `phase` im Snapshot — Rückkehr landet immer in `"lesson"` über Default-Init, das ist akzeptabel und gewollt einfach)
+- `check()`, `advancePractice()`-Kernlogik, DB-Insert in `learning_sessions` (genau einmal pro Runde) bleiben
+- `askEllieAboutLesson` / `askEllieAboutPractice` unverändert
+- Kein Restyling, keine neuen Komponenten
 
-## Risiko / Hinweis
-
-Dein neuer Prompt entfernt die expliziten „Mindestens 5 von 8 Fragen müssen Present Perfect / Conditional / …"-Vorgaben für B1/B2. Der `cefrGuide` enthält weiterhin den NIVEAU-CHECK und das Verbot von A1/A2-Material auf B1/B2 — das sollte reichen, ist aber etwas weniger erzwingend als vorher. Falls B1/B2-Fragen wieder zu leicht werden, fügen wir den „mindestens 5 von 8"-Hinweis als kurze Zeile am Ende wieder ein.
-
-## Nach der Umsetzung
-
-- Edge Function deployen.
-- Quiz auf B1 + B2 testen: Erklärungstypen sichtbar, keine Floskeln, Form + Funktion/Kontrast genannt.
+### Verifikation
+- `bunx tsc --noEmit`
+- Manuell: Lektion starten → Phase 1 zeigt Erklärung + 3 Beispiele + Typischer Fehler + Ellie + „Zu den Übungen". Übungen 1–3 mit Ellie-Button nach jeder Antwort. Abschluss zeigt `X / 3` und ggf. „Nochmal üben". Header-Suffix korrekt in allen 3 Phasen. DB: genau ein `learning_sessions`-Eintrag pro abgeschlossener Lektion.

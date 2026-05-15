@@ -35,7 +35,7 @@ export default function Grammar() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
-  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [phase, setPhase] = useState<"lesson" | "practice" | "done">("lesson");
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [practiceStats, setPracticeStats] = useState({ correct: 0, total: 0 });
 
@@ -115,7 +115,7 @@ export default function Grammar() {
     setLesson(null);
     setAnswers({});
     setRevealed({});
-    setStep(0);
+    setPhase("lesson");
     setPracticeIdx(0);
     setPracticeStats({ correct: 0, total: 0 });
     try {
@@ -179,7 +179,7 @@ export default function Grammar() {
           })
           .then(() => undefined);
       }
-      setStep(4);
+      setPhase("done");
     }
   };
 
@@ -204,7 +204,13 @@ export default function Grammar() {
         <h1 className="text-2xl sm:text-3xl">Grammatik 📚</h1>
         {lesson ? (
           <div className="text-xs text-muted-foreground">
-            {level} · {topic} · Schritt {step + 1} / 5
+            {level} · {topic} · {
+              phase === "lesson"
+                ? "Erklärung"
+                : phase === "practice"
+                ? `Übung ${practiceIdx + 1} / ${lesson.practice.length}`
+                : "abgeschlossen"
+            }
           </div>
         ) : (
           <FocusChip />
@@ -225,7 +231,7 @@ export default function Grammar() {
         <Card className="p-6 text-center text-muted-foreground animate-shimmer">Lade passende Grammatik…</Card>
       )}
 
-      {lesson && step === 0 && (
+      {lesson && phase === "lesson" && (
         <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -249,6 +255,24 @@ export default function Grammar() {
                 <p className="text-xs text-muted-foreground"><span className="font-semibold">Merke:</span> {lesson.explanation.generalization}</p>
               )}
             </div>
+
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
+                <Lightbulb className="h-3 w-3" /> Typischer Fehler
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-start gap-2">
+                  <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <span className="line-through text-muted-foreground">{capitalizeFirst(lesson.common_mistake.wrong)}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                  <span className="font-medium">{capitalizeFirst(lesson.common_mistake.correct)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground italic pt-0.5">{lesson.common_mistake.why}</p>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button
                 size="sm"
@@ -259,14 +283,7 @@ export default function Grammar() {
               </Button>
             </div>
           </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(1)}>
-            Weiter <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
 
-      {lesson && step === 1 && (
-        <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-primary">Beispiele</div>
             <div className="space-y-2">
@@ -278,37 +295,14 @@ export default function Grammar() {
               ))}
             </div>
           </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(2)}>
-            Weiter <ArrowRight className="h-4 w-4" />
+
+          <Button variant="hero" size="lg" className="w-full" onClick={() => setPhase("practice")}>
+            Zu den Übungen <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      {lesson && step === 2 && (
-        <div className="space-y-4">
-          <Card className="hover-lift p-4 sm:p-5 space-y-3 border-destructive/30">
-            <div className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
-              <Lightbulb className="h-3.5 w-3.5" /> Typischer Fehler
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-start gap-2">
-                <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <span className="line-through text-muted-foreground">{capitalizeFirst(lesson.common_mistake.wrong)}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                <span className="font-medium">{capitalizeFirst(lesson.common_mistake.correct)}</span>
-              </div>
-              <p className="text-xs text-muted-foreground italic pt-1">{lesson.common_mistake.why}</p>
-            </div>
-          </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(3)}>
-            Weiter <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {lesson && step === 3 && (() => {
+      {lesson && phase === "practice" && (() => {
         const i = practiceIdx;
         const p = lesson.practice[i];
         const parts = p.sentence.split("__");
@@ -397,7 +391,7 @@ export default function Grammar() {
         );
       })()}
 
-      {lesson && step === 4 && (
+      {lesson && phase === "done" && (
         <Card className="hover-lift p-5 sm:p-6 space-y-4 text-center bg-gradient-card shadow-card">
           <div className="text-xs font-bold uppercase tracking-widest text-primary">Lektion abgeschlossen</div>
           <h2 className="font-display text-xl sm:text-2xl">{lesson.title}</h2>
@@ -406,10 +400,28 @@ export default function Grammar() {
           </p>
           <p className="text-sm text-muted-foreground">Übungen richtig</p>
           <p className="text-xs text-muted-foreground">{level} · {topic}</p>
-          <Button variant="hero" size="lg" className="w-full" onClick={generate} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Neue Lektion
-          </Button>
+          <div className="space-y-2">
+            <Button variant="hero" size="lg" className="w-full" onClick={generate} disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Neue Lektion
+            </Button>
+            {practiceStats.correct < practiceStats.total && (
+              <Button
+                variant="soft"
+                size="lg"
+                className="w-full"
+                onClick={() => {
+                  setAnswers({});
+                  setRevealed({});
+                  setPracticeIdx(0);
+                  setPracticeStats({ correct: 0, total: 0 });
+                  setPhase("practice");
+                }}
+              >
+                <RefreshCw className="h-4 w-4" /> Nochmal üben
+              </Button>
+            )}
+          </div>
         </Card>
       )}
     </div>
