@@ -6,6 +6,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Package 5 — Explanation Quality Upgrade
+// Gemeinsame Rezeptur, die in jeden Erklärungs-Prompt injiziert wird.
+// Ziel: weg von Lehrbuch-Definitionen, hin zu Tutor-Erklärungen mit AHA-Moment.
+const EXPLANATION_RECIPE = `ERKLÄRUNGS-REZEPTUR (für "explanation"):
+Wähle den Typ und folge dem jeweiligen Mini-Format. Schreibe wie ein guter privater Tutor — nicht wie ein Grammatikbuch.
+
+- "contrast" (DE↔EN unterscheidet sich):
+  Format: "DE: <deutsche Form>. EN: <englische Form>. → <der entscheidende Unterschied>"
+  Pflicht: konkretes deutsches Wort/Satzteil nennen (z.B. "seit", "schon", Perfekt).
+- "pattern" (Form verallgemeinern):
+  Format: "Form: <Regel>. Gilt immer wenn <Trigger>."
+  Pflicht: einen wiederverwendbaren Auslöser nennen, kein Lehrbuch-Satz.
+- "trap" (typischer deutscher Fehler):
+  Format: "Deutscher Reflex: <falsche EN-Form>. Korrekt: <richtige Form>. Grund: <kurz>."
+  Pflicht: den deutschen Denkfehler explizit benennen.
+- "function" (was leistet die Form kommunikativ):
+  Format: "Funktion: <was sagt der Sprecher damit>. Genau dann, wenn <Situation>."
+  Pflicht: eine konkrete Sprech-Situation, nicht nur "wird verwendet".
+- "register" (klingt unnatürlich):
+  Format: "<falsch> klingt wie <vergleich>. Natürlich: <besser>."
+- "mnemonic" (Eselsbrücke):
+  Format: "Merksatz: <kurz, bildhaft>. Anker: <warum es haftet>."
+- "chunk" (feste Wendung):
+  Format: "Feste Wendung: <chunk>. Immer mit <festes Element>."
+
+AHA-PFLICHT: Jede Erklärung muss EINEN Aha-Moment auslösen — etwas, das ein deutscher Lerner nicht schon ahnt. Wenn die Erklärung auch ohne die Übung wahr wäre, ist sie zu generisch.
+
+VERBOTEN (führt zu Verwerfen):
+- "wird (im Englischen) verwendet, um …"
+- "beschreibt eine Routine / Gewohnheit / allgemeine Wahrheit"
+- "man benutzt / verwendet / nimmt hier …"
+- "drückt aus, dass …"
+- "im Englischen sagt/nutzt man …"
+- "Diese Option ist korrekt", "passt am besten", "ist die richtige Wahl"
+- Reine Wiederholung der richtigen Antwort.
+
+PFLICHT: Form benennen UND entweder deutschen Kontrast ODER Sprech-Funktion ODER expliziten Denkfehler nennen.`;
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
