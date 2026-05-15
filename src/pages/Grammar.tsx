@@ -179,7 +179,7 @@ export default function Grammar() {
           })
           .then(() => undefined);
       }
-      setStep(4);
+      setPhase("done");
     }
   };
 
