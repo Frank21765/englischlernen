@@ -323,7 +323,7 @@ Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
                     properties: {
                       sentence: { type: "string", description: "Englischer Satz mit '__' für die Lücke." },
                       answer: { type: "string", description: "Das Wort/die Wörter, die in die Lücke gehören." },
-                      hint: { type: "string", description: "Kurzer Hinweis auf Deutsch." },
+                      hint: { type: "string", description: "Konkreter Trigger im Satz, z.B. \"'yesterday' → Simple Past\". Keine abstrakten Regelbegriffe." },
                     },
                     required: ["sentence", "answer", "hint"],
                     additionalProperties: false,
