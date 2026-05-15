@@ -204,17 +204,9 @@ ${cefrGuide}
 WICHTIG: Behandle in dieser Lektion GENAU dieses Grammatikthema: "${focus}" (Niveau ${level}). Wähle KEIN anderes Thema.${topicHint}
 Liefere eine kurze, klare Lektion: typisierte Erklärung (Objekt), 3 Beispielsätze (Englisch + deutsche Übersetzung), 1 typischer Fehler mit Korrektur, 3 kleine Übungssätze (Englisch mit einer Lücke __, plus richtiger Antwort und kurzer Hinweis).
 
-Für die "explanation" wähle den passenden Typ:
-- "contrast": Wenn Deutsch und Englisch sich unterscheiden.
-- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
-- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
-- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
-- "register": Wenn die falsche Form unnatürlich klingt.
-- "mnemonic": Wenn eine Eselsbrücke hilft.
+${EXPLANATION_RECIPE}
 
-"short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Benenne die grammatische Form UND Funktion oder deutschen Kontrast.
-VERBOTEN in "short": "Diese Option ist korrekt", "passt am besten", "ist die richtige Wahl", reine Floskeln.
-Optional: contrastDE, trapNote, generalization — nur wenn sie echten Mehrwert bringen.
+"short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Halte das Wortlimit ein.
 
 Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
