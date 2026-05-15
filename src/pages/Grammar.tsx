@@ -391,7 +391,7 @@ export default function Grammar() {
         );
       })()}
 
-      {lesson && step === 4 && (
+      {lesson && phase === "done" && (
         <Card className="hover-lift p-5 sm:p-6 space-y-4 text-center bg-gradient-card shadow-card">
           <div className="text-xs font-bold uppercase tracking-widest text-primary">Lektion abgeschlossen</div>
           <h2 className="font-display text-xl sm:text-2xl">{lesson.title}</h2>
@@ -400,10 +400,28 @@ export default function Grammar() {
           </p>
           <p className="text-sm text-muted-foreground">Übungen richtig</p>
           <p className="text-xs text-muted-foreground">{level} · {topic}</p>
-          <Button variant="hero" size="lg" className="w-full" onClick={generate} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Neue Lektion
-          </Button>
+          <div className="space-y-2">
+            <Button variant="hero" size="lg" className="w-full" onClick={generate} disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Neue Lektion
+            </Button>
+            {practiceStats.correct < practiceStats.total && (
+              <Button
+                variant="soft"
+                size="lg"
+                className="w-full"
+                onClick={() => {
+                  setAnswers({});
+                  setRevealed({});
+                  setPracticeIdx(0);
+                  setPracticeStats({ correct: 0, total: 0 });
+                  setPhase("practice");
+                }}
+              >
+                <RefreshCw className="h-4 w-4" /> Nochmal üben
+              </Button>
+            )}
+          </div>
         </Card>
       )}
     </div>
