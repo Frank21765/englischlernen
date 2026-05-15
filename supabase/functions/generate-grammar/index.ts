@@ -78,19 +78,9 @@ ${cefrGuide}
 Erzeuge GENAU 8 Multiple-Choice-Fragen passend zu Niveau ${level}.${topicHint}
 Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
-Für die Erklärung wähle den passenden Typ:
-- "contrast": Wenn Deutsch und Englisch sich unterscheiden (z.B. Present Perfect vs. Perfekt, since vs. seit).
-- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
-- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
-- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
-- "register": Wenn die falsche Form unnatürlich klingt und eine bessere Alternative erklärt wird.
-- "mnemonic": Wenn eine Eselsbrücke hilft.
+${EXPLANATION_RECIPE}
 
-Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.
-
-VERBOTEN in "short": "Diese Option ist korrekt", "spiegelt die Grammatikregel wider", "passt am besten", "ist die richtige Wahl", Wiederholung der richtigen Antwort.
-
-PFLICHT in "short": Die grammatische Form benennen UND Funktion oder deutschen Kontrast nennen.`;
+Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
