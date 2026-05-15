@@ -7,6 +7,30 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Package 5 — Explanation Quality Upgrade
+const EXPLANATION_RECIPE = `ERKLÄRUNGS-REZEPTUR (für "explanation"):
+Wähle den Typ und folge dem jeweiligen Mini-Format. Schreibe wie ein guter privater Tutor — nicht wie ein Grammatikbuch.
+
+- "contrast" (DE↔EN unterscheidet sich):
+  Format: "DE: <deutsche Form>. EN: <englische Form>. → <der entscheidende Unterschied>"
+  Pflicht: konkretes deutsches Wort/Satzteil nennen (z.B. "seit", "schon", Perfekt).
+- "pattern" (Form verallgemeinern):
+  Format: "Form: <Regel>. Gilt immer wenn <Trigger>."
+- "trap" (typischer deutscher Fehler):
+  Format: "Deutscher Reflex: <falsche EN-Form>. Korrekt: <richtige Form>. Grund: <kurz>."
+- "function" (kommunikative Funktion):
+  Format: "Funktion: <was sagt der Sprecher damit>. Genau dann, wenn <Situation>."
+- "register": "<falsch> klingt wie <vergleich>. Natürlich: <besser>."
+- "mnemonic": "Merksatz: <kurz>. Anker: <warum es haftet>."
+- "chunk": "Feste Wendung: <chunk>. Immer mit <festes Element>."
+
+AHA-PFLICHT: Jede Erklärung muss EINEN Aha-Moment auslösen — etwas, das ein deutscher Lerner nicht schon ahnt. Wenn die Erklärung auch ohne die Übung wahr wäre, ist sie zu generisch.
+
+VERBOTEN: "wird verwendet um…", "beschreibt Routinen/Gewohnheiten", "man benutzt/verwendet…", "drückt aus, dass…", "im Englischen sagt man…", "passt am besten", reine Wiederholung der Antwort.
+
+PFLICHT: Form benennen UND entweder deutschen Kontrast ODER Sprech-Funktion ODER expliziten Denkfehler nennen.`;
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
