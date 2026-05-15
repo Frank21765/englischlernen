@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst } from "@/lib/text";
 
@@ -35,6 +35,9 @@ export default function Grammar() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [practiceIdx, setPracticeIdx] = useState(0);
+  const [practiceStats, setPracticeStats] = useState({ correct: 0, total: 0 });
 
   // Restore a paused Grammar lesson after a "Frag Ellie" side-trip.
   useEffect(() => {
@@ -112,6 +115,9 @@ export default function Grammar() {
     setLesson(null);
     setAnswers({});
     setRevealed({});
+    setStep(0);
+    setPracticeIdx(0);
+    setPracticeStats({ correct: 0, total: 0 });
     try {
       const { data, error } = await supabase.functions.invoke("generate-grammar", {
         body: { level, topic: hasSelection ? topic : undefined, mode: "lesson" },
@@ -144,19 +150,36 @@ export default function Grammar() {
     } else {
       toast.error(`Richtig wäre: ${lesson.practice[i].answer}`);
     }
-    // Record a session entry per practice answer
-    if (user) {
-      supabase
-        .from("learning_sessions")
-        .insert({
-          user_id: user.id,
-          mode: "grammar",
-          level,
-          topic: hasSelection ? topic : "Grammatik",
-          total_answers: 1,
-          correct_answers: ok ? 1 : 0,
-        })
-        .then(() => undefined);
+  };
+
+  // Move to the next practice item or finish the lesson. Accumulates stats once
+  // per item (not per check) so a skipped item still counts toward total.
+  const advancePractice = () => {
+    if (!lesson) return;
+    const i = practiceIdx;
+    const given = (answers[i] ?? "").trim().toLowerCase();
+    const expected = lesson.practice[i].answer.trim().toLowerCase();
+    const ok = !!revealed[i] && given === expected;
+    const nextStats = { correct: practiceStats.correct + (ok ? 1 : 0), total: practiceStats.total + 1 };
+    setPracticeStats(nextStats);
+    if (i < lesson.practice.length - 1) {
+      setPracticeIdx(i + 1);
+    } else {
+      // Lesson finished — record one session entry for the whole round.
+      if (user) {
+        supabase
+          .from("learning_sessions")
+          .insert({
+            user_id: user.id,
+            mode: "grammar",
+            level,
+            topic: hasSelection ? topic : "Grammatik",
+            total_answers: nextStats.total,
+            correct_answers: nextStats.correct,
+          })
+          .then(() => undefined);
+      }
+      setStep(4);
     }
   };
 
@@ -179,7 +202,13 @@ export default function Grammar() {
     <div className="space-y-5 max-w-2xl mx-auto">
       <header className="space-y-2">
         <h1 className="text-2xl sm:text-3xl">Grammatik 📚</h1>
-        <FocusChip />
+        {lesson ? (
+          <div className="text-xs text-muted-foreground">
+            {level} · {topic} · Schritt {step + 1} / 5
+          </div>
+        ) : (
+          <FocusChip />
+        )}
       </header>
 
       <Card className="hover-lift p-4 sm:p-5 space-y-3 bg-gradient-card shadow-card">
@@ -196,7 +225,7 @@ export default function Grammar() {
         <Card className="p-6 text-center text-muted-foreground animate-shimmer">Lade passende Grammatik…</Card>
       )}
 
-      {lesson && (
+      {lesson && step === 0 && (
         <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -230,7 +259,14 @@ export default function Grammar() {
               </Button>
             </div>
           </Card>
+          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(1)}>
+            Weiter <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
+      {lesson && step === 1 && (
+        <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-primary">Beispiele</div>
             <div className="space-y-2">
@@ -242,7 +278,14 @@ export default function Grammar() {
               ))}
             </div>
           </Card>
+          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(2)}>
+            Weiter <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
+      {lesson && step === 2 && (
+        <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3 border-destructive/30">
             <div className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
               <Lightbulb className="h-3.5 w-3.5" /> Typischer Fehler
@@ -259,89 +302,115 @@ export default function Grammar() {
               <p className="text-xs text-muted-foreground italic pt-1">{lesson.common_mistake.why}</p>
             </div>
           </Card>
-
-          <Card className="hover-lift p-4 sm:p-5 space-y-3">
-            <div className="text-xs font-bold uppercase tracking-widest text-primary">Übung – setz das passende Wort ein</div>
-            <div className="space-y-3">
-              {lesson.practice.map((p, i) => {
-                const parts = p.sentence.split("__");
-                const isRevealed = !!revealed[i];
-                const ok = isRevealed && (answers[i] ?? "").trim().toLowerCase() === p.answer.trim().toLowerCase();
-                return (
-                  <div key={i} className="hover-lift rounded-xl border border-border p-3 space-y-2">
-                    <div className="text-sm leading-relaxed flex flex-wrap items-center gap-1">
-                      <span>{parts[0]}</span>
-                      <Input
-                        value={answers[i] ?? ""}
-                        onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === "Enter") check(i); }}
-                        disabled={isRevealed}
-                        placeholder="…"
-                        className={`inline-flex h-9 w-32 sm:w-40 rounded-lg ${
-                          isRevealed ? (ok ? "border-success" : "border-destructive") : ""
-                        }`}
-                      />
-                      <span>{parts[1] ?? ""}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-xs text-muted-foreground">💡 {p.hint}</span>
-                      {!isRevealed ? (
-                        <div className="flex items-center gap-2">
-                          {/* Skip-Button: parallel zu Quiz/Lückentext/Wortpuzzle.
-                              Markiert die Aufgabe als gesehen, ohne sie als richtig
-                              zu werten. Nur sichtbar bevor geprüft wurde. */}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}
-                            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
-                          >
-                            <SkipForward className="h-3.5 w-3.5" /> Überspringen
-                          </Button>
-                          <Button size="sm" variant="soft" onClick={() => check(i)} disabled={!(answers[i] ?? "").trim()}>
-                            <Check className="h-3.5 w-3.5" /> Prüfen
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className={`text-xs font-semibold ${ok ? "text-success" : "text-destructive"}`}>
-                          {ok ? "Richtig!" : `Lösung: ${capitalizeFirst(p.answer)}`}
-                        </span>
-                      )}
-                    </div>
-                    {/* Mini-Ellie-Erklärung — parallel zu Lektion / Lückentext / Quiz / Wortpuzzle.
-                        Zeigt Lösung + Hint kompakt, sobald geprüft/übersprungen wurde. */}
-                    {isRevealed && (
-                      <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 flex items-start gap-2">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
-                          <EllieIcon size={14} alt="" />
-                        </span>
-                        <div className="min-w-0 flex-1 space-y-0.5 text-xs leading-relaxed">
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
-                          <p className="text-foreground/90">
-                            <span className="text-muted-foreground">Lösung: </span>
-                            <span className="font-semibold">{capitalizeFirst(p.answer)}</span>
-                          </p>
-                          <p className="text-muted-foreground italic">{p.hint}</p>
-                        </div>
-                      </div>
-                    )}
-                    {isRevealed && (
-                      <div className="flex justify-end">
-                        <Button
-                          size="sm"
-                          className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm text-xs"
-                          onClick={() => askEllieAboutPractice(i)}
-                        >
-                          <EllieIcon size={14} alt="" /> Frag Ellie
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(3)}>
+            Weiter <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
+      )}
+
+      {lesson && step === 3 && (() => {
+        const i = practiceIdx;
+        const p = lesson.practice[i];
+        const parts = p.sentence.split("__");
+        const isRevealed = !!revealed[i];
+        const ok = isRevealed && (answers[i] ?? "").trim().toLowerCase() === p.answer.trim().toLowerCase();
+        const isLast = i >= lesson.practice.length - 1;
+        return (
+          <div className="space-y-4">
+            <Card className="hover-lift p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold uppercase tracking-widest text-primary">
+                  Übung {i + 1} / {lesson.practice.length}
+                </div>
+              </div>
+              <div className="hover-lift rounded-xl border border-border p-3 space-y-2">
+                <div className="text-sm leading-relaxed flex flex-wrap items-center gap-1">
+                  <span>{parts[0]}</span>
+                  <Input
+                    value={answers[i] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === "Enter") check(i); }}
+                    disabled={isRevealed}
+                    placeholder="…"
+                    className={`inline-flex h-9 w-32 sm:w-40 rounded-lg ${
+                      isRevealed ? (ok ? "border-success" : "border-destructive") : ""
+                    }`}
+                  />
+                  <span>{parts[1] ?? ""}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground">💡 {p.hint}</span>
+                  {!isRevealed ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}
+                        className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+                      >
+                        <SkipForward className="h-3.5 w-3.5" /> Überspringen
+                      </Button>
+                      <Button size="sm" variant="soft" onClick={() => check(i)} disabled={!(answers[i] ?? "").trim()}>
+                        <Check className="h-3.5 w-3.5" /> Prüfen
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className={`text-xs font-semibold ${ok ? "text-success" : "text-destructive"}`}>
+                      {ok ? "Richtig!" : `Lösung: ${capitalizeFirst(p.answer)}`}
+                    </span>
+                  )}
+                </div>
+                {isRevealed && (
+                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 flex items-start gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                      <EllieIcon size={14} alt="" />
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-0.5 text-xs leading-relaxed">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie</div>
+                      <p className="text-foreground/90">
+                        <span className="text-muted-foreground">Lösung: </span>
+                        <span className="font-semibold">{capitalizeFirst(p.answer)}</span>
+                      </p>
+                      <p className="text-muted-foreground italic">{p.hint}</p>
+                    </div>
+                  </div>
+                )}
+                {isRevealed && (
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold shadow-sm text-xs"
+                      onClick={() => askEllieAboutPractice(i)}
+                    >
+                      <EllieIcon size={14} alt="" /> Frag Ellie
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+            {isRevealed && (
+              <Button variant="hero" size="lg" className="w-full" onClick={advancePractice}>
+                {isLast ? "Lektion abschließen" : "Weiter"} <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        );
+      })()}
+
+      {lesson && step === 4 && (
+        <Card className="hover-lift p-5 sm:p-6 space-y-4 text-center bg-gradient-card shadow-card">
+          <div className="text-xs font-bold uppercase tracking-widest text-primary">Lektion abgeschlossen</div>
+          <h2 className="font-display text-xl sm:text-2xl">{lesson.title}</h2>
+          <p className="text-3xl font-bold">
+            {practiceStats.correct} / {practiceStats.total}
+          </p>
+          <p className="text-sm text-muted-foreground">Übungen richtig</p>
+          <p className="text-xs text-muted-foreground">{level} · {topic}</p>
+          <Button variant="hero" size="lg" className="w-full" onClick={generate} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Neue Lektion
+          </Button>
+        </Card>
       )}
     </div>
   );
