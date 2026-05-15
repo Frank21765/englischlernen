@@ -10,7 +10,7 @@ import { FocusChip } from "@/components/FocusChip";
 import { awardActivity, celebrate, fireConfetti, randomPraise } from "@/lib/gamification";
 import { buildEllieUrl, ellieExplainGrammarLessonPrompt, ellieExplainGrammarPracticePrompt } from "@/lib/ellie";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, Lightbulb, Loader2, RefreshCw, SkipForward, Sparkles, X } from "lucide-react";
 import { EllieIcon } from "@/components/EllieIcon";
 import { capitalizeFirst } from "@/lib/text";
 
