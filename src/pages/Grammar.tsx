@@ -115,7 +115,7 @@ export default function Grammar() {
     setLesson(null);
     setAnswers({});
     setRevealed({});
-    setStep(0);
+    setPhase("lesson");
     setPracticeIdx(0);
     setPracticeStats({ correct: 0, total: 0 });
     try {
