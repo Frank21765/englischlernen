@@ -240,6 +240,46 @@ export default function Lueckentext() {
               </div>
             </div>
           )}
+          <div className="rounded-xl bg-muted/40 border border-border p-3 sm:p-4 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <EllieIcon size={14} alt="" />
+              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Coach Ellie empfiehlt</div>
+            </div>
+            {wrong.length > 0 ? (
+              <>
+                <p className="text-sm leading-relaxed text-foreground/90">
+                  {(() => {
+                    const hints = [...new Set(wrong.map((w) => w.hint).filter((h): h is string => !!h && h.trim().length > 0))].slice(0, 3);
+                    return hints.length > 0
+                      ? `Du stolperst bei ${hints.join(" · ")}. Eine Grammatik-Lektion würde genau das aufgreifen.`
+                      : "Du hattest einige Lücken. Eine Grammatik-Lektion zu diesem Thema wäre der nächste sinnvolle Schritt.";
+                  })()}
+                </p>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/training/grammatik")}
+                >
+                  <Library className="h-4 w-4" /> Grammatik-Lektion starten
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm leading-relaxed text-foreground/90">
+                  Fehlerlos — das Satzmuster sitzt. Jetzt die Vokabeln zum Thema im Quiz festigen?
+                </p>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/training/quiz")}
+                >
+                  <GraduationCap className="h-4 w-4" /> Quiz starten
+                </Button>
+              </>
+            )}
+          </div>
           <div className="flex flex-col gap-2">
             {wrong.length > 0 && (
               <Button
