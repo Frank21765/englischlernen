@@ -204,7 +204,13 @@ export default function Grammar() {
         <h1 className="text-2xl sm:text-3xl">Grammatik 📚</h1>
         {lesson ? (
           <div className="text-xs text-muted-foreground">
-            {level} · {topic} · Schritt {step + 1} / 5
+            {level} · {topic} · {
+              phase === "lesson"
+                ? "Erklärung"
+                : phase === "practice"
+                ? `Übung ${practiceIdx + 1} / ${lesson.practice.length}`
+                : "abgeschlossen"
+            }
           </div>
         ) : (
           <FocusChip />
