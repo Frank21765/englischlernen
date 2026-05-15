@@ -115,6 +115,9 @@ export default function Grammar() {
     setLesson(null);
     setAnswers({});
     setRevealed({});
+    setStep(0);
+    setPracticeIdx(0);
+    setPracticeStats({ correct: 0, total: 0 });
     try {
       const { data, error } = await supabase.functions.invoke("generate-grammar", {
         body: { level, topic: hasSelection ? topic : undefined, mode: "lesson" },
@@ -147,19 +150,36 @@ export default function Grammar() {
     } else {
       toast.error(`Richtig wäre: ${lesson.practice[i].answer}`);
     }
-    // Record a session entry per practice answer
-    if (user) {
-      supabase
-        .from("learning_sessions")
-        .insert({
-          user_id: user.id,
-          mode: "grammar",
-          level,
-          topic: hasSelection ? topic : "Grammatik",
-          total_answers: 1,
-          correct_answers: ok ? 1 : 0,
-        })
-        .then(() => undefined);
+  };
+
+  // Move to the next practice item or finish the lesson. Accumulates stats once
+  // per item (not per check) so a skipped item still counts toward total.
+  const advancePractice = () => {
+    if (!lesson) return;
+    const i = practiceIdx;
+    const given = (answers[i] ?? "").trim().toLowerCase();
+    const expected = lesson.practice[i].answer.trim().toLowerCase();
+    const ok = !!revealed[i] && given === expected;
+    const nextStats = { correct: practiceStats.correct + (ok ? 1 : 0), total: practiceStats.total + 1 };
+    setPracticeStats(nextStats);
+    if (i < lesson.practice.length - 1) {
+      setPracticeIdx(i + 1);
+    } else {
+      // Lesson finished — record one session entry for the whole round.
+      if (user) {
+        supabase
+          .from("learning_sessions")
+          .insert({
+            user_id: user.id,
+            mode: "grammar",
+            level,
+            topic: hasSelection ? topic : "Grammatik",
+            total_answers: nextStats.total,
+            correct_answers: nextStats.correct,
+          })
+          .then(() => undefined);
+      }
+      setStep(4);
     }
   };
 
