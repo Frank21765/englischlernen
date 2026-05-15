@@ -658,7 +658,9 @@ export default function Quiz() {
               </div>
             ) : (
               <div className="text-xs sm:text-sm text-muted-foreground">
-                Gut gemacht — diese Antwort passt zur Bedeutung und zum Beispielsatz.
+                {current.kind === "vocab"
+                  ? `${current.vocab.english} — ${current.vocab.german}`
+                  : "Richtige Form gewählt."}
               </div>
             )}
           </div>
