@@ -252,6 +252,14 @@ ${EXPLANATION_RECIPE}
 
 "short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Halte das Wortlimit ein.
 
+ELLIE-FORMAT für common_mistake.why (5-Schritte-Pflicht, alle in einem kurzen Absatz):
+1. Richtige Form + DE-Bedeutung   2. Falsche Form + warum sie verlockend ist (DE-Reflex)
+3. Beispielsatz (richtig)         4. Kontrastsatz (falsch → richtig mit Pfeil)
+5. "Der Unterschied ist …" — eine Zeile, was sich der Lerner merken soll.
+
+practice[].hint: KEIN abstrakter Regelbegriff. Nenne den konkreten Trigger im Satz, z.B.
+"'yesterday' → Simple Past", "'since 2010' → Present Perfect", "Pronomen 'he/she' → Endung -s".
+
 Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
