@@ -94,17 +94,9 @@ Deno.serve(async (req) => {
 Beispiele für gute hints: "Verlaufsform", "Past Simple", "Gerundium", "Modalverb + Infinitiv", "Komparativ".
 KEIN hint der die Lösung erklärt — nur die grammatische Kategorie benennen.
 
-"explanation" = typisierte Erklärung NACH der Antwort. Wähle den passenden Typ:
-- "contrast": Wenn Deutsch und Englisch sich unterscheiden (z.B. seit→for, Perfekt→Present Perfect).
-- "pattern": Wenn eine Form erklärt und verallgemeinert wird (z.B. enjoy + -ing → immer Gerundium).
-- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
-- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
-- "register": Wenn die falsche Form unnatürlich klingt.
-- "mnemonic": Wenn eine Eselsbrücke hilft.
+${EXPLANATION_RECIPE}
 
-Wortlimit für explanation.short: A1=25, A2=35, B1=50, B2=70 Wörter (Niveau: ${level}).
-VERBOTEN: "Diese Antwort ist korrekt", "passt am besten", Wiederholung des missing_word als Erklärung.
-PFLICHT: Form benennen + Funktion oder deutschen Kontrast nennen.`;
+Wortlimit für explanation.short: A1=25, A2=35, B1=50, B2=70 Wörter (Niveau: ${level}).`;
 
     const userPrompt = `Erstelle 10 Lückentext-Sätze auf Englisch für Niveau ${level}, Thema "${topic}". Befolge die Regeln für "hint" und "explanation" aus dem System-Prompt.${vocabBlock}`;
 
