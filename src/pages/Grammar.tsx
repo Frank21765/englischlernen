@@ -35,6 +35,9 @@ export default function Grammar() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [practiceIdx, setPracticeIdx] = useState(0);
+  const [practiceStats, setPracticeStats] = useState({ correct: 0, total: 0 });
 
   // Restore a paused Grammar lesson after a "Frag Ellie" side-trip.
   useEffect(() => {
