@@ -134,7 +134,7 @@ Wortlimit für explanation.short: A1=25, A2=35, B1=50, B2=70 Wörter (Niveau: ${
                         translation: { type: "string" },
                         hint: {
                           type: "string",
-                          description: "Max. 4 Wörter. Nur grammatische Kategorie, keine Erklärung.",
+                          description: "Max. 8 Wörter. Konkreter Trigger, DE-Kontrast, Formenkürzel oder Fallen-Hinweis (siehe System-Prompt).",
                         },
                         explanation: {
                           type: "object",
