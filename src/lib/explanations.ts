@@ -41,6 +41,7 @@ export function validateExplanation(e: TypedExplanation, cefr: string): string[]
   const limit = EXPLANATION_WORD_LIMITS[cefr] ?? 70;
   const wordCount = e.short.trim().split(/\s+/).filter(Boolean).length;
   if (wordCount > limit) errors.push(`Zu lang: ${wordCount}/${limit} Wörter für ${cefr}`);
+  if (wordCount < 8) errors.push(`Zu kurz (${wordCount} Wörter): kein Erklärungsgehalt`);
 
   const BANNED: RegExp[] = [
     /correctly reflects/i,
@@ -51,15 +52,43 @@ export function validateExplanation(e: TypedExplanation, cefr: string): string[]
     /die richtige Antwort ist/i,
     /passt am besten/i,
     /ist die einzig/i,
-    // Package 5: zusätzliche Lehrbuch-/Floskel-Phrasen
+    // Package 5: Lehrbuch-/Floskel-Phrasen
     /wird (?:im englischen )?verwendet,? um/i,
     /beschreibt (?:eine )?(?:routine|routinen|gewohnheit|gewohnheiten|allgemeine? wahrheit)/i,
     /man (?:benutzt|verwendet|nimmt) (?:hier |dafür |dazu )?(?:das|den|die|ein)/i,
     /drückt (?:hier )?aus,? dass/i,
     /im englischen (?:sagt|nutzt|verwendet) man/i,
+    // Audit Welle 1: zusätzliche Tautologien
+    /passt zur bedeutung/i,
+    /ist die richtige wahl/i,
+    /man (?:benutzt|verwendet) hier/i,
+    /^ist korrekt\.?\s*$/i,
   ];
   for (const p of BANNED) {
     if (p.test(e.short)) errors.push("Floskel/Lehrbuch-Sprache erkannt");
+  }
+
+  // Audit Welle 1: QUALITY_SIGNALS — mindestens eines muss vorkommen
+  const QUALITY_SIGNALS: RegExp[] = [
+    /\bstatt\b/i,
+    /\bnicht\b/i,
+    /im deutschen/i,
+    /im englischen/i,
+    /\bfalle\b/i,
+    /merke\s*:/i,
+    /\bz\.?\s*b\.?\b/i,
+    /\bbeispiel\b/i,
+    /\bunterschied\b/i,
+    /\bsondern\b/i,
+    /\bgegensatz\b/i,
+    /→/,
+    /✗|✓/,
+  ];
+  const hasOptionalAnchor =
+    (e.contrastDE && e.contrastDE.trim().length > 0) ||
+    (e.trapNote && e.trapNote.trim().length > 0);
+  if (!hasOptionalAnchor && !QUALITY_SIGNALS.some((re) => re.test(e.short))) {
+    errors.push("Keine konkrete Information: weder Kontrast, DE-Bezug, Falle, Merksatz noch Beispiel");
   }
 
   // Package 5: contrast-check — bei type="contrast" muss ein deutscher Anker da sein.
