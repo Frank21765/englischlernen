@@ -119,6 +119,11 @@ Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
 ${EXPLANATION_RECIPE}
 
+ELLIE-FORMAT (Audit Welle 1) — Fokus der Erklärung:
+- Erkläre primär: "Warum war die falsche Antwort verlockend (deutscher Reflex)?", NICHT "Warum ist richtig richtig?"
+- contrastDE: nutze 🇩🇪-Anker, z.B. "🇩🇪 'seit 2010' verleitet zu 'since 2010' im Simple Past — englisch braucht aber Present Perfect."
+- trapNote: nutze ✗ falsch / ✓ richtig mit kurzem Kontrast, z.B. "✗ I have hunger  ✓ I'm hungry — DE 'Hunger haben' ≠ EN."
+
 Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
