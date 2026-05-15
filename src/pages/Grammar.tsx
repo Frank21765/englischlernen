@@ -231,7 +231,7 @@ export default function Grammar() {
         <Card className="p-6 text-center text-muted-foreground animate-shimmer">Lade passende Grammatik…</Card>
       )}
 
-      {lesson && step === 0 && (
+      {lesson && phase === "lesson" && (
         <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -255,6 +255,24 @@ export default function Grammar() {
                 <p className="text-xs text-muted-foreground"><span className="font-semibold">Merke:</span> {lesson.explanation.generalization}</p>
               )}
             </div>
+
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
+                <Lightbulb className="h-3 w-3" /> Typischer Fehler
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-start gap-2">
+                  <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <span className="line-through text-muted-foreground">{capitalizeFirst(lesson.common_mistake.wrong)}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                  <span className="font-medium">{capitalizeFirst(lesson.common_mistake.correct)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground italic pt-0.5">{lesson.common_mistake.why}</p>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button
                 size="sm"
@@ -265,14 +283,7 @@ export default function Grammar() {
               </Button>
             </div>
           </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(1)}>
-            Weiter <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
 
-      {lesson && step === 1 && (
-        <div className="space-y-4">
           <Card className="hover-lift p-4 sm:p-5 space-y-3">
             <div className="text-xs font-bold uppercase tracking-widest text-primary">Beispiele</div>
             <div className="space-y-2">
@@ -284,32 +295,9 @@ export default function Grammar() {
               ))}
             </div>
           </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(2)}>
-            Weiter <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
 
-      {lesson && step === 2 && (
-        <div className="space-y-4">
-          <Card className="hover-lift p-4 sm:p-5 space-y-3 border-destructive/30">
-            <div className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-1.5">
-              <Lightbulb className="h-3.5 w-3.5" /> Typischer Fehler
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-start gap-2">
-                <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <span className="line-through text-muted-foreground">{capitalizeFirst(lesson.common_mistake.wrong)}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                <span className="font-medium">{capitalizeFirst(lesson.common_mistake.correct)}</span>
-              </div>
-              <p className="text-xs text-muted-foreground italic pt-1">{lesson.common_mistake.why}</p>
-            </div>
-          </Card>
-          <Button variant="hero" size="lg" className="w-full" onClick={() => setStep(3)}>
-            Weiter <ArrowRight className="h-4 w-4" />
+          <Button variant="hero" size="lg" className="w-full" onClick={() => setPhase("practice")}>
+            Zu den Übungen <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       )}
