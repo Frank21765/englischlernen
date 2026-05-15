@@ -375,8 +375,9 @@ export default function Lueckentext() {
         <Button variant="ghost" size="sm" onClick={() => setItems([])}>
           <ArrowLeft className="h-4 w-4" /> Zurück
         </Button>
-        <div className="text-sm text-muted-foreground">
-          {idx + 1} / {items.length} {combo > 1 && <span className="ml-2 text-primary font-bold">🔥 {combo}</span>}
+        <div className="text-xs sm:text-sm text-muted-foreground truncate">
+          <span className="font-semibold text-foreground">{level}</span> · {topic} · {idx + 1} / {items.length}
+          {combo > 1 && <span className="ml-2 text-primary font-bold">🔥 {combo}</span>}
         </div>
       </div>
 
