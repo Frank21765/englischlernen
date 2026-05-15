@@ -51,9 +51,27 @@ export function validateExplanation(e: TypedExplanation, cefr: string): string[]
     /die richtige Antwort ist/i,
     /passt am besten/i,
     /ist die einzig/i,
+    // Package 5: zusätzliche Lehrbuch-/Floskel-Phrasen
+    /wird (?:im englischen )?verwendet,? um/i,
+    /beschreibt (?:eine )?(?:routine|routinen|gewohnheit|gewohnheiten|allgemeine? wahrheit)/i,
+    /man (?:benutzt|verwendet|nimmt) (?:hier |dafür |dazu )?(?:das|den|die|ein)/i,
+    /drückt (?:hier )?aus,? dass/i,
+    /im englischen (?:sagt|nutzt|verwendet) man/i,
   ];
   for (const p of BANNED) {
-    if (p.test(e.short)) errors.push("Validation-Sprache erkannt");
+    if (p.test(e.short)) errors.push("Floskel/Lehrbuch-Sprache erkannt");
+  }
+
+  // Package 5: contrast-check — bei type="contrast" muss ein deutscher Anker da sein.
+  if (e.type === "contrast") {
+    const hasContrastField = !!e.contrastDE && e.contrastDE.trim().length > 0;
+    const mentionsGerman =
+      /\bDE\b|\bDeutsch/i.test(e.short) ||
+      /[äöüß]/.test(e.short) ||
+      /\b(seit|schon|gerade|noch|werden|wurde|hatte|habe|bin|bist)\b/i.test(e.short);
+    if (!hasContrastField && !mentionsGerman) {
+      errors.push("Contrast-Erklärung ohne deutschen Anker");
+    }
   }
   return errors;
 }

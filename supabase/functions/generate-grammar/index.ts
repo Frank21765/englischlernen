@@ -6,6 +6,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Package 5 — Explanation Quality Upgrade
+// Gemeinsame Rezeptur, die in jeden Erklärungs-Prompt injiziert wird.
+// Ziel: weg von Lehrbuch-Definitionen, hin zu Tutor-Erklärungen mit AHA-Moment.
+const EXPLANATION_RECIPE = `ERKLÄRUNGS-REZEPTUR (für "explanation"):
+Wähle den Typ und folge dem jeweiligen Mini-Format. Schreibe wie ein guter privater Tutor — nicht wie ein Grammatikbuch.
+
+- "contrast" (DE↔EN unterscheidet sich):
+  Format: "DE: <deutsche Form>. EN: <englische Form>. → <der entscheidende Unterschied>"
+  Pflicht: konkretes deutsches Wort/Satzteil nennen (z.B. "seit", "schon", Perfekt).
+- "pattern" (Form verallgemeinern):
+  Format: "Form: <Regel>. Gilt immer wenn <Trigger>."
+  Pflicht: einen wiederverwendbaren Auslöser nennen, kein Lehrbuch-Satz.
+- "trap" (typischer deutscher Fehler):
+  Format: "Deutscher Reflex: <falsche EN-Form>. Korrekt: <richtige Form>. Grund: <kurz>."
+  Pflicht: den deutschen Denkfehler explizit benennen.
+- "function" (was leistet die Form kommunikativ):
+  Format: "Funktion: <was sagt der Sprecher damit>. Genau dann, wenn <Situation>."
+  Pflicht: eine konkrete Sprech-Situation, nicht nur "wird verwendet".
+- "register" (klingt unnatürlich):
+  Format: "<falsch> klingt wie <vergleich>. Natürlich: <besser>."
+- "mnemonic" (Eselsbrücke):
+  Format: "Merksatz: <kurz, bildhaft>. Anker: <warum es haftet>."
+- "chunk" (feste Wendung):
+  Format: "Feste Wendung: <chunk>. Immer mit <festes Element>."
+
+AHA-PFLICHT: Jede Erklärung muss EINEN Aha-Moment auslösen — etwas, das ein deutscher Lerner nicht schon ahnt. Wenn die Erklärung auch ohne die Übung wahr wäre, ist sie zu generisch.
+
+VERBOTEN (führt zu Verwerfen):
+- "wird (im Englischen) verwendet, um …"
+- "beschreibt eine Routine / Gewohnheit / allgemeine Wahrheit"
+- "man benutzt / verwendet / nimmt hier …"
+- "drückt aus, dass …"
+- "im Englischen sagt/nutzt man …"
+- "Diese Option ist korrekt", "passt am besten", "ist die richtige Wahl"
+- Reine Wiederholung der richtigen Antwort.
+
+PFLICHT: Form benennen UND entweder deutschen Kontrast ODER Sprech-Funktion ODER expliziten Denkfehler nennen.`;
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -78,19 +117,9 @@ ${cefrGuide}
 Erzeuge GENAU 8 Multiple-Choice-Fragen passend zu Niveau ${level}.${topicHint}
 Jede Frage hat 4 Optionen, GENAU EINE richtige Antwort.
 
-Für die Erklärung wähle den passenden Typ:
-- "contrast": Wenn Deutsch und Englisch sich unterscheiden (z.B. Present Perfect vs. Perfekt, since vs. seit).
-- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
-- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
-- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
-- "register": Wenn die falsche Form unnatürlich klingt und eine bessere Alternative erklärt wird.
-- "mnemonic": Wenn eine Eselsbrücke hilft.
+${EXPLANATION_RECIPE}
 
-Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.
-
-VERBOTEN in "short": "Diese Option ist korrekt", "spiegelt die Grammatikregel wider", "passt am besten", "ist die richtige Wahl", Wiederholung der richtigen Antwort.
-
-PFLICHT in "short": Die grammatische Form benennen UND Funktion oder deutschen Kontrast nennen.`;
+Wortlimit für "short": A1=25, A2=35, B1=50, B2=70 Wörter. Halte das Limit für Niveau ${level} ein.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -214,17 +243,9 @@ ${cefrGuide}
 WICHTIG: Behandle in dieser Lektion GENAU dieses Grammatikthema: "${focus}" (Niveau ${level}). Wähle KEIN anderes Thema.${topicHint}
 Liefere eine kurze, klare Lektion: typisierte Erklärung (Objekt), 3 Beispielsätze (Englisch + deutsche Übersetzung), 1 typischer Fehler mit Korrektur, 3 kleine Übungssätze (Englisch mit einer Lücke __, plus richtiger Antwort und kurzer Hinweis).
 
-Für die "explanation" wähle den passenden Typ:
-- "contrast": Wenn Deutsch und Englisch sich unterscheiden.
-- "pattern": Wenn eine Form erklärt und verallgemeinert wird.
-- "trap": Wenn ein typischer Fehler von Deutschsprachigen explizit benannt wird.
-- "function": Wenn erklärt wird, was diese Form in der Kommunikation leistet.
-- "register": Wenn die falsche Form unnatürlich klingt.
-- "mnemonic": Wenn eine Eselsbrücke hilft.
+${EXPLANATION_RECIPE}
 
-"short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Benenne die grammatische Form UND Funktion oder deutschen Kontrast.
-VERBOTEN in "short": "Diese Option ist korrekt", "passt am besten", "ist die richtige Wahl", reine Floskeln.
-Optional: contrastDE, trapNote, generalization — nur wenn sie echten Mehrwert bringen.
+"short": 1–2 Sätze auf Deutsch (max ${lessonWordLimit} Wörter). Halte das Wortlimit ein.
 
 Halte alles freundlich und lernerfreundlich, KEIN Fachjargon-Overload.`;
 
